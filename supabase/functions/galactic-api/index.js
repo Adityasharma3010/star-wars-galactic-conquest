@@ -4,6 +4,7 @@ import { createGame,transition } from './_shared/game/engine/game.js';
 import { CHARACTERS,BOARD } from './_shared/game/rules/data.js';
 import { secureRandom } from './_shared/game/engine/random.js';
 import { timeoutAction } from './_shared/game/engine/timeouts.js';
+import { automationPlayer } from './_shared/game/engine/connections.js';
 import { chooseAction } from './_shared/game/ai/commander.js';
 import { allowedOrigin } from './origins.js';
 import { validId,cleanProfile,publicState,validateAction,safeRules } from './authority.js';
@@ -16,12 +17,27 @@ const code=()=>Array.from({length:6},()=> 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Mat
 async function membership(gameId,userId){validId(gameId);const rows=await checked(service.from('game_players').select('player_id,team').eq('game_id',gameId).eq('user_id',userId));if(!rows.length)throw new Error('You are not a member of this match.');return rows[0];}
 async function roomInfo(roomId,userId,host=false){validId(roomId);const room=await checked(service.from('game_rooms').select('*').eq('id',roomId).single());const players=await checked(service.from('room_players').select('*').eq('room_id',roomId).order('joined_at'));if(!players.some(p=>p.user_id===userId)||(host&&room.host_id!==userId))throw new Error(host?'Only the host can perform this action.':'Room membership required.');const games=await checked(service.from('games').select('id').eq('room_id',roomId));const config=await checked(service.from('room_settings').select('rules').eq('room_id',roomId).single());return {room,players,rules:config.rules,game:games[0]?.id||null};}
 async function commit(state,action){const {snapshot,recipients}=await commitAction(state,action,secureRandom,rpc);if(recipients.length){const achievement=await checked(service.from('achievements').select('id').eq('key','first-world').single());await checked(service.from('player_achievements').upsert(recipients.map(p=>({user_id:p.id,achievement_id:achievement.id})),{onConflict:'user_id,achievement_id'}));}return snapshot;}
-async function tick(gameId){for(let n=0;n<6;n++){const state=await rpc('galactic_engine',{p_game:gameId});if(state.phase==='finished')return publicState(state);const expired=timeoutAction(state);if(expired){await commit(state,{...expired,id:uuid(),version:state.version,now:Date.now()});continue;}if(state.animationUntil>Date.now())return publicState(state);let player;
- if(state.debt)player=state.players.find(p=>p.id===state.debt.payer&&p.ai);
- else if(state.auction){if(state.auction.deadline<Date.now()){player=state.players.find(p=>!p.bankrupt&&!state.auction.passed.includes(p.id)&&p.id!==state.auction.bidder);if(player){await commit(state,{id:uuid(),player:player.id,type:'PASS',payload:{},version:state.version,now:Date.now()});continue;}}player=state.players.find(p=>p.ai&&!p.bankrupt&&!state.auction.passed.includes(p.id)&&p.id!==state.auction.bidder);}
- else{const offer=state.trades.find(t=>t.status==='pending'&&state.players.find(p=>p.id===t.to)?.ai);player=offer?state.players.find(p=>p.id===offer.to):state.players[state.turn].ai?state.players[state.turn]:null;}
- if(!player)return publicState(state);const chosen=chooseAction(state,player);if(!chosen)return publicState(state);await commit(state,{...chosen,id:uuid(),version:state.version,now:Date.now()});}
- return publicState(await rpc('galactic_engine',{p_game:gameId}));}
+async function connection(gameId,userId,sessionId,status='online') {
+ validId(gameId);validId(sessionId||userId);
+ return rpc('galactic_connection',{p_game:gameId,p_user:userId,p_session:sessionId||userId,p_status:status});
+}
+async function tick(gameId) {
+ for(let n=0;n<6;n++) {
+  const state=await rpc('galactic_engine',{p_game:gameId});
+  if(state.phase==='finished')return publicState(state);
+  const expired=timeoutAction(state);
+  if(expired){await commit(state,{...expired,id:uuid(),version:state.version,now:Date.now()});continue;}
+  if(state.animationUntil>Date.now())return publicState(state);
+  const connections=await rpc('galactic_connections',{p_game:gameId});
+  const player=automationPlayer(state,connections);
+  if(!player)return publicState(state);
+  const chosen=chooseAction(state,{...player,difficulty:player.difficulty||'medium'});
+  if(!chosen)return publicState(state);
+  const next=await commit(state,{...chosen,id:uuid(),version:state.version,now:Date.now(),connectionTimeout:!player.ai});
+  if(next.version===state.version)return next;
+ }
+ return publicState(await rpc('galactic_engine',{p_game:gameId}));
+}
 Deno.serve(async request=>{const origin=request.headers.get('origin');const permitted=allowedOrigin(origin,allowedOrigins,Deno.env.get('ALLOW_LAN_ORIGINS')==='true');const cors={'Access-Control-Allow-Origin':permitted&&origin?origin:allowedOrigins[0],'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'};const respond=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json'}});
  if(!permitted)return respond({error:'Origin is not allowed.'},403);
  if(request.method==='OPTIONS')return new Response('ok',{headers:cors});if(request.method!=='POST')return respond({error:'Use POST.'},405);
@@ -34,9 +50,10 @@ Deno.serve(async request=>{const origin=request.headers.get('origin');const perm
   case 'configureRoom':{validId(body.roomId);await rpc('galactic_configure_room',{p_room:body.roomId,p_user:user.id,p_rules:safeRules(body.rules),p_max:body.maxPlayers||8});return respond(await roomInfo(body.roomId,user.id));}
   case 'kick':{const info=await roomInfo(body.roomId,user.id,true);if(info.room.status!=='waiting')throw new Error('Cannot kick players from an active match.');validId(body.playerId);if(body.playerId===user.id)throw new Error('The host cannot kick themselves.');await checked(service.from('room_players').delete().eq('room_id',body.roomId).eq('user_id',body.playerId));return respond({ok:true});}
   case 'leaveRoom':{validId(body.roomId);await rpc('galactic_leave_room',{p_room:body.roomId,p_user:user.id});return respond({ok:true});}
-  case 'startRoom':{const info=await roomInfo(body.roomId,user.id,true);const config=(await checked(service.from('room_settings').select('rules').eq('room_id',body.roomId).single())).rules;const rules=safeRules(config),used=new Set(info.players.map(p=>p.character));let ps=info.players.map((p,i)=>{const c=CHARACTERS.find(c=>c.id===p.character)||CHARACTERS[0];return {id:p.user_id,name:p.display_name,character:c.id,faction:p.faction,color:c.color,ai:false,team:rules.teams?i%2===0?'Rebel Squadron':'Imperial Squadron':null};});const aiCount=Math.max(0,Math.min(8-ps.length,Number.isInteger(body.aiCount)?Math.min(info.room.max_players-ps.length,body.aiCount):0));for(const c of CHARACTERS.filter(c=>!used.has(c.id)).slice(0,aiCount)){ps.push({id:uuid(),name:c.name,character:c.id,faction:c.faction,color:c.color,ai:true,difficulty:rules.difficulty,team:rules.teams?ps.length%2===0?'Rebel Squadron':'Imperial Squadron':null});}const state=createGame(ps,{...rules,now:Date.now(),id:uuid()},secureRandom);const snapshot=await rpc('galactic_start_match',{p_room:body.roomId,p_actor:user.id,p_state:state,p_snapshot:publicState(state)});return respond({state:snapshot});}
-  case 'snapshot':{await membership(body.gameId,user.id);return respond({state:await tick(body.gameId)});}
-  case 'action':{await membership(body.gameId,user.id);const state=await rpc('galactic_engine',{p_game:body.gameId});if(state.processed.includes(body.action?.id))return respond({state:publicState(state)});const action=validateAction(body.action,user.id,state.version);const snapshot=await commit(state,action);return respond({state:snapshot});}
+  case 'startRoom':{const info=await roomInfo(body.roomId,user.id,true);const config=(await checked(service.from('room_settings').select('rules').eq('room_id',body.roomId).single())).rules;const rules=safeRules(config),used=new Set(info.players.map(p=>p.character));let ps=info.players.map((p,i)=>{const c=CHARACTERS.find(c=>c.id===p.character)||CHARACTERS[0];return {id:p.user_id,name:p.display_name,character:c.id,faction:p.faction,color:c.color,ai:false,team:rules.teams?i%2===0?'Rebel Squadron':'Imperial Squadron':null};});const aiCount=Math.max(0,Math.min(8-ps.length,Number.isInteger(body.aiCount)?Math.min(info.room.max_players-ps.length,body.aiCount):0));for(const c of CHARACTERS.filter(c=>!used.has(c.id)).slice(0,aiCount)){ps.push({id:uuid(),name:c.name,character:c.id,faction:c.faction,color:c.color,ai:true,difficulty:rules.difficulty,team:rules.teams?ps.length%2===0?'Rebel Squadron':'Imperial Squadron':null});}const state=createGame(ps,{...rules,now:Date.now(),id:uuid()},secureRandom);const snapshot=await rpc('galactic_start_match',{p_room:body.roomId,p_actor:user.id,p_state:state,p_snapshot:publicState(state)});const connections=await connection(state.id,user.id,body.sessionId);return respond({state:snapshot,connections});}
+  case 'snapshot':{await membership(body.gameId,user.id);await connection(body.gameId,user.id,body.sessionId);const state=await tick(body.gameId);return respond({state,connections:await rpc('galactic_connections',{p_game:body.gameId})});}
+  case 'connection':{await membership(body.gameId,user.id);return respond({connections:await connection(body.gameId,user.id,body.sessionId,body.status||'online')});}
+  case 'action':{await membership(body.gameId,user.id);await connection(body.gameId,user.id,body.sessionId);const state=await rpc('galactic_engine',{p_game:body.gameId});if(state.processed.includes(body.action?.id))return respond({state:publicState(state)});const action=validateAction(body.action,user.id,state.version);const snapshot=await commit(state,action);return respond({state:snapshot});}
   case 'chat':{const member=body.gameId?await membership(body.gameId,user.id):null;if(body.team&&!member?.team)throw new Error('A team channel requires team membership.');const text=String(body.text||'').trim();if(!text||text.length>300)throw new Error('Transmission must contain 1–300 characters.');await checked(service.from('chat_messages').insert({game_id:body.gameId||null,sender_id:user.id,body:text,team:body.team?member.team:null}));return respond({ok:true});}
   case 'friendRequest':{validId(body.recipient);if(body.recipient===user.id)throw new Error('Choose another commander.');const blocked=await checked(service.from('blocked_players').select('id').or('and(user_id.eq.'+user.id+',blocked_id.eq.'+body.recipient+'),and(user_id.eq.'+body.recipient+',blocked_id.eq.'+user.id+')'));if(blocked.length)throw new Error('Commander is unavailable.');await checked(service.from('friend_requests').insert({sender_id:user.id,recipient_id:body.recipient}));return respond({ok:true});}
   case 'friendResponse':{validId(body.requestId);await rpc('galactic_friend_response',{p_request:body.requestId,p_user:user.id,p_accept:Boolean(body.accept)});return respond({ok:true});}

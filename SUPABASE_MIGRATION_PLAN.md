@@ -25,3 +25,15 @@ The first three migrations are applied. The dry run for `202611190004_lobby_tran
 The fourth migration serializes character readiness, friend acceptance, host changes and lobby rule edits; syncs room callsigns to profiles; maintains auction deadlines; awards team results correctly; and enables global chat with the same blocking controls. It introduces service-only functions and triggers. It relaxes the chat match reference to allow a global channel, replacing only this application's named chat read policy while preserving team and member restrictions. No data is deleted and no unrelated object is changed. Source: `supabase/migrations/202611190004_lobby_transactions.sql`.
 
 After approval: apply this migration, redeploy the JavaScript Edge Function, and verify readiness races, social transactions, RLS and real online play.
+# Fifth migration: connection grace (approved and applied)
+
+`supabase/migrations/202611190005_connection_grace.sql` was listed successfully by the linked CLI dry run on 19 November 2026. It does not delete existing game data.
+
+- Add a private, RLS-enabled table of per-tab connection heartbeats. No client can read or edit it directly.
+- Add service-only RPCs for heartbeat/leave updates and member connection status.
+- Detect missing heartbeats after 30 seconds, then grant five minutes to reconnect. Explicitly leaving grants two minutes. Ordinary turns have no countdown.
+- Preserve the seat, identity and holdings. After grace expires, temporary AI can continue; reconnecting returns control to the human.
+- Wrap the existing atomic commit RPC with a lock shared by reconnect updates. A reconnect cancels a pending automatic action before it commits. Existing economy, history and version checks remain in the original implementation.
+- Separate connection updates from game versions, so heartbeats cannot replay movement or invalidate human actions. Multiple active tabs keep a player connected when one tab closes.
+
+The owner approved this migration after the dry run; application and Edge Function deployment succeeded. Rollback-only connection/race/security fixtures and the real two-player disconnect/leave/rejoin browser checks passed.

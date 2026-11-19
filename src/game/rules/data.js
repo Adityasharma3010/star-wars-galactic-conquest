@@ -43,4 +43,4 @@ export const CHARACTERS = [
 ].map(([id,name,faction,color,symbol])=>({id,name,faction,color,symbol,available:true,owned:true}));
 export const FACTIONS = ['Rebel Alliance','Galactic Empire','Jedi Order','Sith','Mandalorians','Galactic Republic','Separatists','First Order','Resistance'];
 export const MODES = {classic:'Classic',quick:'Quick Match',teams:'Teams',solo:'Solo vs AI',custom:'Custom Rules'};
-export const DEFAULT_RULES = {startingCredits:1500,startBonus:200,auctions:true,freeParking:false,incomeTax:200,luxuryTax:100,outposts:32,bases:12,trading:true,mortgageInterest:0.1,turnDuration:90,roundLimit:0,mortgages:true,difficulty:'medium',teams:false,sharedProperties:false,noTeamRent:true,duplicateCharacters:false};
+export const DEFAULT_RULES = {startingCredits:1500,startBonus:200,auctions:true,freeParking:false,incomeTax:200,luxuryTax:100,outposts:32,bases:12,trading:true,mortgageInterest:0.1,roundLimit:0,mortgages:true,difficulty:'medium',teams:false,sharedProperties:false,noTeamRent:true,duplicateCharacters:false};

@@ -27,6 +27,8 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 - Profile: cloud statistics/history, friends, invitations, rankings and device cosmetics.
 - Comms: match/team/global messages, mute, block and report.
 - Settings: an included saber/blaster/droid sound pack, volume controls, atmospheric soundscape and reduced motion. No audio import is needed.
+- Force/Galactic Events: animated holocron/saber and starfighter transmission briefings, with readable effects and a Continue mission action.
+- Online timing: ordinary turns are untimed; network loss grants five minutes after heartbeat detection, leaving grants two minutes. Rejoin returns control. Auction bids reset their closing countdown to ten seconds.
 
 ## Validate
 

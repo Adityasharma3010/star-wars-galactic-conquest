@@ -29,7 +29,7 @@ VITE_PUBLIC_GAME_URL=https://star-wars-galactic-conquest.vercel.app is configure
 
 ## Deployed Supabase configuration
 
-Project iheauyxopwcpouogfkvi, Mumbai, organization Aditya Org. Four approved migrations and the synchronized JavaScript galactic-api Edge Function are deployed. See SUPABASE_SETUP_REPORT.md.
+Project iheauyxopwcpouogfkvi, Mumbai, organization Aditya Org. Five approved migrations and the synchronized JavaScript galactic-api Edge Function are deployed. See SUPABASE_SETUP_REPORT.md.
 
 ALLOWED_ORIGINS includes the exact public Vercel origin and localhost development addresses. ALLOW_LAN_ORIGINS=true permits private IPv4 addresses only on development ports 5173/5174. Auth site_url and redirect URLs include the actual HTTPS public alias; the configuration push succeeded.
 

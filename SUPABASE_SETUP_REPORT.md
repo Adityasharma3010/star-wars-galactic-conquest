@@ -6,18 +6,19 @@ The project was created with the owner's authorization. Before migration it cont
 
 ## Applied migrations
 
-All four remote pushes succeeded after their dry runs and the owner's approvals:
+All five remote pushes succeeded after their dry runs and the owner's approvals:
 
 1. `202611190001_schema.sql` — normalized tables, constraints, indexes, RLS, profile trigger, Realtime and Storage.
 2. `202611190002_authority.sql` — trusted room/start/engine/commit/rate RPCs and transactional normalized economy/history.
 3. `202611190003_catalog.sql` — 28 purchasable assets, 24 cards and achievement definitions.
 4. `202611190004_lobby_transactions.sql` — atomic readiness/friend acceptance/lobby edits/host leave, profile sync, auction deadlines, team progression and moderated global chat.
+5. `202611190005_connection_grace.sql` — private document-session leases, service-only heartbeat/connection RPCs and atomic reconnect protection around the existing commit implementation.
 
-The remote migration history contains all four versions. No remote reset was used.
+The remote migration history contains all five versions. No remote reset was used.
 
 ## Verified schema
 
-**36 public tables, all 36 with RLS; 80 public indexes; 39 public policies.** The private engine, action and rate-limit tables are in `galactic_private`.
+**36 public tables, all 36 with RLS; 80 public indexes; 39 public policies.** The private engine, action, rate-limit and connection-lease tables are in `galactic_private`. Connection leases also have RLS enabled and no client schema/table access.
 
 Public tables: `profiles`, `player_settings`, `friendships`, `friend_requests`, `blocked_players`, `game_rooms`, `room_players`, `room_settings`, `room_invitations`, `games`, `game_players`, `game_state`, `game_events`, `turn_history`, `match_history`, `player_wallets`, `transactions`, `properties`, `property_ownership`, `property_development`, `mortgages`, `trades`, `trade_items`, `trade_history`, `auctions`, `auction_bids`, `card_decks`, `card_definitions`, `player_cards`, `chat_messages`, `player_reports`, `player_statistics`, `achievements`, `player_achievements`, `cosmetic_items`, `player_cosmetics`.
 
@@ -46,5 +47,7 @@ Rollback-only SQL fixtures passed member versus outsider reads, denied wallet wr
 Real browser sessions passed public/private room creation and joining, same-character readiness races, host-only configuration, forged actor rejection, concurrent dice/bid protection, counteroffers, purchases/auction ownership, match/team/global chat isolation, invitations, refresh recovery and a complete five-round team match. Final team results and each user's statistics were checked remotely; the actual victory screen was displayed.
 
 ## Operational requirements
+
+The fifth migration's rollback-only fixtures passed live-tab aggregation, two-minute leave grace, five-minute disconnect grace after detection, expiry, reconnect-versus-automatic-action protection and private RPC authorization. The real browser flow also passed a network interruption, leaving and rejoining. Heartbeats do not update game revisions. Normal turns are untimed; auctions close ten seconds after the most recent bid.
 
 `ALLOWED_ORIGINS` includes the verified production address https://star-wars-galactic-conquest.vercel.app and the intended localhost development origins. Auth site URL and redirect configuration were pushed successfully to that production address. Hosted guests, room invitations, readiness, starting, dice, chat and recovery passed in independent browser sessions; publishing details are in `DEPLOYMENT.md`. Email confirmation is configured, but a complete real inbox verification cycle is not claimed. Owner mail delivery and moderation operations need launch-specific configuration. Client polling drives AI/deadline processing; a match with every client offline remains saved until a client returns. See `ASSET_CREDITS.md` for the distinction between creator-licensed audio and official reference-image rights.
