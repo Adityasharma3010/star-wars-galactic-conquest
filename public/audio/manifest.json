@@ -1,0 +1,29 @@
+[
+  {
+    "file": "blaster.mp3",
+    "url": "https://cdn.freesound.org/previews/466/466834_8430571-hq.mp3",
+    "source": "https://freesound.org/people/MikeE63/sounds/466834/",
+    "name": "Enhanced blaster",
+    "author": "MikeE63",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  {
+    "file": "droid.mp3",
+    "url": "https://cdn.freesound.org/previews/404/404759_140737-hq.mp3",
+    "source": "https://freesound.org/people/OwlStorm/sounds/404759/",
+    "name": "R2-D2-style chirp",
+    "author": "Ashe Kirk / OwlStorm / Owlish Media",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  {
+    "file": "lightsaber.mp3",
+    "url": "https://cdn.freesound.org/previews/848/848168_18522131-hq.mp3",
+    "source": "https://freesound.org/people/posdesigndesom/sounds/848168/",
+    "name": "Lightsaber recreation",
+    "author": "Bruna Mattos, João Gilberto Tenório, Taiane Ketily / posdesigndesom",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+  }
+]

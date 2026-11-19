@@ -1,0 +1,1 @@
+-- Catalog is seeded by migration 202611190003; no duplicate seed inserts.

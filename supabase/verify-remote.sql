@@ -1,0 +1,15 @@
+select jsonb_build_object(
+ 'public_tables',(select count(*) from pg_tables where schemaname='public'),
+ 'rls_tables',(select count(*) from pg_tables where schemaname='public' and rowsecurity),
+ 'indexes',(select count(*) from pg_indexes where schemaname='public'),
+ 'policies',(select count(*) from pg_policies where schemaname='public'),
+ 'board_assets',(select count(*) from properties),
+ 'cards',(select count(*) from card_definitions),
+ 'migrations',(select jsonb_agg(version order by version) from supabase_migrations.schema_migrations),
+ 'realtime_tables',(select jsonb_agg(tablename) from pg_publication_tables where pubname='supabase_realtime' and schemaname='public'),
+ 'buckets',(select jsonb_agg(jsonb_build_object('name',name,'public',public,'size_limit',file_size_limit)) from storage.buckets),
+ 'authenticated_engine_access',has_function_privilege('authenticated','public.galactic_engine(uuid)','EXECUTE'),
+ 'authenticated_commit_access',has_function_privilege('authenticated','public.galactic_commit(uuid,jsonb,integer,jsonb,jsonb)','EXECUTE'),
+ 'anonymous_commit_access',has_function_privilege('anon','public.galactic_commit(uuid,jsonb,integer,jsonb,jsonb)','EXECUTE'),
+ 'authenticated_private_schema',has_schema_privilege('authenticated','galactic_private','USAGE')
+) as verification;

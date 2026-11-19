@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+.git/
+node_modules/
+.npm-cache/
+dist/
+.supabase/
+.vercel/
+test-results/
+playwright-report/
+supabase/.temp/
+scripts/asset-research/
+*.log
