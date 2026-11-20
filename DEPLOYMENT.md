@@ -2,7 +2,11 @@
 
 Updated 20 November 2026. **Public game: https://monopoly.adityasharma.site** (the original Vercel alias remains active).
 
-## Actual production verification
+## Current production update
+
+The 20 November update was published from commit `68275eb` to deployment `dpl_TmvUPUPEtuNUAskfiQTvc6W5GKaF`; Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. Hosted welcome and custom-setting persistence checks passed. The original-theme follow-up is verified separately before publication.
+
+## Previous production verification (19 November)
 
 The public alias returned HTTP 200 without authentication. Four browser runs against that alias passed: fresh-guest room invitation/readiness/start/roll, two independent guests with authoritative turns/chat/refresh recovery, all 26 property/transport images with ownership and development markers at desktop/mobile sizes, and decoding/preview of the three built-in saber/blaster/droid recordings.
 

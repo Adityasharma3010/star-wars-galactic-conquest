@@ -34,7 +34,7 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 
 ## Play and customize
 
-- Opening screen: choose local or online play; saved local games resume explicitly. New matches have a skippable crawl featuring commander names and chosen factions with included orchestral music.
+- Opening screen: choose local or online play; saved local games resume explicitly. New matches have a skippable crawl featuring commander names and chosen factions with the original John Williams Main Title through its official YouTube player.
 - Custom settings: grouped controls, retained local/room drafts and an explicit Reset rules action. Room rules apply only on Save; background updates preserve edits.
 - New game: character, allegiance, 2–8 commanders, human/AI slots, difficulty and classic/quick/teams/custom rules.
 - Find a game: authenticated public rooms, private codes, invite links, editable guest/registered callsigns, synchronized readiness, host settings, AI filling and refresh recovery.

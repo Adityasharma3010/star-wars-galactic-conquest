@@ -762,7 +762,8 @@ export function Settings() {
         />
       </label>
       <p className="muted">
-        Opening music: Superepic by Alexander Nakarada (CreatorChords), licensed under CC BY 4.0.
+        Opening music: the original John Williams Main Title through its official YouTube player.
+        Playback controls remain available in the intro.
       </p>
       <label className="toggle-row">
         <span>Mute game sounds</span>

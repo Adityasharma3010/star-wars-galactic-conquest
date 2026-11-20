@@ -53,6 +53,9 @@ test('real Supabase room, independent guests, readiness, sync, turn enforcement,
   await expect(host.locator('.connection-badge')).toContainText('ONLINE');
   await expect(guest.getByRole('button', { name: 'Roll dice', exact: true })).toBeDisabled();
   await host.getByRole('button', { name: 'Roll dice', exact: true }).click();
+  await expect(host.locator('.log-entry').first()).not.toContainText(
+    'The galaxy is yours to conquer.',
+  );
   await expect(host.getByRole('button', { name: 'Travelling…' })).toHaveCount(0, {
     timeout: 12000,
   });

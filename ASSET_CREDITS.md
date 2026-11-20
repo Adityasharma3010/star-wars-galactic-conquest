@@ -24,8 +24,6 @@ Primary references: [Star Wars Databank](https://www.starwars.com/databank) and 
 
 ## Libraries, icons and fonts
 
-Opening music: Superepic by Alexander Nakarada (https://creatorchords.com), licensed under Creative Commons Attribution 4.0 International (https://creativecommons.org/licenses/by/4.0/). The composer's page at https://creatorchords.com/music/superepic/ explicitly offers free use with attribution. Playback uses an excerpt and a fade-out for the personalized opening crawl. The file is bundled as `public/audio/opening.mp3` from the artist's published CloudFront download.
-
 The animated event scenes use original SVG starfighter, Jedi/Imperial crest interpretations, saber beams and CSS hologram/radar/star-trail effects. They are code compositions made for this fan interface, not movie clips or extracted footage. Galactic scene backgrounds reuse the Databank references listed above.
 
 Lucide supplies interface icons under its ISC license. React, Vite, Zustand, Tailwind and Motion retain their upstream licenses. GSAP and its React integration are used under their upstream distribution terms. Fonts use system-installed families; no downloaded font asset is bundled. See package metadata and installed dependency licenses for the exact third-party terms.
@@ -33,3 +31,5 @@ Lucide supplies interface icons under its ISC license. React, Vite, Zustand, Tai
 ## Replacement and release
 
 Title/theme configuration, locations, characters, faction names, descriptions, imagery and audio references can be replaced without rewriting economic rules. An unrestricted public or commercial Star Wars release requires appropriate rights. A fully original theme can replace these universe references. The creator licenses above apply to those recordings, not to the Star Wars brand or official imagery.
+
+Original opening theme: **Main Title** by **John Williams and the London Symphony Orchestra**, from **Star Wars: A New Hope**, [official recording](https://www.youtube.com/watch?v=e9lapdvLSGw), provided to YouTube by Universal Music Group. Playback uses the visible official YouTube player and its controls. The soundtrack is streamed by YouTube; it is not copied into this repository. Playback is subject to YouTube availability and browser autoplay controls.

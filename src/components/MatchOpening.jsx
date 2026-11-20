@@ -3,7 +3,7 @@ import { Volume2, VolumeX, ArrowRight } from 'lucide-react';
 import { useReducedMotion } from 'motion/react';
 import { useGameStore } from '../stores/gameStore.js';
 import { openingStory } from '../game/openingStory.js';
-import { playOpeningMusic } from '../services/starWarsAudio.js';
+import OriginalTheme from './OriginalTheme.jsx';
 import HoloLoader from './HoloLoader.jsx';
 
 export default function MatchOpening() {
@@ -11,13 +11,14 @@ export default function MatchOpening() {
   const reduced = useReducedMotion() || settings.reducedMotion;
   const [phase, setPhase] = useState('loading');
   const [music, setMusic] = useState(!settings.mute && settings.introMusic !== false);
+  const [loadTheme, setLoadTheme] = useState(!settings.mute && settings.introMusic !== false);
   const root = useRef();
   const crawl = useRef();
   useLayoutEffect(() => {
     if (phase === 'crawl' && crawl.current && !reduced)
       crawl.current.style.setProperty(
         '--crawl-end',
-        -(crawl.current.offsetHeight + window.innerHeight * 0.9) + 'px',
+        -(crawl.current.offsetHeight + window.innerHeight * 1.8) + 'px',
       );
   }, [phase, reduced]);
   useEffect(() => {
@@ -37,22 +38,9 @@ export default function MatchOpening() {
       setTimeout(() => setPhase('title'), 2900),
       setTimeout(() => setPhase('crawl'), 5100),
     ];
-    if (!reduced) timers.push(setTimeout(finishIntro, 31000));
+    if (!reduced) timers.push(setTimeout(finishIntro, 65000));
     return () => timers.forEach(clearTimeout);
   }, [intro?.gameId, reduced, finishIntro]);
-  useEffect(() => {
-    if (!intro || phase === 'loading' || phase === 'prologue' || !music || settings.mute) return;
-    let disposed = false,
-      stop;
-    playOpeningMusic(settings, () => disposed).then((fn) => {
-      if (disposed) fn();
-      else stop = fn;
-    });
-    return () => {
-      disposed = true;
-      stop?.();
-    };
-  }, [intro?.gameId, music, settings.mute, phase === 'loading' || phase === 'prologue']);
   if (!intro || !game) return null;
   const story = openingStory(game);
   return (
@@ -81,7 +69,13 @@ export default function MatchOpening() {
         <button
           className="text-button"
           data-opening-control
-          onClick={() => setMusic(!music)}
+          onClick={() => {
+            if (!music) {
+              setLoadTheme(true);
+              if (settings.mute) useGameStore.getState().updateSettings({ mute: false });
+            }
+            setMusic(!music);
+          }}
           aria-label={music ? 'Mute opening music' : 'Play opening music'}
         >
           {music ? <Volume2 size={17} /> : <VolumeX size={17} />}
@@ -128,6 +122,13 @@ export default function MatchOpening() {
         <span>{story.commanders.join(' · ')}</span>
         {story.teams.length > 0 && <small>{story.teams.join(' / ')}</small>}
       </div>
+      {loadTheme && (
+        <OriginalTheme
+          playing={phase === 'title' || phase === 'crawl'}
+          audible={music && !settings.mute}
+          volume={(settings.volume ?? 0.45) * (settings.musicVolume ?? 0.2)}
+        />
+      )}
     </section>
   );
 }

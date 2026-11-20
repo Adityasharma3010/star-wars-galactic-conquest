@@ -29,24 +29,11 @@ test('account and profile dialogs fit desktop/mobile and retain usable callsign 
   expect(errors).toEqual([]);
 });
 
-test('personalized opening animates, plays decodable music, skips cleanly, and does not replay', async ({
+test('personalized wide opening plays the original John Williams recording, skips cleanly, and does not replay', async ({
   page,
 }) => {
   test.setTimeout(90000);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.addInitScript(() => {
-    window.openingAudio = { started: 0, stopped: 0 };
-    const start = AudioBufferSourceNode.prototype.start,
-      stop = AudioBufferSourceNode.prototype.stop;
-    AudioBufferSourceNode.prototype.start = function (...args) {
-      if (this.buffer?.duration > 40) window.openingAudio.started++;
-      return start.apply(this, args);
-    };
-    AudioBufferSourceNode.prototype.stop = function (...args) {
-      if (this.buffer?.duration > 40) window.openingAudio.stopped++;
-      return stop.apply(this, args);
-    };
-  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
@@ -64,20 +51,26 @@ test('personalized opening animates, plays decodable music, skips cleanly, and d
   expect(
     await page.locator('.opening-crawl').evaluate((el) => getComputedStyle(el).animationName),
   ).toBe('opening-crawl');
-  await expect.poll(() => page.evaluate(() => window.openingAudio.started)).toBe(1);
-  const duration = await page.evaluate(async () => {
-    const ctx = new AudioContext();
-    const buffer = await ctx.decodeAudioData(
-      await (await fetch('/audio/opening.mp3')).arrayBuffer(),
-    );
-    await ctx.close();
-    return buffer.duration;
-  });
-  expect(duration).toBeGreaterThan(40);
+  const theme = page.getByRole('complementary', { name: 'Original Star Wars theme' });
+  await expect(theme.locator('iframe')).toBeVisible({ timeout: 20000 });
+  await expect(theme).not.toHaveAttribute('data-playback', 'loading', { timeout: 20000 });
+  const play = theme.getByRole('button', { name: 'Play theme', exact: true });
+  if (await play.count()) await play.click();
+  await expect(theme).toHaveAttribute('data-playback', 'playing', { timeout: 30000 });
+  await expect(theme.locator('iframe')).toHaveAttribute('src', /e9lapdvLSGw/);
+  const dimensions = await theme.locator('iframe').boundingBox();
+  expect(dimensions.width).toBeGreaterThanOrEqual(200);
+  expect(dimensions.height).toBeGreaterThanOrEqual(200);
+  const crawlSize = await page
+    .locator('.opening-crawl')
+    .evaluate((el) => ({ width: el.clientWidth, font: parseFloat(getComputedStyle(el).fontSize) }));
+  expect(crawlSize.width).toBeGreaterThan(1000);
+  expect(crawlSize.font).toBeGreaterThanOrEqual(40);
+  await page.waitForTimeout(6500);
   await page.screenshot({ path: 'test-results/opening-crawl.png', fullPage: true });
   await page.getByRole('button', { name: /Skip intro/ }).click();
   await expect(page.getByTestId('game-board')).toBeVisible();
-  await expect.poll(() => page.evaluate(() => window.openingAudio.stopped)).toBe(1);
+  await expect(page.locator('.original-theme-panel iframe')).toHaveCount(0);
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(page.getByTestId('game-board')).toBeVisible();

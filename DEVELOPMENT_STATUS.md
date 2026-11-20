@@ -17,7 +17,7 @@ Updated 20 November 2026.
 
 ## Current update
 
-Fresh visits show an explicit local/online menu; played saves resume without restoring the old automatic bot preview. New matches have a skippable, personalized faction crawl with licensed orchestral music, a static reduced-motion view and no replay on resume. Account/profile dialogs are compact and animated, with holographic loading states.
+Fresh visits show an explicit local/online menu; played saves resume without restoring the old automatic bot preview. New matches have a skippable, personalized faction crawl with the original John Williams Main Title through its visible official YouTube player, a static reduced-motion view and no replay on resume. The movie-style crawl uses a wider 90% text plane, larger type, a corrected perspective origin and a slower 65-second sequence. Account/profile dialogs are compact and animated, with holographic loading states.
 
 Guests choose their callsign before joining. Profile names can be edited. Waiting-room identity changes reset readiness and cannot race a stale match-start roster. Mission briefings are interactive only for the recipient; other commanders receive informational transmissions. Debt and property financing follow the actual debtor.
 
@@ -28,7 +28,7 @@ Prettier formats the supported project files, including SQL and TOML. VS Code wo
 ## Passed checks
 
 - **30 browser scenarios passed across the full run and targeted retests.** These cover the existing gameplay/LAN/online/social/visual/reconnect cases, welcome/resume behavior, compact dialogs, animated/music and reduced-motion openings, mission/debt permissions, and persistent custom/room settings. The settings checks include multiple poll intervals, closing, page reload, exact launch values, explicit reset, remote save results and editing during an in-flight save.
-- **80 Vitest tests passed**, covering engine/AI/security/grace behavior, session restoration, personalized intros and paused dispatch, duplicate lobby attachments, mission recipients/observers, debt financing, unverified registration and cancellation of late-loading music. The runner uses two workers to avoid oversubscribing the Windows development machine.
+- **81 Vitest tests passed**, covering engine/AI/security/grace behavior, session restoration, personalized intros and paused dispatch, duplicate lobby attachments, mission recipients/observers, debt financing, unverified registration and cancellation of late-loading official players, native playback cleanup, mute and volume. The runner uses two workers to avoid oversubscribing the Windows development machine.
 - **Four previous-production hosted browser runs passed on 19 November** on the public Vercel alias: fresh guest invite/start/roll, independent-session sync/chat/refresh, all 26 images with ownership/building markers and desktop/mobile overflow, and actual decoding/preview of all three installed audio recordings. These repeat selected checks from the 17-test suite against production.
 - Production Vite build passed. All application sources are JavaScript/JSX; schema/functions are SQL/JavaScript.
 - Actual remote inspection: 36/36 public tables use RLS, 80 public indexes, 39 public policies, 28 assets, 24 cards, six Realtime tables, four buckets and six approved migrations. The new private connection table has RLS and no client access.
