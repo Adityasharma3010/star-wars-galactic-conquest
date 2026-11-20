@@ -4,9 +4,11 @@ Updated 20 November 2026. **Public game: https://monopoly.adityasharma.site** (t
 
 ## Current production update
 
-The current game code was published from commit `76f82fb` to deployment `dpl_9vGoq6LFq5zQTcUUfjbW7zaK7UCs` on 20 November. Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. This release adds holographic dropdowns, a quiet three-track Galactic radio playlist with fades and looping, and personal background songs stored only in the browser. The original intro player is compact and remains visible as required by YouTube.
+The current game code was published from commit `1d61061` to deployment `dpl_8a1SrSKoWqdqCZXp6LRivDRX99Y4` on 20 November. Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. This release adds a cinematic menu with actual Star Wars Databank imagery, React Router map/match pages, automatic intro completion, the requested hidden theme-player panel, aligned setup controls, and the complete Force/Galactic event guide. Star Wars has one playable map; Default remains a coming-soon category.
 
-Four hosted browser scenarios passed on the custom domain: actual music playback at low volume, a transition near the end of a track, keyboard dropdown selection, pause/resume, personal-song persistence and deletion, no personal-song data in outgoing requests, no match music during the intro, and mobile dropdown placement. Two independent Supabase guests also passed room joining, callsign edits, readiness, start, dice, chat and refresh recovery. Original John Williams Main Title playback, the compact player, wide crawl, skip cleanup and resume passed again on this release.
+Five hosted browser scenarios passed on the custom domain: hidden original Main Title playback, personalized crawl/skip/resume, real menu image loading, map/category URLs and reloads, mobile field alignment, browser Back and saved-game recovery, automatic entry when the final story line leaves the screen, and private-song persistence/deletion/intro separation. Two independent Supabase guests also passed room joining, callsign edits, readiness, start, dice, chat and refresh recovery. The automatic intro scenario entered gameplay in about 55 seconds and confirmed that the theme iframe was removed and match music began.
+
+The preceding `76f82fb` radio release passed quiet native music playback, transitions near a song boundary, keyboard selection, pause/resume, personal-song privacy and mobile menus. No backend deployment or database migration was required for the new menu/routes update.
 
 Hosted welcome and custom-setting persistence checks passed against `68275eb`.
 
