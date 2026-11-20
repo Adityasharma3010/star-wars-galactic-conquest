@@ -23,6 +23,8 @@ Visual-release checks passed: 100 Vitest tests, 23 browser scenarios across the 
 
 The following India and backend details remain in effect:
 
+The visual runtime is commit `00b3ec8`, deployed Ready as `dpl_F3Vh7w5Wo1EMgJio4jrThxgWJvq1` with the `monopoly.adityasharma.site` alias. Three hosted animation scenarios passed across the initial run and purchase retest: live sector imagery/deed controls and reduced motion on both maps, plus property-claim and cash feedback with unchanged committed results. The transient claim glow is recorded across animation frames so a slow browser does not sample it only after it ends. The working tree's formatting and secret checks passed.
+
 India and multiplayer expiration are implemented. Imperial/Income Tax always charges 10% of cash by default; Custom Rules can select total wealth. Guests receive the joined room’s actual map and token choices. Expired human seats are eliminated without bots; a sole survivor wins, and simultaneous all-player expiry ends without a winner. Late visitors spectate; after completion, Join next match opens a linked waiting room. Existing match history is retained.
 
 Migration seven is approved and applied. Remote inspection found 37/37 public tables with RLS, 81 indexes, 43 policies and seven migration versions. The Edge Function is deployed. The full unit suite passed 100 tests. All 22 selected browser scenarios passed across the full run and one targeted retest; the obsolete sound-pack test now scopes its no-uploader assertion to effects while permitting the requested personal-song uploader. Rollback-only database checks passed. The runtime update is commit `0c047f6`, production deployment `dpl_Dv4yASSrjZo2hZhmma9WLCFgqX32`, verified Ready with the custom-domain alias.

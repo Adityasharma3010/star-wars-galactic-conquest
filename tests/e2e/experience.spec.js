@@ -48,14 +48,25 @@ test('a purchase animates the claimed property and cash without changing its com
   page,
 }) => {
   const game = await load(page, 'galactic-conquest', true);
+  // Record the short effect while it runs; remote browser latency can outlast it.
+  await page.evaluate(() => {
+    const began = performance.now();
+    window.purchasePulse = 0;
+    const sample = () => {
+      const pulse = document.querySelector('[data-tile="3"] .tile-pulse');
+      if (pulse)
+        window.purchasePulse = Math.max(
+          window.purchasePulse,
+          Number(getComputedStyle(pulse).opacity),
+        );
+      if (performance.now() - began < 5000) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
   await page.getByRole('button', { name: 'Acquire Jakku', exact: true }).click();
   await expect(page.locator('[data-tile="3"] .owner-sigil')).toBeVisible();
   await expect(page.locator('.balance-change.loss')).toContainText('60');
-  expect(
-    await page
-      .locator('[data-tile="3"] .tile-pulse')
-      .evaluate((element) => Number(getComputedStyle(element).opacity)),
-  ).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.purchasePulse)).toBeGreaterThan(0);
   await expect(page.locator('.commander-stats .animated-balance').first()).toHaveAttribute(
     'aria-label',
     '1,440',
