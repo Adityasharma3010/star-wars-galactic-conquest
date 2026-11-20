@@ -5,6 +5,8 @@ import { loadThemePlayer, ORIGINAL_THEME } from '../services/originalTheme.js';
 export default function OriginalTheme({ playing, audible, volume }) {
   const host = useRef();
   const player = useRef();
+  const resumeVisible = useRef(false);
+  const wasPlaying = useRef(playing);
   const desired = useRef({ playing, audible, volume });
   desired.current = { playing, audible, volume };
   const [status, setStatus] = useState('loading');
@@ -24,7 +26,7 @@ export default function OriginalTheme({ playing, audible, volume }) {
         if (disposed) return;
         player.current = new YT.Player(mount, {
           host: 'https://www.youtube-nocookie.com',
-          width: 320,
+          width: 202,
           height: 200,
           videoId: ORIGINAL_THEME.videoId,
           playerVars: { playsinline: 1, controls: 1, rel: 0, origin: location.origin },
@@ -36,7 +38,9 @@ export default function OriginalTheme({ playing, audible, volume }) {
               frame.referrerPolicy = 'strict-origin-when-cross-origin';
               applySound(event.target);
               setStatus('ready');
-              if (desired.current.playing) event.target.playVideo();
+              if (desired.current.playing && document.visibilityState !== 'hidden')
+                event.target.playVideo();
+              else if (desired.current.playing) resumeVisible.current = true;
             },
             onStateChange: (event) => {
               if (!disposed)
@@ -70,8 +74,30 @@ export default function OriginalTheme({ playing, audible, volume }) {
     };
   }, [attempt]);
   useEffect(() => {
+    const visibility = () => {
+      const target = player.current;
+      if (!target?.getPlayerState) return;
+      if (document.visibilityState === 'hidden') {
+        resumeVisible.current = [1, 3].includes(target.getPlayerState());
+        target.pauseVideo();
+      } else if (resumeVisible.current && desired.current.playing) {
+        resumeVisible.current = false;
+        target.playVideo();
+      }
+    };
+    document.addEventListener('visibilitychange', visibility);
+    return () => document.removeEventListener('visibilitychange', visibility);
+  }, []);
+  useEffect(() => {
+    const activated = playing && !wasPlaying.current;
+    wasPlaying.current = playing;
     if (!player.current?.getPlayerState) return;
     applySound(player.current);
+    if (document.visibilityState === 'hidden') {
+      if (activated) resumeVisible.current = true;
+      player.current.pauseVideo();
+      return;
+    }
     if (playing) player.current.playVideo();
     else player.current.pauseVideo();
   }, [playing, audible, volume]);

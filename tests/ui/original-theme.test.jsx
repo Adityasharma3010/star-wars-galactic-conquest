@@ -57,6 +57,14 @@ it('uses the original recording, respects mute/volume, and destroys playback on 
   view.rerender(<OriginalTheme playing audible={false} volume={0.2} />);
   expect(player.mute).toHaveBeenCalled();
   expect(player.setVolume).toHaveBeenLastCalledWith(20);
+  const visibility = vi.spyOn(document, 'visibilityState', 'get');
+  visibility.mockReturnValue('hidden');
+  act(() => document.dispatchEvent(new Event('visibilitychange')));
+  expect(player.pauseVideo).toHaveBeenCalled();
+  visibility.mockReturnValue('visible');
+  act(() => document.dispatchEvent(new Event('visibilitychange')));
+  expect(player.playVideo.mock.calls.length).toBeGreaterThan(1);
+  visibility.mockRestore();
   view.unmount();
   expect(player.destroy).toHaveBeenCalledOnce();
 });

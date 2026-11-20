@@ -1,3 +1,4 @@
+import { selectChoice } from './helpers.js';
 import { test, expect } from '@playwright/test';
 test('real Supabase room, independent guests, readiness, sync, turn enforcement, chat and refresh', async ({
   browser,
@@ -31,8 +32,8 @@ test('real Supabase room, independent guests, readiness, sync, turn enforcement,
   await guest.getByRole('button', { name: 'Join room', exact: true }).click();
   await expect(guest.locator('.room-code>strong')).toHaveText(code, { timeout: 20000 });
   await host.getByRole('button', { name: 'Toggle ready' }).click();
-  await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');
-  await guest.getByLabel('YOUR ONLINE ALLEGIANCE').selectOption('Jedi Order');
+  await selectChoice(guest, 'YOUR ONLINE CHARACTER', 'vader');
+  await selectChoice(guest, 'YOUR ONLINE ALLEGIANCE', 'Jedi Order');
   await guest.getByRole('button', { name: 'Toggle ready' }).click();
   await guest.getByLabel('YOUR CALLSIGN').fill('Pilot Two Renamed');
   await expect(guest.getByRole('button', { name: 'Toggle ready' })).toBeDisabled();

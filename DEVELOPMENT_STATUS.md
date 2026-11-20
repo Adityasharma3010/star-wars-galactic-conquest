@@ -25,17 +25,21 @@ Custom match rules have a dedicated editor with grouped economy, conquest, team 
 
 Prettier formats the supported project files, including SQL and TOML. VS Code workspace settings explicitly select Prettier for format-on-save. Vite excludes generated backend/cache files from its watcher, preventing the Windows EBUSY crash during backend synchronization.
 
+Holographic dropdowns replace native menus throughout setup, lobbies, trades, auctions and chat. Galactic radio has three creator-licensed ambient tracks, quiet default volume, smooth transitions, shuffle/playlist/single-song looping and visible match-header controls. Personal songs persist in browser IndexedDB; file bytes, names and music-source preferences do not go to Supabase or other players. Background music stops for the intro, the menu, a reserved seat and completed matches. The original intro player is reduced to a 202×200 video area; YouTube requires visible playback and prohibits hidden/background players (https://developers.google.com/youtube/terms/developer-policies).
+
 ## Passed checks
 
 - **Current hosted verification passed on 20 November:** the original Main Title played through its official player on https://monopoly.adityasharma.site; the larger crawl, skip cleanup and resume passed. A second run passed the full independent-guest join/name/readiness/start/roll/chat/refresh flow. The runtime update is commit `2500efd`, production deployment `dpl_7YjsoB25ggpEY1WYUZ3La3VyECVq`.
 
-- **30 browser scenarios passed across the full run and targeted retests.** These cover the existing gameplay/LAN/online/social/visual/reconnect cases, welcome/resume behavior, compact dialogs, animated/music and reduced-motion openings, mission/debt permissions, and persistent custom/room settings. The settings checks include multiple poll intervals, closing, page reload, exact launch values, explicit reset, remote save results and editing during an in-flight save.
-- **81 Vitest tests passed**, covering engine/AI/security/grace behavior, session restoration, personalized intros and paused dispatch, duplicate lobby attachments, mission recipients/observers, debt financing, unverified registration and cancellation of late-loading official players, native playback cleanup, mute and volume. The runner uses two workers to avoid oversubscribing the Windows development machine.
+- **32 browser scenarios passed across the full run and targeted retests.** These cover the existing gameplay/LAN/online/social/visual/reconnect cases, welcome/resume behavior, compact dialogs, animated/music and reduced-motion openings, mission/debt permissions, and persistent custom/room settings. The settings checks include multiple poll intervals, closing, page reload, exact launch values, explicit reset, remote save results and editing during an in-flight save.
+- **87 Vitest tests passed**, covering engine/AI/security/grace behavior, session restoration, personalized intros and paused dispatch, duplicate lobby attachments, mission recipients/observers, debt financing, unverified registration and cancellation of late-loading official players, native playback cleanup, mute and volume. The runner uses two workers to avoid oversubscribing the Windows development machine.
 - **Four previous-production hosted browser runs passed on 19 November** on the public Vercel alias: fresh guest invite/start/roll, independent-session sync/chat/refresh, all 26 images with ownership/building markers and desktop/mobile overflow, and actual decoding/preview of all three installed audio recordings. These repeat selected checks from the 17-test suite against production.
 - Production Vite build passed. All application sources are JavaScript/JSX; schema/functions are SQL/JavaScript.
 - Actual remote inspection: 36/36 public tables use RLS, 80 public indexes, 39 public policies, 28 assets, 24 cards, six Realtime tables, four buckets and six approved migrations. The new private connection table has RLS and no client access.
 - Rollback-only database verification passed authorization, denied writes/RPCs/private schema, readiness/friendship atomicity, commit idempotency and stale-state checks.
 - Connection fixtures passed multiple live tabs, both grace periods, expiry, outsider rejection and a reconnect cancelling a pending automatic action. Both the original and connection security fixtures rolled back.
+
+The radio/selector checks verify actual media playback and low volume, a real transition near a song boundary, keyboard selection, pause/resume, local song persistence, absence of file data in outgoing requests, and no background playback during the intro.
 
 ## Failures investigated and resolved
 

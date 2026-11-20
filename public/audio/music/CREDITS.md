@@ -1,0 +1,9 @@
+# Galactic radio
+
+These are creator-licensed ambient compositions selected for quiet space journeys and strategic play. They are separate from the original Star Wars intro recording.
+
+- **Space Ambience** by **Alexander Nakarada** (https://creatorchords.com). Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/. Source: https://creatorchords.com/music/space-ambience/.
+- **Decoherence** by **Scott Buckley** — released under CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. https://www.scottbuckley.com.au. Source: https://www.scottbuckley.com.au/library/decoherence/.
+- **Ephemera** by **Scott Buckley** — released under CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. https://www.scottbuckley.com.au. Source: https://www.scottbuckley.com.au/library/ephemera/.
+
+Official MP3 downloads are listed in manifest.json. Playback adjusts volume and crossfades track boundaries for the game's background playlist. Personal songs are retained only in the user's browser storage and are not included in or uploaded by this project.

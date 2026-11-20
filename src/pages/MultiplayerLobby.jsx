@@ -1,3 +1,4 @@
+import HoloSelect from '../components/HoloSelect.jsx';
 import { copyText } from '../utils/clipboard.js';
 import { useEffect, useRef, useState } from 'react';
 import { Copy, Plus, Dices, Check, RefreshCw, ArrowRight, Globe2 } from 'lucide-react';
@@ -275,7 +276,7 @@ export default function MultiplayerLobby() {
             ))}
           </div>
           <Field label="YOUR ONLINE CHARACTER">
-            <select
+            <HoloSelect
               disabled={busy || you?.is_ready}
               value={profile.character}
               onChange={(e) => updateProfile({ character: e.target.value })}
@@ -285,10 +286,10 @@ export default function MultiplayerLobby() {
                   {c.name}
                 </option>
               ))}
-            </select>
+            </HoloSelect>
           </Field>
           <Field label="YOUR ONLINE ALLEGIANCE">
-            <select
+            <HoloSelect
               disabled={busy || you?.is_ready}
               value={profile.faction}
               onChange={(e) => updateProfile({ faction: e.target.value })}
@@ -296,7 +297,7 @@ export default function MultiplayerLobby() {
               {FACTIONS.map((f) => (
                 <option key={f}>{f}</option>
               ))}
-            </select>
+            </HoloSelect>
           </Field>
           <p className="muted">
             {players.length} / {room.max_players} seats · {savedRules.startingCredits} starting
@@ -305,7 +306,7 @@ export default function MultiplayerLobby() {
           {host && (
             <>
               <Field label="AI COMMANDERS">
-                <select
+                <HoloSelect
                   value={Math.min(aiCount, max - players.length)}
                   onChange={(e) => setAI(+e.target.value)}
                 >
@@ -314,7 +315,7 @@ export default function MultiplayerLobby() {
                       {i} AI
                     </option>
                   ))}
-                </select>
+                </HoloSelect>
               </Field>
               <details className="lobby-rules">
                 <summary>
@@ -327,7 +328,7 @@ export default function MultiplayerLobby() {
                   </span>
                 </summary>
                 <Field label="ROOM CAPACITY">
-                  <select value={max} onChange={(e) => setMax(+e.target.value)}>
+                  <HoloSelect value={max} onChange={(e) => setMax(+e.target.value)}>
                     {[2, 3, 4, 5, 6, 7, 8]
                       .filter((n) => n >= players.length)
                       .map((n) => (
@@ -335,7 +336,7 @@ export default function MultiplayerLobby() {
                           {n} players
                         </option>
                       ))}
-                  </select>
+                  </HoloSelect>
                 </Field>
                 <RuleFields rules={rules} setRules={setRules} onReset={resetRules} />
                 <p className="rule-draft-status" role="status">
@@ -409,14 +410,14 @@ export default function MultiplayerLobby() {
           {friends.length > 0 && (
             <div className="field-row">
               <Field label="INVITE A FRIEND">
-                <select value={invite} onChange={(e) => setInvite(e.target.value)}>
+                <HoloSelect value={invite} onChange={(e) => setInvite(e.target.value)}>
                   <option value="">Choose commander</option>
                   {friends.map((f) => (
                     <option key={f.friend_id} value={f.friend_id}>
                       {f.profiles?.display_name}
                     </option>
                   ))}
-                </select>
+                </HoloSelect>
               </Field>
               <button
                 className="button"

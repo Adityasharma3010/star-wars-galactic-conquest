@@ -1,3 +1,4 @@
+import HoloSelect from './HoloSelect.jsx';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import {
@@ -381,7 +382,7 @@ export function ActivityPanel() {
       {activeTab === 'chat' && online && (
         <label className="comms-scope">
           Channel
-          <select
+          <HoloSelect
             aria-label="Chat channel"
             value={scope}
             onChange={(e) => setScope(e.target.value)}
@@ -389,7 +390,7 @@ export function ActivityPanel() {
             <option value="match">Match</option>
             {game.rules.teams && <option value="team">Team</option>}
             <option value="global">Global</option>
-          </select>
+          </HoloSelect>
         </label>
       )}
       <div className="activity-content" role="log" aria-live="polite">

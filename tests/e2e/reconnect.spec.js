@@ -1,3 +1,4 @@
+import { selectChoice } from './helpers.js';
 import { test, expect } from '@playwright/test';
 test('real guest disconnect has five minutes, leave has two minutes, and rejoin clears both', async ({
   browser,
@@ -19,8 +20,8 @@ test('real guest disconnect has five minutes, leave has two minutes, and rejoin 
     await guest.getByLabel('YOUR CALLSIGN').fill('Grace Guest');
     await guest.getByRole('button', { name: 'Join room', exact: true }).click();
     await expect(guest.locator('.room-code>strong')).toHaveText(code, { timeout: 20000 });
-    await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');
-    await host.getByLabel('AI COMMANDERS').selectOption('0');
+    await selectChoice(guest, 'YOUR ONLINE CHARACTER', 'vader');
+    await selectChoice(host, 'AI COMMANDERS', '0');
     await host.getByRole('button', { name: 'Toggle ready' }).click();
     await guest.getByRole('button', { name: 'Toggle ready' }).click();
     await expect(host.getByRole('button', { name: 'Start match' })).toBeEnabled({ timeout: 15000 });

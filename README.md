@@ -35,13 +35,14 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 ## Play and customize
 
 - Opening screen: choose local or online play; saved local games resume explicitly. New matches have a skippable crawl featuring commander names and chosen factions with the original John Williams Main Title through its official YouTube player.
+- Dropdowns: holographic lists with mouse/touch selection, arrow/Home/End/Enter keys, type-ahead, and Escape dismissal.
 - Custom settings: grouped controls, retained local/room drafts and an explicit Reset rules action. Room rules apply only on Save; background updates preserve edits.
 - New game: character, allegiance, 2–8 commanders, human/AI slots, difficulty and classic/quick/teams/custom rules.
 - Find a game: authenticated public rooms, private codes, invite links, editable guest/registered callsigns, synchronized readiness, host settings, AI filling and refresh recovery.
 - Board: roll, acquire/auction, manage developments and mortgages, negotiate trades and counteroffers, resolve detention/debt and view results.
 - Profile: cloud statistics/history, friends, invitations, rankings and device cosmetics.
 - Comms: match/team/global messages, mute, block and report.
-- Settings: an included saber/blaster/droid sound pack, volume controls, atmospheric soundscape and reduced motion. No audio import is needed.
+- Settings: included saber/blaster/droid effects, separate intro/ambient/background volumes, and reduced motion. Galactic radio plays a quiet three-track ambient playlist with smooth transitions; choose ordered/shuffled playlists or loop a song. Add up to five personal songs (50 MB each), saved only on this browser, for match background music.
 - Force/Galactic Events: animated holocron/saber and starfighter transmission briefings, with readable effects and a Continue mission action for the recipient. Other commanders receive a noninteractive transmission.
 - Online timing: ordinary turns are untimed; network loss grants five minutes after heartbeat detection, leaving grants two minutes. Rejoin returns control. Auction bids reset their closing countdown to ten seconds.
 

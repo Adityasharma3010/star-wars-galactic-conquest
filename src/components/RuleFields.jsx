@@ -1,3 +1,4 @@
+import HoloSelect from './HoloSelect.jsx';
 import { Coins, Navigation, Shield, Building2, RotateCcw, SlidersHorizontal } from 'lucide-react';
 
 const numbers = {
@@ -99,7 +100,7 @@ export default function RuleFields({ rules, setRules, onReset }) {
         {['teams', 'noTeamRent', 'sharedProperties', 'duplicateCharacters'].map(toggle)}
         <label className="field rule-number">
           <span>AI DIFFICULTY</span>
-          <select
+          <HoloSelect
             value={rules.difficulty}
             onChange={(e) => setRules({ ...rules, difficulty: e.target.value })}
           >
@@ -108,7 +109,7 @@ export default function RuleFields({ rules, setRules, onReset }) {
                 {d[0].toUpperCase() + d.slice(1)}
               </option>
             ))}
-          </select>
+          </HoloSelect>
         </label>
       </section>
       <section className="rule-section">

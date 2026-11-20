@@ -1,3 +1,4 @@
+import { selectChoice } from './helpers.js';
 import { test, expect } from '@playwright/test';
 
 test('custom local settings survive closing and refreshing, launch exactly, and reset only on request', async ({
@@ -11,7 +12,7 @@ test('custom local settings survive closing and refreshing, launch exactly, and 
   await page.getByRole('button', { name: 'Custom', exact: true }).click();
   await page.getByLabel('STARTING CREDITS').fill('2345');
   await page.getByLabel('ROUND LIMIT').fill('12');
-  await page.getByLabel('AI DIFFICULTY').selectOption('expert');
+  await selectChoice(page, 'AI DIFFICULTY', 'expert');
   await page.getByRole('checkbox', { name: /Enable trading/ }).uncheck();
   await page.getByLabel('Close dialog').click();
   await page.getByRole('button', { name: /Play locally/ }).click();
@@ -19,7 +20,7 @@ test('custom local settings survive closing and refreshing, launch exactly, and 
   await page.reload();
   await page.getByRole('button', { name: /Play locally/ }).click();
   await expect(page.getByLabel('ROUND LIMIT')).toHaveValue('12');
-  await expect(page.getByLabel('AI DIFFICULTY')).toHaveValue('expert');
+  await expect(page.getByLabel('AI DIFFICULTY')).toHaveAttribute('data-value', 'expert');
   await expect(page.getByRole('checkbox', { name: /Enable trading/ })).not.toBeChecked();
   await page.screenshot({ path: 'test-results/custom-rules-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Launch conquest' }).click();
@@ -52,16 +53,16 @@ test('multiplayer rule drafts survive polling and refresh, apply explicitly, and
   await expect(page.locator('.room-code > strong')).toBeVisible({ timeout: 20000 });
   await page.locator('.lobby-rules summary').click();
   await page.getByLabel('STARTING CREDITS').fill('2789');
-  await page.getByLabel('ROOM CAPACITY').selectOption('6');
+  await selectChoice(page, 'ROOM CAPACITY', '6');
   await page.waitForTimeout(11500);
   await expect(page.getByLabel('STARTING CREDITS')).toHaveValue('2789');
-  await expect(page.getByLabel('ROOM CAPACITY')).toHaveValue('6');
+  await expect(page.getByLabel('ROOM CAPACITY')).toHaveAttribute('data-value', '6');
   await page.reload();
   await page.getByRole('button', { name: 'Find a game', exact: true }).click();
   await expect(page.locator('.room-code > strong')).toBeVisible({ timeout: 20000 });
   await page.locator('.lobby-rules summary').click();
   await expect(page.getByLabel('STARTING CREDITS')).toHaveValue('2789');
-  await expect(page.getByLabel('ROOM CAPACITY')).toHaveValue('6');
+  await expect(page.getByLabel('ROOM CAPACITY')).toHaveAttribute('data-value', '6');
   await page.getByRole('button', { name: 'Save room rules & reset readiness' }).click();
   await expect(page.locator('.rule-draft-status')).toContainText('These rules are applied', {
     timeout: 20000,

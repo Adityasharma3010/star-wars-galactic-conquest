@@ -1,3 +1,4 @@
+import { selectChoice } from './helpers.js';
 import { test, expect } from '@playwright/test';
 import { createGame } from '../../src/game/engine/game.js';
 import { getCard } from '../../src/game/cards/decks.js';
@@ -39,7 +40,7 @@ test('personalized wide opening plays the original John Williams recording, skip
   await page.goto('/');
   await page.getByRole('button', { name: /Play locally/ }).click();
   await page.getByLabel('COMMANDER NAME').fill('Nova Pilot');
-  await page.getByLabel('ALLEGIANCE').selectOption('Jedi Order');
+  await selectChoice(page, 'ALLEGIANCE', 'Jedi Order');
   await page.getByRole('button', { name: 'Launch conquest' }).click();
   await expect(page.getByRole('dialog', { name: 'Opening crawl' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Roll dice', exact: true })).toHaveCount(0);
@@ -86,7 +87,7 @@ test('reduced-motion opening stays readable with a manual entry button on mobile
   await page.goto('/');
   await page.getByRole('button', { name: /Play locally/ }).click();
   await page.getByLabel('COMMANDER NAME').fill('Sky Pilot');
-  await page.getByLabel('ALLEGIANCE').selectOption('Rebel Alliance');
+  await selectChoice(page, 'ALLEGIANCE', 'Rebel Alliance');
   await page.getByRole('button', { name: 'Launch conquest' }).click();
   await expect(page.getByRole('button', { name: 'Enter the galaxy' })).toBeVisible({
     timeout: 10000,

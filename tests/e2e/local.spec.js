@@ -1,3 +1,4 @@
+import { selectChoice } from './helpers.js';
 import { test, expect } from '@playwright/test';
 import { createGame, transition } from '../../src/game/engine/game.js';
 import { seededRandom } from '../../src/game/engine/random.js';
@@ -100,7 +101,7 @@ test('auction bids, pass, final ownership and credits', async ({ page }) => {
   await page.getByRole('button', { name: 'Decline & open auction' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Place bid' }).click();
-  await page.getByLabel('BIDDING COMMANDER').selectOption('friend');
+  await selectChoice(page, 'BIDDING COMMANDER', 'friend');
   await page.getByRole('button', { name: 'Pass auction' }).click();
   await expect(page.getByText('The auction has concluded.', { exact: false })).toBeVisible();
   await page.getByLabel('Close dialog').click();

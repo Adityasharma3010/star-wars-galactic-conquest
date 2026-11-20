@@ -1,3 +1,4 @@
+import { selectChoice } from './helpers.js';
 import { test, expect } from '@playwright/test';
 test('a shared LAN room invitation joins with a fresh guest session', async ({ browser }) => {
   test.setTimeout(150000);
@@ -20,7 +21,7 @@ test('a shared LAN room invitation joins with a fresh guest session', async ({ b
   await expect(host.locator('.room-players')).toContainText('LAN Guest', { timeout: 15000 });
   await expect(guest.locator('.form-error')).toHaveCount(0);
   await host.getByRole('button', { name: 'Toggle ready' }).click();
-  await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');
+  await selectChoice(guest, 'YOUR ONLINE CHARACTER', 'vader');
   await guest.getByRole('button', { name: 'Toggle ready' }).click();
   await expect(host.getByRole('button', { name: 'Start match' })).toBeEnabled({ timeout: 15000 });
   await host.getByRole('button', { name: 'Start match' }).click();

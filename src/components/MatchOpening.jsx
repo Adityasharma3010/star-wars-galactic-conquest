@@ -53,7 +53,9 @@ export default function MatchOpening() {
       onKeyDown={(event) => {
         if (event.key === 'Escape') finishIntro();
         if (event.key === 'Tab') {
-          const buttons = [...root.current.querySelectorAll('button')];
+          const buttons = [
+            ...root.current.querySelectorAll('button:not([disabled]),a[href],iframe'),
+          ];
           if (event.shiftKey && document.activeElement === buttons[0]) {
             event.preventDefault();
             buttons.at(-1).focus();

@@ -16,6 +16,11 @@ export const useGameStore = create(
       intro: null,
       introducedGames: [],
       ruleDrafts: {},
+      musicPreferences: { source: 'builtin', selection: 'playlist', shuffle: false },
+      personalMusic: [],
+      updateMusicPreferences: (patch) =>
+        set((state) => ({ musicPreferences: { ...state.musicPreferences, ...patch } })),
+      setPersonalMusic: (personalMusic) => set({ personalMusic }),
       updateRuleDraft: (key, patch) =>
         set((state) => ({
           ruleDrafts: { ...state.ruleDrafts, [key]: { ...state.ruleDrafts[key], ...patch } },
@@ -42,6 +47,8 @@ export const useGameStore = create(
         effectsVolume: 0.8,
         ambientVolume: 0.25,
         musicVolume: 0.2,
+        matchMusic: true,
+        matchMusicVolume: 0.14,
         ambience: false,
         music: false,
         reducedMotion: false,
@@ -268,6 +275,8 @@ export const useGameStore = create(
         matchAway: s.matchAway,
         introducedGames: s.introducedGames,
         ruleDrafts: s.ruleDrafts,
+        musicPreferences: s.musicPreferences,
+        personalMusic: s.personalMusic,
       }),
     },
   ),

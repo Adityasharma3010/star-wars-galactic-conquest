@@ -1,3 +1,5 @@
+import { MusicSettings } from '../components/MatchMusic.jsx';
+import HoloSelect from '../components/HoloSelect.jsx';
 import { useEffect, useState } from 'react';
 import Social from './Social.jsx';
 import Victory from './MatchResults.jsx';
@@ -190,15 +192,15 @@ export function NewGame() {
             />
           </Field>
           <Field label="ALLEGIANCE">
-            <select value={faction} onChange={(e) => setFaction(e.target.value)}>
+            <HoloSelect value={faction} onChange={(e) => setFaction(e.target.value)}>
               {FACTIONS.map((f) => (
                 <option key={f}>{f}</option>
               ))}
-            </select>
+            </HoloSelect>
           </Field>
           <div className="field-row">
             <Field label="COMMANDERS">
-              <select
+              <HoloSelect
                 value={count}
                 onChange={(e) => {
                   setCount(+e.target.value);
@@ -210,27 +212,27 @@ export function NewGame() {
                     {n} players
                   </option>
                 ))}
-              </select>
+              </HoloSelect>
             </Field>
             {mode !== 'custom' && (
               <Field label="AI DIFFICULTY">
-                <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                <HoloSelect value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
                   {['easy', 'medium', 'hard', 'expert'].map((d) => (
                     <option key={d}>{d}</option>
                   ))}
-                </select>
+                </HoloSelect>
               </Field>
             )}
           </div>
           {mode !== 'solo' && (
             <Field label="HUMAN PLAYERS ON THIS DEVICE">
-              <select value={humans} onChange={(e) => setHumans(+e.target.value)}>
+              <HoloSelect value={humans} onChange={(e) => setHumans(+e.target.value)}>
                 {Array.from({ length: count }, (_, i) => (
                   <option key={i} value={i + 1}>
                     {i + 1} human{i ? 's' : ''} · {count - i - 1} AI
                   </option>
                 ))}
-              </select>
+              </HoloSelect>
             </Field>
           )}
           <div className="setup-summary">
@@ -478,7 +480,7 @@ export function Trade() {
         </span>
       </div>
       <Field label="TRADE PARTNER">
-        <select
+        <HoloSelect
           value={to}
           onChange={(e) => {
             setTo(e.target.value);
@@ -493,7 +495,7 @@ export function Trade() {
                 {p.name}
               </option>
             ))}
-        </select>
+        </HoloSelect>
       </Field>
       <div className="trade-grid">
         {selection(me, give, setGive, giveCards, setGiveCards)}
@@ -632,7 +634,7 @@ export function Auction() {
       </div>
       {!online && (
         <Field label="BIDDING COMMANDER">
-          <select value={bidder} onChange={(e) => setBidder(e.target.value)}>
+          <HoloSelect value={bidder} onChange={(e) => setBidder(e.target.value)}>
             {game.players
               .filter((p) => !p.ai && !p.bankrupt)
               .map((p) => (
@@ -640,7 +642,7 @@ export function Auction() {
                   {p.name}
                 </option>
               ))}
-          </select>
+          </HoloSelect>
         </Field>
       )}
       <Field label={`YOUR BID · AVAILABLE ◈ ${p?.credits || 0}`}>
@@ -752,7 +754,8 @@ export function Settings() {
   const { settings, updateSettings } = useGameStore();
   return (
     <div>
-      <h4>Audio & atmosphere</h4>
+      <MusicSettings />
+      <h4>Opening & game sounds</h4>
       <label className="toggle-row">
         <span>Opening crawl music</span>
         <input
@@ -811,15 +814,7 @@ export function Settings() {
           onChange={(e) => updateSettings({ ambientVolume: +e.target.value })}
         />
       </Field>
-      <label className="toggle-row">
-        <span>Atmospheric soundscape</span>
-        <input
-          type="checkbox"
-          checked={Boolean(settings.music)}
-          onChange={(e) => updateSettings({ music: e.target.checked })}
-        />
-      </label>
-      <Field label="MUSIC VOLUME">
+      <Field label="INTRO MUSIC VOLUME">
         <input
           type="range"
           min="0"

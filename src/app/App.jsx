@@ -1,3 +1,4 @@
+import MatchMusic from '../components/MatchMusic.jsx';
 import { Component, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -232,11 +233,22 @@ function GameApp() {
     if (new URLSearchParams(location.search).has('room')) open('rooms');
   }, [open]);
   useEffect(() => {
-    const apply = () => setAtmosphere(useGameStore.getState().settings);
+    const apply = () => {
+      const current = useGameStore.getState();
+      setAtmosphere({
+        ...current.settings,
+        ambience:
+          current.settings.ambience &&
+          current.playing &&
+          !current.intro &&
+          !current.matchAway &&
+          current.game?.phase !== 'finished',
+      });
+    };
     document.addEventListener('pointerdown', apply);
     apply();
     return () => document.removeEventListener('pointerdown', apply);
-  }, [settings]);
+  }, [settings, playing, intro, matchAway, game?.phase === 'finished']);
   useEffect(() => {
     if (online || !playing || !game) return;
     const timer = setInterval(() => {
@@ -353,6 +365,7 @@ function GameApp() {
                   <p>Explore iconic worlds. Build your empire. Rule the galaxy.</p>
                 </div>
                 <div className="mission-actions">
+                  <MatchMusic active={!matchAway && game.phase !== 'finished'} />
                   <span className="connection-badge">
                     {online ? (
                       matchAway ? (

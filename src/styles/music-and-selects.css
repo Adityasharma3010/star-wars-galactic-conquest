@@ -1,0 +1,277 @@
+.holo-select {
+  width: 100%;
+  min-width: 0;
+}
+.holo-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 43px;
+  padding: 11px 13px;
+  border: 1px solid #426078;
+  border-radius: 5px;
+  background: linear-gradient(120deg, #102337, #091521);
+  color: #d6e3ed;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+.holo-select-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.holo-select-trigger > svg {
+  flex: none;
+  color: #d8ba78;
+  transition: transform 0.18s;
+}
+.holo-select-trigger[aria-expanded='true'] {
+  border-color: #c9ae71;
+  box-shadow: 0 0 0 2px #d9b65c15;
+}
+.holo-select-trigger[aria-expanded='true'] > svg {
+  transform: rotate(180deg);
+}
+.holo-select-trigger:hover {
+  border-color: #6f9db4;
+}
+.holo-select-trigger:focus-visible {
+  outline: 2px solid #dcc183;
+  outline-offset: 2px;
+}
+.holo-select-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.holo-select-menu {
+  position: fixed;
+  z-index: 400;
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid #7596a8;
+  border-top: 2px solid #d4b774;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #142a3cfb, #091524fc);
+  box-shadow:
+    0 18px 55px #000b,
+    0 0 20px #69b6d210;
+  scrollbar-width: thin;
+  scrollbar-color: #476b82 #102031;
+  animation: holo-menu-reveal 0.16s ease-out;
+}
+.holo-select-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  min-height: 39px;
+  padding: 10px 11px;
+  border-left: 2px solid transparent;
+  border-radius: 3px;
+  color: #bbccd9;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.holo-select-option.active {
+  border-left-color: #8ad3e4;
+  background: #38627c55;
+  color: #edf6f9;
+}
+.holo-select-option.selected {
+  color: #e7ca8d;
+}
+.holo-select-option[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.rule-number .holo-select-trigger {
+  color: #e9ce94;
+}
+.activity-panel .holo-select-trigger {
+  font-size: 11px;
+  min-height: 34px;
+  padding: 7px 10px;
+}
+@keyframes holo-menu-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo-select-menu {
+    animation: none;
+  }
+  .holo-select-trigger,
+  .holo-select-trigger > svg {
+    transition: none;
+  }
+}
+.match-radio {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-right: auto;
+  padding: 4px 7px;
+  border: 1px solid #3e6177;
+  border-radius: 5px;
+  background: #0a1c2a;
+  min-width: 0;
+  position: relative;
+}
+.match-radio > button {
+  display: flex;
+  align-items: center;
+  padding: 7px;
+  color: #a9c9d8;
+}
+.match-radio .match-radio-title {
+  gap: 8px;
+  text-align: left;
+  min-width: 0;
+}
+.match-radio-title span {
+  display: block;
+  min-width: 0;
+}
+.match-radio-title small {
+  display: block;
+  font-size: 7px;
+  color: #a99c78;
+  letter-spacing: 1.4px;
+}
+.match-radio-title strong {
+  display: block;
+  font-weight: 500;
+  font-size: 10px;
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.music-playback-note {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 250px;
+  padding: 10px;
+  background: #122b3dec;
+  border: 1px solid #47677c;
+  font-size: 10px;
+  color: #d5c590;
+}
+.music-settings {
+  padding: 15px;
+  border: 1px solid #3d5d74;
+  border-radius: 7px;
+  background: linear-gradient(130deg, #152d4180, #0a1927);
+  margin-bottom: 22px;
+}
+.music-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #a7d8e4;
+}
+.music-settings .music-section-heading h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  color: #e2c78b;
+}
+.music-section-heading p,
+.music-helper {
+  font-size: 11px;
+  color: #9db5c7;
+  line-height: 1.7;
+}
+.music-helper {
+  margin: 9px 0;
+}
+.personal-music-box {
+  border: 1px dashed #5a788b;
+  border-radius: 5px;
+  background: #0e213370;
+  padding: 13px;
+  margin-top: 16px;
+}
+.personal-music-box > div > strong {
+  color: #d4c391;
+  font-size: 12px;
+}
+.personal-music-box > div > p {
+  color: #91a9bd;
+  font-size: 10px;
+  line-height: 1.7;
+  margin: 7px 0 12px;
+}
+.personal-music-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.personal-music-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid #344d61;
+  font-size: 11px;
+  color: #cad9e4;
+}
+.personal-music-row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.personal-music-row small {
+  display: block;
+  color: #7f9bb0;
+  margin-top: 4px;
+  font-size: 9px;
+}
+.music-credits {
+  color: #86a1b5;
+  font-size: 9px;
+  line-height: 1.7;
+  margin-top: 15px;
+}
+.music-credits a {
+  color: #b9cedb;
+  text-decoration: underline;
+}
+@media (max-width: 650px) {
+  .music-settings {
+    padding: 13px;
+  }
+  .music-settings .field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .match-radio-title strong {
+    max-width: 100px;
+  }
+  .bottom-toolbar {
+    flex-wrap: wrap;
+  }
+  .match-radio {
+    margin-right: 0;
+  }
+}

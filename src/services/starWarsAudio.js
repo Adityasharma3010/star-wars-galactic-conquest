@@ -78,10 +78,11 @@ export async function setAtmosphere(settings = {}) {
   try {
     const ctx = audioContext();
     if (!atmosphere) {
+      if (!settings.ambience || settings.mute) return;
       const clips = await buffers();
       if (atmosphere) return;
-      atmosphere = { ambient: ctx.createGain(), music: ctx.createGain() };
-      for (const channel of ['ambient', 'music']) {
+      atmosphere = { ambient: ctx.createGain() };
+      for (const channel of ['ambient']) {
         const source = ctx.createBufferSource();
         source.buffer = clips.saber;
         source.loop = true;
