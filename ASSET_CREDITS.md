@@ -32,7 +32,9 @@ Lucide supplies interface icons under its ISC license. React, Vite, Zustand, Tai
 
 Title/theme configuration, locations, characters, faction names, descriptions, imagery and audio references can be replaced without rewriting economic rules. An unrestricted public or commercial Star Wars release requires appropriate rights. A fully original theme can replace these universe references. The creator licenses above apply to those recordings, not to the Star Wars brand or official imagery.
 
-Original opening theme: **Main Title** by **John Williams and the London Symphony Orchestra**, from **Star Wars: A New Hope**, [official recording](https://www.youtube.com/watch?v=e9lapdvLSGw), provided to YouTube by Universal Music Group. Playback uses the visible official YouTube player and its controls. The soundtrack is streamed by YouTube; it is not copied into this repository. Playback is subject to YouTube availability and browser autoplay controls.
+Original opening theme: **Main Title** by **John Williams and the London Symphony Orchestra**, from **Star Wars: A New Hope**, [official recording](https://www.youtube.com/watch?v=e9lapdvLSGw), provided to YouTube by Universal Music Group. The soundtrack is streamed by YouTube; it is not copied into this repository. The owner requested hiding the intro player's panel. Playback is subject to YouTube availability and browser autoplay controls.
+
+Menu galaxy: actual Death Star and world imagery from the official Star Wars Databank, as listed above, with original CSS starfield and lighting effects. No third-party 3D models are included.
 
 ## Match background music
 

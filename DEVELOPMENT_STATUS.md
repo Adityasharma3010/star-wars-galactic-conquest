@@ -17,7 +17,9 @@ Updated 20 November 2026.
 
 ## Current update
 
-Fresh visits show an explicit local/online menu; played saves resume without restoring the old automatic bot preview. New matches have a skippable, personalized faction crawl with the original John Williams Main Title through its visible official YouTube player, a static reduced-motion view and no replay on resume. The movie-style crawl uses a wider 90% text plane, larger type, a corrected perspective origin and a slower 65-second sequence. Account/profile dialogs are compact and animated, with holographic loading states.
+Fresh visits show a cinematic menu with actual Death Star and world imagery from the official Star Wars Databank. Subtle image motion, a starfield, command navigation and holographic map controls give the menu its visual identity. React Router supplies the home page, `/maps/star-wars`, `/maps/default`, and `/match/:gameId`. Default is a coming-soon category only; Galactic Conquest remains the single playable map. Browser navigation and reloads preserve the explicit saved-game resume flow.
+
+New matches have a skippable, personalized faction crawl with the original John Williams Main Title, a static reduced-motion view and no replay on resume. The owner requested `display: none` on the theme player's aside. A Play theme control can appear if browser autoplay is blocked. The movie-style crawl uses a wide text plane and ends as its final line clears the horizon, with animation-end and timed fallbacks. Finishing or skipping destroys theme playback and enables the match. Account/profile dialogs are compact and animated, with holographic loading states. Commander count and AI difficulty share aligned labels and controls.
 
 Guests choose their callsign before joining. Profile names can be edited. Waiting-room identity changes reset readiness and cannot race a stale match-start roster. Mission briefings are interactive only for the recipient; other commanders receive informational transmissions. Debt and property financing follow the actual debtor.
 
@@ -25,14 +27,16 @@ Custom match rules have a dedicated editor with grouped economy, conquest, team 
 
 Prettier formats the supported project files, including SQL and TOML. VS Code workspace settings explicitly select Prettier for format-on-save. Vite excludes generated backend/cache files from its watcher, preventing the Windows EBUSY crash during backend synchronization.
 
-Holographic dropdowns replace native menus throughout setup, lobbies, trades, auctions and chat. Galactic radio has three creator-licensed ambient tracks, quiet default volume, smooth transitions, shuffle/playlist/single-song looping and visible match-header controls. Personal songs persist in browser IndexedDB; file bytes, names and music-source preferences do not go to Supabase or other players. Background music stops for the intro, the menu, a reserved seat and completed matches. The original intro player is reduced to a 202×200 video area; YouTube requires visible playback and prohibits hidden/background players (https://developers.google.com/youtube/terms/developer-policies).
+Holographic dropdowns replace native menus throughout setup, lobbies, trades, auctions and chat. Galactic radio has three creator-licensed ambient tracks, quiet default volume, smooth transitions, shuffle/playlist/single-song looping and visible match-header controls. Personal songs persist in browser IndexedDB; file bytes, names and music-source preferences do not go to Supabase or other players. Background music stops for the intro, the menu, a reserved seat and completed matches.
+
+[The event guide](FORCE_AND_GALACTIC_EVENTS.md) documents all 12 Force and 12 Galactic cards, exact credit changes, destinations, rent multipliers, repair examples, debt behavior and recipient-only briefings.
 
 ## Passed checks
 
 - **Current hosted verification passed on 20 November:** four browser scenarios on https://monopoly.adityasharma.site passed actual quiet music playback, track transitions, keyboard dropdown selection, pause/resume, personal-song persistence/privacy/deletion, intro separation, mobile menus, and the full independent-guest join/name/readiness/start/roll/chat/refresh flow. Original Main Title playback, the compact player, wide crawl, skip cleanup and resume also passed again. The runtime update is commit `76f82fb`, production deployment `dpl_9vGoq6LFq5zQTcUUfjbW7zaK7UCs`.
 
 - **32 browser scenarios passed across the full run and targeted retests.** These cover the existing gameplay/LAN/online/social/visual/reconnect cases, welcome/resume behavior, compact dialogs, animated/music and reduced-motion openings, mission/debt permissions, and persistent custom/room settings. The settings checks include multiple poll intervals, closing, page reload, exact launch values, explicit reset, remote save results and editing during an in-flight save.
-- **87 Vitest tests passed**, covering engine/AI/security/grace behavior, session restoration, personalized intros and paused dispatch, duplicate lobby attachments, mission recipients/observers, debt financing, unverified registration and cancellation of late-loading official players, native playback cleanup, mute and volume. The runner uses two workers to avoid oversubscribing the Windows development machine.
+- **90 Vitest tests passed**, covering engine/AI/security/grace behavior, session restoration, personalized intros and paused dispatch, automatic crawl completion and horizon detection, replacement of an active match without dismissing its new intro, duplicate lobby attachments, mission recipients/observers, debt financing, unverified registration and cancellation of late-loading official players, native playback cleanup, mute and volume. The runner uses two workers to avoid oversubscribing the Windows development machine.
 - **Four previous-production hosted browser runs passed on 19 November** on the public Vercel alias: fresh guest invite/start/roll, independent-session sync/chat/refresh, all 26 images with ownership/building markers and desktop/mobile overflow, and actual decoding/preview of all three installed audio recordings. These repeat selected checks from the 17-test suite against production.
 - Production Vite build passed. All application sources are JavaScript/JSX; schema/functions are SQL/JavaScript.
 - Actual remote inspection: 36/36 public tables use RLS, 80 public indexes, 39 public policies, 28 assets, 24 cards, six Realtime tables, four buckets and six approved migrations. The new private connection table has RLS and no client access.
@@ -40,6 +44,8 @@ Holographic dropdowns replace native menus throughout setup, lobbies, trades, au
 - Connection fixtures passed multiple live tabs, both grace periods, expiry, outsider rejection and a reconnect cancelling a pending automatic action. Both the original and connection security fixtures rolled back.
 
 The radio/selector checks verify actual media playback and low volume, a real transition near a song boundary, keyboard selection, pause/resume, local song persistence, absence of file data in outgoing requests, and no background playback during the intro.
+
+The latest menu/route browser checks passed hidden original-theme playback, actual automatic intro completion, reduced-motion entry, official image loading, category/deep-link reloads, desktop/tablet/mobile layouts, aligned setup fields, browser Back, saved-game recovery, both music flows and independent Supabase multiplayer. A guard race when replacing an active match was fixed and its personal-music scenario passed on retest. Screenshots were visually inspected. The 3D proposal was replaced with actual Databank imagery at the owner's request.
 
 ## Failures investigated and resolved
 

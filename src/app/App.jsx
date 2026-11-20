@@ -1,5 +1,14 @@
 import MatchMusic from '../components/MatchMusic.jsx';
-import { Component, useEffect, useState } from 'react';
+import { Component, useEffect, useState, useRef } from 'react';
+import {
+  Routes,
+  Route,
+  NavLink,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   Settings,
@@ -23,6 +32,7 @@ import { Emblem, TokenArt } from '../components/Art.jsx';
 import EventPresentation from '../components/EventPresentation.jsx';
 import Dialogs from '../pages/Dialogs.jsx';
 import WelcomeScreen from '../pages/WelcomeScreen.jsx';
+import MapSelection from '../pages/MapSelection.jsx';
 import MatchOpening from '../components/MatchOpening.jsx';
 import MissionTransmission from '../components/MissionTransmission.jsx';
 import { useGameStore } from '../stores/gameStore.js';
@@ -55,6 +65,9 @@ class ErrorBoundary extends Component {
   }
 }
 function GameApp() {
+  const route = useLocation();
+  const navigate = useNavigate();
+  const previousRoute = useRef({ path: route.pathname, gameId: null });
   const {
     game,
     online,
@@ -75,6 +88,32 @@ function GameApp() {
     intro,
   } = useGameStore();
   const [connected, setConnected] = useState(true);
+  useEffect(() => {
+    const gameId = playing && game ? game.id : null;
+    const previous = previousRoute.current;
+    previousRoute.current = { path: route.pathname, gameId };
+    if (gameId && gameId !== previous.gameId) {
+      navigate('/match/' + encodeURIComponent(gameId), {
+        replace: route.pathname.startsWith('/match/'),
+      });
+    } else if (
+      gameId &&
+      route.pathname !== previous.path &&
+      !route.pathname.startsWith('/match/')
+    ) {
+      returnHome();
+    } else if (!gameId && route.pathname.startsWith('/match/')) {
+      navigate('/', { replace: true });
+    }
+  }, [playing, game?.id, route.pathname, navigate, returnHome]);
+  useEffect(() => {
+    document.title = route.pathname.startsWith('/maps')
+      ? 'Choose a map · Galactic Conquest'
+      : playing
+        ? 'Command deck · Galactic Conquest'
+        : 'Star Wars · Galactic Conquest';
+    window.scrollTo({ top: 0 });
+  }, [route.pathname, playing]);
   useEffect(() => {
     if (!supabase) return;
     const originalProfile = useGameStore.getState().profile;
@@ -230,8 +269,8 @@ function GameApp() {
     };
   }, [online, game?.id, commit, matchAway, game?.phase === 'finished', playing]);
   useEffect(() => {
-    if (new URLSearchParams(location.search).has('room')) open('rooms');
-  }, [open]);
+    if (new URLSearchParams(route.search).has('room')) open('rooms');
+  }, [open, route.search]);
   useEffect(() => {
     const apply = () => {
       const current = useGameStore.getState();
@@ -306,7 +345,14 @@ function GameApp() {
       }}
     >
       <header className="app-header">
-        <button className="brand" onClick={returnHome} aria-label="Galactic Conquest main menu">
+        <button
+          className="brand"
+          onClick={() => {
+            returnHome();
+            navigate('/');
+          }}
+          aria-label="Galactic Conquest main menu"
+        >
           <Emblem size={39} />
           <span>
             <b>STAR WARS</b>
@@ -314,10 +360,24 @@ function GameApp() {
           </span>
           <small>FAN EDITION</small>
         </button>
-        <nav>
-          <button className="selected" onClick={() => useGameStore.getState().close()}>
-            {playing ? 'Command deck' : 'Main menu'}
-          </button>
+        <nav aria-label="Main navigation">
+          <NavLink to="/" end className={({ isActive }) => (isActive ? 'selected' : '')}>
+            Main menu
+          </NavLink>
+          <NavLink
+            to="/maps/star-wars"
+            className={route.pathname.startsWith('/maps') ? 'selected' : ''}
+          >
+            Choose maps
+          </NavLink>
+          {playing && game && (
+            <NavLink
+              to={'/match/' + encodeURIComponent(game.id)}
+              className={({ isActive }) => (isActive ? 'selected' : '')}
+            >
+              Command deck
+            </NavLink>
+          )}
           <button onClick={() => open('rooms')}>Find a game</button>
           <button onClick={() => open('rules')}>
             How to play <CircleHelp size={13} />
@@ -349,97 +409,114 @@ function GameApp() {
         </div>
       </header>
       <main>
-        {playing && game ? (
-          intro ? (
-            <MatchOpening />
-          ) : (
-            <>
-              <div className="mission-heading">
-                <div>
-                  <div className="breadcrumb">
-                    COMMAND DECK <span>/</span> {online ? 'MULTIPLAYER' : 'SOLO & LOCAL PLAY'}
-                  </div>
-                  <h2>
-                    Your conquest begins here<span>.</span>
-                  </h2>
-                  <p>Explore iconic worlds. Build your empire. Rule the galaxy.</p>
-                </div>
-                <div className="mission-actions">
-                  <MatchMusic active={!matchAway && game.phase !== 'finished'} />
-                  <span className="connection-badge">
-                    {online ? (
-                      matchAway ? (
-                        <>
-                          <Radio size={12} /> SEAT RESERVED
-                        </>
-                      ) : connected ? (
-                        <>
-                          <i className="status-dot" /> ONLINE
-                        </>
-                      ) : (
-                        <>
-                          <WifiOff size={12} /> RECONNECTING
-                        </>
-                      )
-                    ) : (
-                      <>
-                        <i className="status-dot" /> SOLO & AI READY
-                      </>
-                    )}
-                  </span>
-                  {online && !matchAway && game.phase !== 'finished' && (
-                    <button className="button leave-match-button" onClick={exit}>
-                      <LogOut size={14} /> Leave match
-                    </button>
-                  )}
-                  <button className="button new-game-button" onClick={() => open('newGame')}>
-                    <Plus size={15} /> New game
-                  </button>
-                </div>
-              </div>
-              {online && matchAway && (
-                <div className="match-away-banner">
-                  <Radio size={24} />
-                  <div>
-                    <strong>Your squadron is waiting.</strong>
-                    <p>Your seat is reserved for two minutes. Return to resume control.</p>
-                  </div>
-                  <button
-                    className="button gold-button"
-                    disabled={useGameStore.getState().busy}
-                    onClick={resume}
-                  >
-                    Rejoin match <ArrowRight size={16} />
-                  </button>
-                </div>
-              )}
-              <div className="game-layout">
-                <PlayersPanel />
-                <Board />
-                <aside className="right-panel">
-                  <PropertyPanel />
-                  <ActivityPanel />
-                </aside>
-              </div>
-              <div className="bottom-toolbar">
-                <button onClick={() => open('trade')}>
-                  <ArrowRightLeft size={15} /> Trade
-                </button>
-                <button onClick={() => open('deed')}>
-                  <Globe2 size={15} /> Property deed
-                </button>
-                <button onClick={() => open('rules')}>
-                  <CircleHelp size={15} /> Rules
-                </button>
-                <button onClick={() => open('newGame')}>
-                  <Plus size={15} /> New game
-                </button>
-              </div>
-            </>
-          )
-        ) : (
-          <WelcomeScreen onResumeOnline={resume} />
-        )}
+        <Routes>
+          <Route path="/" element={<WelcomeScreen onResumeOnline={resume} />} />
+          <Route path="/maps" element={<Navigate to="/maps/star-wars" replace />} />
+          <Route path="/maps/:category" element={<MapSelection />} />
+          <Route
+            path="/match/:gameId"
+            element={
+              <MatchRoute>
+                {playing && game ? (
+                  intro ? (
+                    <MatchOpening />
+                  ) : (
+                    <>
+                      <div className="mission-heading">
+                        <div>
+                          <div className="breadcrumb">
+                            COMMAND DECK <span>/</span>{' '}
+                            {online ? 'MULTIPLAYER' : 'SOLO & LOCAL PLAY'}
+                          </div>
+                          <h2>
+                            Your conquest begins here<span>.</span>
+                          </h2>
+                          <p>Explore iconic worlds. Build your empire. Rule the galaxy.</p>
+                        </div>
+                        <div className="mission-actions">
+                          <MatchMusic active={!matchAway && game.phase !== 'finished'} />
+                          <span className="connection-badge">
+                            {online ? (
+                              matchAway ? (
+                                <>
+                                  <Radio size={12} /> SEAT RESERVED
+                                </>
+                              ) : connected ? (
+                                <>
+                                  <i className="status-dot" /> ONLINE
+                                </>
+                              ) : (
+                                <>
+                                  <WifiOff size={12} /> RECONNECTING
+                                </>
+                              )
+                            ) : (
+                              <>
+                                <i className="status-dot" /> SOLO & AI READY
+                              </>
+                            )}
+                          </span>
+                          {online && !matchAway && game.phase !== 'finished' && (
+                            <button className="button leave-match-button" onClick={exit}>
+                              <LogOut size={14} /> Leave match
+                            </button>
+                          )}
+                          <button
+                            className="button new-game-button"
+                            onClick={() => open('newGame')}
+                          >
+                            <Plus size={15} /> New game
+                          </button>
+                        </div>
+                      </div>
+                      {online && matchAway && (
+                        <div className="match-away-banner">
+                          <Radio size={24} />
+                          <div>
+                            <strong>Your squadron is waiting.</strong>
+                            <p>Your seat is reserved for two minutes. Return to resume control.</p>
+                          </div>
+                          <button
+                            className="button gold-button"
+                            disabled={useGameStore.getState().busy}
+                            onClick={resume}
+                          >
+                            Rejoin match <ArrowRight size={16} />
+                          </button>
+                        </div>
+                      )}
+                      <div className="game-layout">
+                        <PlayersPanel />
+                        <Board />
+                        <aside className="right-panel">
+                          <PropertyPanel />
+                          <ActivityPanel />
+                        </aside>
+                      </div>
+                      <div className="bottom-toolbar">
+                        <button onClick={() => open('trade')}>
+                          <ArrowRightLeft size={15} /> Trade
+                        </button>
+                        <button onClick={() => open('deed')}>
+                          <Globe2 size={15} /> Property deed
+                        </button>
+                        <button onClick={() => open('rules')}>
+                          <CircleHelp size={15} /> Rules
+                        </button>
+                        <button onClick={() => open('newGame')}>
+                          <Plus size={15} /> New game
+                        </button>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <Navigate to="/" replace />
+                )}
+              </MatchRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
       <footer>
         <span>
@@ -484,4 +561,13 @@ export default function App() {
       <GameApp />
     </ErrorBoundary>
   );
+}
+
+function MatchRoute({ children }) {
+  const { gameId } = useParams();
+  const game = useGameStore((state) => state.game);
+  const playing = useGameStore((state) => state.playing);
+  if (playing && game && game.id !== gameId)
+    return <Navigate to={'/match/' + encodeURIComponent(game.id)} replace />;
+  return children;
 }

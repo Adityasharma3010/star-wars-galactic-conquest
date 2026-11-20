@@ -1,24 +1,36 @@
-import { ArrowRight, Globe2, Dices, Shield, Radio, Play, BookOpen } from 'lucide-react';
+import {
+  ArrowRight,
+  Globe2,
+  Dices,
+  Shield,
+  Radio,
+  Play,
+  BookOpen,
+  Map,
+  Crosshair,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore.js';
-import { BattleStation, PlanetArt } from '../components/Art.jsx';
-import { Starfighter } from '../components/EventPresentation.jsx';
+import { PlanetArt, Emblem } from '../components/Art.jsx';
+import GalaxyBackdrop from '../components/GalaxyBackdrop.jsx';
 import { BOARD } from '../game/rules/data.js';
 
 export default function WelcomeScreen({ onResumeOnline }) {
   const { game, online, open, resumeSaved, busy } = useGameStore();
   return (
     <section className="welcome-menu" aria-labelledby="welcome-title">
+      <GalaxyBackdrop />
+      <div className="welcome-command-status">
+        <span>
+          <i /> GALACTIC COMMAND ONLINE
+        </span>
+        <span>SECTOR 01 / OUTER RIM</span>
+      </div>
       <div className="welcome-hero">
-        <div className="welcome-hero-art" aria-hidden="true">
-          <div className="welcome-orbit" />
-          <div className="welcome-station">
-            <BattleStation />
-          </div>
-          <Starfighter className="welcome-starfighter" />
-          <span className="welcome-sector">OUTER RIM / AGE OF REBELLION</span>
-        </div>
         <div className="welcome-intro">
-          <span className="eyebrow gold">STAR WARS / GALACTIC CONQUEST</span>
+          <span className="welcome-edition">
+            <Emblem size={20} /> A STAR WARS STRATEGY EXPERIENCE
+          </span>
           <h1 id="welcome-title">
             THE GALAXY
             <br />
@@ -29,6 +41,21 @@ export default function WelcomeScreen({ onResumeOnline }) {
             <br />
             Choose your squadron and begin your conquest.
           </p>
+        </div>
+        <div className="welcome-theater">
+          <div className="welcome-target" aria-hidden="true">
+            <Crosshair size={40} />
+            <span>DS-01 / BATTLE STATION</span>
+            <i />
+          </div>
+          <Link to="/maps/star-wars" className="welcome-map-link">
+            <Map size={21} />
+            <span>
+              <small>ACTIVE MAP / STAR WARS</small>
+              <strong>Galactic Conquest</strong>
+            </span>
+            <ArrowRight size={20} />
+          </Link>
           <div className="welcome-worlds">
             {[1, 11, 21].map((id) => (
               <div key={id}>
@@ -37,67 +64,79 @@ export default function WelcomeScreen({ onResumeOnline }) {
               </div>
             ))}
           </div>
+          <span className="welcome-theater-note">22 WORLDS / 40 SECTORS / ONE DESTINY</span>
         </div>
-      </div>
-      {game && (
-        <div className="welcome-resume">
-          <Radio size={25} />
-          <div>
-            <span className="eyebrow gold">
-              {game.phase === 'finished' ? 'YOUR LAST CONQUEST' : 'YOUR SAVED CONQUEST'}
-            </span>
-            <strong>
-              {online
-                ? 'Online squadron'
-                : game.players.filter((p) => !p.ai).length > 1
-                  ? 'Pass & play'
-                  : 'Solo conquest'}
-              <small>
-                Round {game.round} · {game.players.length} commanders
-              </small>
-            </strong>
+        <div className="welcome-command-menu">
+          {game && (
+            <div className="welcome-resume">
+              <Radio size={25} />
+              <div>
+                <span className="eyebrow gold">
+                  {game.phase === 'finished' ? 'YOUR LAST CONQUEST' : 'YOUR SAVED CONQUEST'}
+                </span>
+                <strong>
+                  {online
+                    ? 'Online squadron'
+                    : game.players.filter((p) => !p.ai).length > 1
+                      ? 'Pass & play'
+                      : 'Solo conquest'}
+                  <small>
+                    Round {game.round} · {game.players.length} commanders
+                  </small>
+                </strong>
+              </div>
+              <button
+                className="button gold-button"
+                disabled={busy}
+                onClick={online ? onResumeOnline : resumeSaved}
+              >
+                {busy
+                  ? 'Reconnecting…'
+                  : game.phase === 'finished'
+                    ? 'View results'
+                    : 'Resume saved game'}
+                <Play size={15} />
+              </button>
+            </div>
+          )}
+          <div className="welcome-choices">
+            <button
+              className="welcome-choice local-choice"
+              disabled={busy}
+              onClick={() => open('newGame')}
+            >
+              <Dices size={29} />
+              <span>
+                <small>01 / BEGIN A CONQUEST</small>
+                <strong>Play locally</strong>
+                <p>Challenge AI commanders or share one device with friends.</p>
+              </span>
+              <ArrowRight size={22} />
+            </button>
+            <button
+              className="welcome-choice online-choice"
+              disabled={busy}
+              onClick={() => open('rooms')}
+            >
+              <Globe2 size={29} />
+              <span>
+                <small>02 / ASSEMBLE YOUR SQUADRON</small>
+                <strong>Online multiplayer</strong>
+                <p>Create a room, join an open conquest, or use an invite code.</p>
+              </span>
+              <ArrowRight size={22} />
+            </button>
+            <Link to="/maps/star-wars" className="welcome-choice map-choice">
+              <Map size={29} />
+              <span>
+                <small>03 / CHART A NEW COURSE</small>
+                <strong>Choose maps</strong>
+                <p>Explore Star Wars worlds and upcoming classic boards.</p>
+              </span>
+              <ArrowRight size={22} />
+            </Link>
           </div>
-          <button
-            className="button gold-button"
-            disabled={busy}
-            onClick={online ? onResumeOnline : resumeSaved}
-          >
-            {busy
-              ? 'Reconnecting…'
-              : game.phase === 'finished'
-                ? 'View results'
-                : 'Resume saved game'}
-            <Play size={15} />
-          </button>
         </div>
-      )}
-      <div className="welcome-choices">
-        <button
-          className="welcome-choice local-choice"
-          disabled={busy}
-          onClick={() => open('newGame')}
-        >
-          <Dices size={29} />
-          <span>
-            <small>YOUR GALAXY. YOUR RULES.</small>
-            <strong>Play locally</strong>
-            <p>Challenge AI commanders or share one device with friends.</p>
-          </span>
-          <ArrowRight size={22} />
-        </button>
-        <button
-          className="welcome-choice online-choice"
-          disabled={busy}
-          onClick={() => open('rooms')}
-        >
-          <Globe2 size={29} />
-          <span>
-            <small>ASSEMBLE YOUR SQUADRON</small>
-            <strong>Online multiplayer</strong>
-            <p>Create a room, join an open conquest, or use an invite code.</p>
-          </span>
-          <ArrowRight size={22} />
-        </button>
       </div>
       <div className="welcome-footer">
         <span>

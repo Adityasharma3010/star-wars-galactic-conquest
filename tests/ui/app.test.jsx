@@ -1,11 +1,15 @@
 import React from 'react';
-import { beforeAll, beforeEach, afterEach, describe, it, expect } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { beforeAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
+import { render as renderView, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../../src/app/App.jsx';
 import { useGameStore } from '../../src/stores/gameStore.js';
+vi.mock('../../src/components/GalaxyBackdrop.jsx', () => ({ default: () => <div /> }));
 beforeAll(() => {
+  window.scrollTo = () => {};
   window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
 });
+const render = (view) => renderView(<MemoryRouter>{view}</MemoryRouter>);
 beforeEach(() => {
   useGameStore.setState({
     intro: null,
@@ -82,5 +86,22 @@ describe('command deck', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Resume saved game' }));
     await waitFor(() => expect(screen.getByTestId('game-board')).toBeVisible());
     expect(useGameStore.getState().game).toBe(game);
+  });
+  it('keeps the new intro active when replacing a match from its command deck', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Play locally/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Launch conquest' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /Skip intro/ })).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: /Skip intro/ }));
+    await waitFor(() => expect(screen.getByTestId('game-board')).toBeVisible());
+    const oldId = useGameStore.getState().game.id;
+    fireEvent.click(screen.getAllByRole('button', { name: 'New game', exact: true })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Launch conquest' }));
+    await waitFor(() =>
+      expect(screen.getByRole('dialog', { name: 'Opening crawl' })).toBeVisible(),
+    );
+    expect(useGameStore.getState().game.id).not.toBe(oldId);
+    expect(useGameStore.getState().playing).toBe(true);
+    expect(useGameStore.getState().intro).not.toBeNull();
   });
 });

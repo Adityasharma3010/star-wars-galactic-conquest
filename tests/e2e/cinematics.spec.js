@@ -30,7 +30,7 @@ test('account and profile dialogs fit desktop/mobile and retain usable callsign 
   expect(errors).toEqual([]);
 });
 
-test('personalized wide opening plays the original John Williams recording, skips cleanly, and does not replay', async ({
+test('personalized wide opening plays the original theme with a hidden player, skips cleanly, and does not replay', async ({
   page,
 }) => {
   test.setTimeout(90000);
@@ -52,16 +52,14 @@ test('personalized wide opening plays the original John Williams recording, skip
   expect(
     await page.locator('.opening-crawl').evaluate((el) => getComputedStyle(el).animationName),
   ).toBe('opening-crawl');
-  const theme = page.getByRole('complementary', { name: 'Original Star Wars theme' });
-  await expect(theme.locator('iframe')).toBeVisible({ timeout: 20000 });
+  const theme = page.locator('.original-theme-panel');
+  await expect(theme.locator('iframe')).toBeAttached({ timeout: 20000 });
+  await expect(theme).toBeHidden();
   await expect(theme).not.toHaveAttribute('data-playback', 'loading', { timeout: 20000 });
-  const play = theme.getByRole('button', { name: 'Play theme', exact: true });
+  const play = page.locator('.original-theme-retry');
   if (await play.count()) await play.click();
   await expect(theme).toHaveAttribute('data-playback', 'playing', { timeout: 30000 });
   await expect(theme.locator('iframe')).toHaveAttribute('src', /e9lapdvLSGw/);
-  const dimensions = await theme.locator('iframe').boundingBox();
-  expect(dimensions.width).toBeGreaterThanOrEqual(200);
-  expect(dimensions.height).toBeGreaterThanOrEqual(200);
   const crawlSize = await page
     .locator('.opening-crawl')
     .evaluate((el) => ({ width: el.clientWidth, font: parseFloat(getComputedStyle(el).fontSize) }));

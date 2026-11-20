@@ -53,7 +53,8 @@ it('uses the original recording, respects mute/volume, and destroys playback on 
   expect(player.playVideo).toHaveBeenCalled();
   expect(player.setVolume).toHaveBeenLastCalledWith(50);
   act(() => options.events.onStateChange({ data: 1 }));
-  expect(screen.getByText('Main Title · playing')).toBeVisible();
+  expect(screen.getByText('Main Title · playing')).toBeInTheDocument();
+  expect(document.querySelector('aside.original-theme-panel')).not.toBeVisible();
   view.rerender(<OriginalTheme playing audible={false} volume={0.2} />);
   expect(player.mute).toHaveBeenCalled();
   expect(player.setVolume).toHaveBeenLastCalledWith(20);

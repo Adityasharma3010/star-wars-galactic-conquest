@@ -34,7 +34,9 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 
 ## Play and customize
 
-- Opening screen: choose local or online play; saved local games resume explicitly. New matches have a skippable crawl featuring commander names and chosen factions with the original John Williams Main Title through its official YouTube player.
+- Opening screen: cinematic official Star Wars Databank imagery with a starfield, subtle scene motion and reduced-motion support. Choose local or online play; saved local games resume explicitly.
+- Map picker: React Router pages at `/maps/star-wars` and `/maps/default`. Galactic Conquest is the playable Star Wars map; Default is a coming-soon category for classic boards and separate classic effects, with no Star Wars intro. No additional map is included yet.
+- New matches use `/match/:gameId` and have a skippable crawl featuring commander names and chosen factions. The original Main Title streams through its YouTube player, whose panel is hidden at the owner's request. The match starts automatically when the final story line clears the horizon, and intro playback is destroyed. Browser autoplay restrictions can show a Play theme control.
 - Dropdowns: holographic lists with mouse/touch selection, arrow/Home/End/Enter keys, type-ahead, and Escape dismissal.
 - Custom settings: grouped controls, retained local/room drafts and an explicit Reset rules action. Room rules apply only on Save; background updates preserve edits.
 - New game: character, allegiance, 2–8 commanders, human/AI slots, difficulty and classic/quick/teams/custom rules.
@@ -43,7 +45,7 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 - Profile: cloud statistics/history, friends, invitations, rankings and device cosmetics.
 - Comms: match/team/global messages, mute, block and report.
 - Settings: included saber/blaster/droid effects, separate intro/ambient/background volumes, and reduced motion. Galactic radio plays a quiet three-track ambient playlist with smooth transitions; choose ordered/shuffled playlists or loop a song. Add up to five personal songs (50 MB each), saved only on this browser, for match background music.
-- Force/Galactic Events: animated holocron/saber and starfighter transmission briefings, with readable effects and a Continue mission action for the recipient. Other commanders receive a noninteractive transmission.
+- Force/Galactic Events: animated holocron/saber and starfighter transmission briefings, with readable effects and a Continue mission action for the recipient. Other commanders receive a noninteractive transmission. See [the complete 24-event guide](FORCE_AND_GALACTIC_EVENTS.md).
 - Online timing: ordinary turns are untimed; network loss grants five minutes after heartbeat detection, leaving grants two minutes. Rejoin returns control. Auction bids reset their closing countdown to ten seconds.
 
 ## Validate

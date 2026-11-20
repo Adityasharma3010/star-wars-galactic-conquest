@@ -15,12 +15,28 @@ export default function MatchOpening() {
   const root = useRef();
   const crawl = useRef();
   useLayoutEffect(() => {
-    if (phase === 'crawl' && crawl.current && !reduced)
-      crawl.current.style.setProperty(
-        '--crawl-end',
-        -(crawl.current.offsetHeight + window.innerHeight * 1.8) + 'px',
-      );
-  }, [phase, reduced]);
+    if (phase !== 'crawl' || !crawl.current || reduced) return;
+    const text = crawl.current;
+    text.style.setProperty('--crawl-end', -(text.offsetHeight + window.innerHeight * 1.8) + 'px');
+    const check = () => {
+      const last = text.lastElementChild;
+      if (
+        document.visibilityState !== 'hidden' &&
+        last?.getBoundingClientRect().bottom <= Math.max(40, window.innerHeight * 0.12)
+      )
+        finishIntro();
+    };
+    // End when the final line clears the visible horizon, rather than waiting on an unrelated timer.
+    const timer = setInterval(check, 150);
+    const duration = parseFloat(getComputedStyle(text).animationDuration) || 59.5;
+    const fallback = setTimeout(finishIntro, duration * 1000 + 500);
+    window.addEventListener('resize', check);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(fallback);
+      window.removeEventListener('resize', check);
+    };
+  }, [phase, reduced, finishIntro]);
   useEffect(() => {
     if (!intro) return;
     const previous = document.body.style.overflow;
@@ -38,7 +54,6 @@ export default function MatchOpening() {
       setTimeout(() => setPhase('title'), 2900),
       setTimeout(() => setPhase('crawl'), 5100),
     ];
-    if (!reduced) timers.push(setTimeout(finishIntro, 65000));
     return () => timers.forEach(clearTimeout);
   }, [intro?.gameId, reduced, finishIntro]);
   if (!intro || !game) return null;
@@ -55,7 +70,7 @@ export default function MatchOpening() {
         if (event.key === 'Tab') {
           const buttons = [
             ...root.current.querySelectorAll('button:not([disabled]),a[href],iframe'),
-          ];
+          ].filter((element) => element.getClientRects().length > 0);
           if (event.shiftKey && document.activeElement === buttons[0]) {
             event.preventDefault();
             buttons.at(-1).focus();
@@ -102,7 +117,18 @@ export default function MatchOpening() {
       )}
       {phase === 'crawl' && (
         <div className="opening-perspective">
-          <div ref={crawl} className="opening-crawl">
+          <div
+            ref={crawl}
+            className="opening-crawl"
+            onAnimationEnd={(event) => {
+              if (
+                !reduced &&
+                event.target === event.currentTarget &&
+                event.animationName === 'opening-crawl'
+              )
+                finishIntro();
+            }}
+          >
             <span className="opening-episode">EPISODE I</span>
             <h2>{story.title}</h2>
             {story.paragraphs.map((paragraph, index) => (
