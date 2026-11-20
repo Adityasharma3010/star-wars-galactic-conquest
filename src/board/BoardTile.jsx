@@ -64,6 +64,8 @@ export default function BoardTile({
       onClick={() => onSelect(tile.id)}
     >
       {tile.color && <span className="group-stripe" />}
+      <span className="tile-trace" aria-hidden="true" />
+      <span className="tile-pulse" aria-hidden="true" />
       <span className="tile-number">{String(tile.id).padStart(2, '0')}</span>
       {tile.type === 'property' || tile.type === 'transport' ? (
         <PlanetArt tile={tile} />

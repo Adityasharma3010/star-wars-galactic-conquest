@@ -15,13 +15,15 @@ export function tokenCoordinates(position, index = 0) {
   };
 }
 export default function PlayerToken({ player, index, position }) {
+  const active = useGameStore((state) => state.game.players[state.game.turn].id === player.id);
   return (
     <div
-      className="player-token"
+      className={'player-token ' + (active ? 'active-token' : '')}
       data-token={player.id}
       aria-label={`${player.name} at space ${player.position}`}
       style={{ ...tokenCoordinates(position ?? player.position, index), color: player.color }}
     >
+      <span className="token-aura" aria-hidden="true" />
       <TokenArt
         character={
           tokensFor(useGameStore.getState().game).find((c) => c.id === player.character) || {

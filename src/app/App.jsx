@@ -1,4 +1,5 @@
 import MatchMusic from '../components/MatchMusic.jsx';
+import useMotionPreference from '../hooks/useMotionPreference.js';
 import { Component, useEffect, useState, useRef } from 'react';
 import {
   Routes,
@@ -344,10 +345,12 @@ function GameApp() {
     }
   };
   const character = [...CHARACTERS, ...tokensFor('india')].find((c) => c.id === profile.character);
+  const motionReduced = useMotionPreference();
   return (
     <div
       className={
         'app-shell ' +
+        (motionReduced ? ' motion-reduced ' : ' motion-enabled ') +
         (settings.reducedMotion ? 'reduce-motion' : '') +
         (!playing ? ' welcome-screen' : '') +
         (classic ? ' classic-theme' : '')

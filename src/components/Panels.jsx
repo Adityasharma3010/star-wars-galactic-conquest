@@ -1,4 +1,5 @@
 import { mapText } from '../services/mapText.js';
+import AnimatedBalance from './AnimatedBalance.jsx';
 import { boardFor, groupsFor, tokensFor, isClassic } from '../game/maps.js';
 import HoloSelect from './HoloSelect.jsx';
 import { useEffect, useState } from 'react';
@@ -132,7 +133,9 @@ export function PlayersPanel() {
               <div className="commander-stats">
                 <span>
                   <Coins size={12} />
-                  <strong>{p.credits.toLocaleString()}</strong>
+                  <strong>
+                    <AnimatedBalance value={p.credits} />
+                  </strong>
                   <small>{mapText('CR')}</small>
                 </span>
                 <span>

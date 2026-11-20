@@ -102,6 +102,9 @@ test('reduced-motion opening stays readable with a manual entry button on mobile
 test('AI missions are informational and another commander debt does not open human financing', async ({
   page,
 }) => {
+  // Keep the AI from resolving its debt before the observer assertions finish.
+  await page.clock.install({ time: new Date('2026-11-20T12:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-11-20T12:00:01Z'));
   const game = createGame([
     { id: 'you', name: 'Nova', character: 'luke', ai: false },
     { id: 'ai', name: 'Vader', character: 'vader', ai: true },
@@ -121,11 +124,13 @@ test('AI missions are informational and another commander debt does not open hum
         id: 'observer',
         card: getCard('f1'),
         player: game.players[1],
-        readyAt: Date.now() + 1500,
+        readyAt: 0,
       },
     },
   );
   await page.goto('/');
+  await expect(page.getByTestId('game-board')).toBeVisible();
+  await page.clock.runFor(1);
   await expect(page.locator('.mission-transmission')).toContainText('The mission belongs to Vader');
   await expect(page.getByRole('button', { name: 'Continue mission' })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);

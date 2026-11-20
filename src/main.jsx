@@ -9,6 +9,7 @@ import './styles/welcome.css';
 import './styles/cinematics.css';
 import './styles/galaxy-menu.css';
 import './styles/classic.css';
+import './styles/experience.css';
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

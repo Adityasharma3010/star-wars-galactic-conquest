@@ -4,36 +4,85 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { motion } from 'motion/react';
 import { Dices, ArrowRight, ChevronRight, LockKeyhole, Sparkles } from 'lucide-react';
-import { BOARD } from '../game/rules/data.js';
-import { boardFor, isClassic } from '../game/maps.js';
-import { BattleStation, Emblem } from '../components/Art.jsx';
+import { boardFor, isClassic, tokensFor } from '../game/maps.js';
+import { TokenArt, Emblem } from '../components/Art.jsx';
 import BoardTile from './BoardTile.jsx';
 import PlayerToken, { tokenCoordinates } from './PlayerToken.jsx';
 import Dice from './Dice.jsx';
 import OwnershipLegend from './OwnershipLegend.jsx';
 import ConnectionGrace from '../components/ConnectionGrace.jsx';
+import BoardScene from './BoardScene.jsx';
+import usePointerLight from '../hooks/usePointerLight.js';
+import useMotionPreference from '../hooks/useMotionPreference.js';
 import { useGameStore } from '../stores/gameStore.js';
 gsap.registerPlugin(useGSAP);
 export default function Board() {
-  const {
-      game,
-      selected,
-      select,
-      dispatch,
-      settings,
-      busy,
-      online,
-      onlinePlayer,
-      open,
-      matchAway,
-    } = useGameStore(),
+  const { game, selected, select, dispatch, busy, online, onlinePlayer, open, matchAway } =
+      useGameStore(),
     p = game.players[game.turn],
     ref = useRef(),
-    [visual, setVisual] = useState({}),
     [moving, setMoving] = useState(false),
     [expanded, setExpanded] = useState(false);
-  const reduced =
-    settings.reducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = useMotionPreference();
+  usePointerLight(ref, reduced);
+  const previous = useRef(game);
+  useGSAP(
+    () => {
+      if (reduced) return;
+      gsap.from('.board-tile', {
+        opacity: 0,
+        y: 9,
+        scale: 0.94,
+        duration: 0.55,
+        stagger: 0.012,
+        ease: 'power2.out',
+      });
+      gsap.from('.turn-console', {
+        opacity: 0,
+        y: 18,
+        duration: 0.65,
+        delay: 0.25,
+        ease: 'power3.out',
+      });
+    },
+    { scope: ref, dependencies: [game.id, reduced], revertOnUpdate: true },
+  );
+  useGSAP(
+    () => {
+      const before = previous.current;
+      previous.current = game;
+      if (reduced || before.id !== game.id || before.version === game.version) return;
+      for (const [id, owned] of Object.entries(game.ownership)) {
+        const old = before.ownership[id];
+        const tile = ref.current.querySelector(`[data-tile="${id}"]`);
+        if (!tile) continue;
+        if (old?.owner !== owned.owner) {
+          gsap.fromTo(
+            tile.querySelector('.tile-pulse'),
+            { opacity: 1, scale: 0.85 },
+            { opacity: 0, scale: 1.22, duration: 1.2, ease: 'power2.out' },
+          );
+          gsap.from(tile.querySelector('.owner-sigil'), {
+            scale: 0,
+            rotate: -30,
+            duration: 0.55,
+            ease: 'back.out(2)',
+          });
+        }
+        if (old?.level !== owned.level && owned.level)
+          gsap.from(tile.querySelector('.development'), {
+            y: -14,
+            scale: 0.6,
+            opacity: 0,
+            duration: 0.65,
+            ease: 'back.out(1.5)',
+          });
+      }
+      if (before.turn !== game.turn)
+        gsap.from('.turn-banner', { opacity: 0, x: -12, duration: 0.45, ease: 'power2.out' });
+    },
+    { scope: ref, dependencies: [game.version], revertOnUpdate: true },
+  );
   const BOARD = boardFor(game),
     classic = isClassic(game),
     spectator = online && !onlinePlayer;
@@ -64,12 +113,24 @@ export default function Board() {
           },
           (_, i) => (m.from + (m.back ? -(i + 1) : i + 1) + 80) % 40,
         );
-      for (const position of path)
-        tl.to(el, {
-          ...tokenCoordinates(position, index),
-          duration: 0.26,
-          ease: 'power1.inOut',
-        });
+      let stepAt = tl.duration();
+      for (const position of path) {
+        tl.to(
+          el,
+          {
+            ...tokenCoordinates(position, index),
+            duration: 0.26,
+            ease: 'power1.inOut',
+          },
+          stepAt,
+        );
+        const trace = ref.current.querySelector(`[data-tile="${position}"] .tile-trace`);
+        if (trace) {
+          tl.fromTo(trace, { opacity: 0 }, { opacity: 1, duration: 0.12 }, stepAt);
+          tl.to(trace, { opacity: 0, duration: 0.45 }, stepAt + 0.12);
+        }
+        stepAt += 0.26;
+      }
       const destination = game.players.find((p) => p.id === m.player)?.position;
       if (path.at(-1) !== destination)
         tl.to(el, {
@@ -88,7 +149,7 @@ export default function Board() {
     },
     {
       scope: ref,
-      dependencies: [game.version],
+      dependencies: [game.version, reduced],
       revertOnUpdate: true,
     },
   );
@@ -147,7 +208,12 @@ export default function Board() {
           </button>
         </span>
       </div>
-      <div className="galactic-board" ref={ref} data-testid="game-board">
+      <div
+        className="galactic-board"
+        ref={ref}
+        data-testid="game-board"
+        style={{ '--active-player': p.color }}
+      >
         {BOARD.map((t) => (
           <BoardTile
             key={t.id}
@@ -161,16 +227,16 @@ export default function Board() {
           />
         ))}
         <div className="board-center">
-          <div className="center-coordinate">
-            OUTER RIM // SECTOR 07.24{' '}
-            <span>
-              HOLOMAP ACTIVE <i />
-            </span>
-          </div>
-          <div className="star-field" />
-          <div className="orbit-line orbit-one" />
-          <div className="orbit-line orbit-two" />
-          {!classic && <BattleStation />}
+          <BoardScene
+            game={game}
+            selected={selected}
+            onSelect={select}
+            onInspect={(id) => {
+              select(id);
+              open('deed');
+            }}
+            reduced={reduced}
+          />
           <div className="center-title">
             <span className="eyebrow gold">{mapText('THE GALAXY IS YOURS')}</span>
             <h1>
@@ -192,7 +258,10 @@ export default function Board() {
                   color: p.color,
                 }}
               >
-                <Emblem size={22} />
+                <TokenArt
+                  character={tokensFor(game).find((token) => token.id === p.character)}
+                  size={24}
+                />
               </span>
               <div>
                 <span className="eyebrow">
@@ -301,7 +370,7 @@ export default function Board() {
         {game.players
           .filter((p) => !p.bankrupt)
           .map((p, i) => (
-            <PlayerToken key={p.id} player={p} index={i} position={visual[p.id]} />
+            <PlayerToken key={p.id} player={p} index={i} />
           ))}
       </div>
       <OwnershipLegend />

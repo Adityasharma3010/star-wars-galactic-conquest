@@ -24,6 +24,8 @@ Primary references: [Star Wars Databank](https://www.starwars.com/databank) and 
 
 ## Libraries, icons and fonts
 
+The refreshed interface adds original CSS lighting, orbit guides, particle points, route trails and property-claim effects with GSAP and Motion. The board's live sector scene and larger menu cards reuse the already attributed Databank and India photographs. No additional movie footage, 3D model or generated planet image is bundled.
+
 The animated event scenes use original SVG starfighter, Jedi/Imperial crest interpretations, saber beams and CSS hologram/radar/star-trail effects. They are code compositions made for this fan interface, not movie clips or extracted footage. Galactic scene backgrounds reuse the Databank references listed above.
 
 Lucide supplies interface icons under its ISC license. React, Vite, Zustand, Tailwind and Motion retain their upstream licenses. GSAP and its React integration are used under their upstream distribution terms. Fonts use system-installed families; no downloaded font asset is bundled. See package metadata and installed dependency licenses for the exact third-party terms.

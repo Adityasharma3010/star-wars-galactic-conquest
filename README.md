@@ -34,6 +34,8 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 
 ## Play and customize
 
+The visual experience now has layered lighting, moving stars and orbital signals, animated menu entrances, richer image-backed map cards and a photographic command table. The board's sector controls browse each color group and open the selected deed. Token movement lights the route, property claims pulse, buildings appear with a short reveal, and cash changes count smoothly with a signed change indicator. India uses warmer materials and city imagery. The operating system and in-game reduced-motion setting stop ambient effects and shorten transitions.
+
 - Opening screen: cinematic official Star Wars Databank imagery with a starfield, subtle scene motion and reduced-motion support. Choose local or online play; saved local games resume explicitly.
 - Map picker: React Router pages at `/maps/star-wars` and `/maps/default`. Galactic Conquest is the Star Wars map. India is playable under Default with 22 real capital-city photos, rupees, eight colored pill tokens, houses/hotels, Chance/Community Chest and classic audio. Default maps have no factions or Star Wars opening. See [India map details](INDIA_MAP.md).
 - New matches use `/match/:gameId`. Star Wars matches have a skippable crawl featuring commander names and chosen factions. The original Main Title streams through its YouTube player, whose panel is hidden at the owner's request. The match starts automatically when the final story line clears the horizon, and intro playback is destroyed. Browser autoplay restrictions can show a Play theme control. India starts directly on the board.

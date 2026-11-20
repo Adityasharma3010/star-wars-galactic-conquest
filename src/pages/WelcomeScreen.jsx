@@ -14,13 +14,51 @@ import { useGameStore } from '../stores/gameStore.js';
 import { PlanetArt, Emblem } from '../components/Art.jsx';
 import GalaxyBackdrop from '../components/GalaxyBackdrop.jsx';
 import { boardFor, mapFor } from '../game/maps.js';
+import { useRef } from 'react';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+import useMotionPreference from '../hooks/useMotionPreference.js';
+import usePointerLight from '../hooks/usePointerLight.js';
 
 export default function WelcomeScreen({ onResumeOnline }) {
+  const ref = useRef();
+  const reduced = useMotionPreference();
+  usePointerLight(ref, reduced);
+  useGSAP(
+    () => {
+      if (reduced) return;
+      gsap.from('.welcome-edition, .welcome-intro h1, .welcome-intro p', {
+        opacity: 0,
+        y: 22,
+        duration: 0.8,
+        stagger: 0.12,
+        ease: 'power3.out',
+      });
+      gsap.from('.welcome-choice', {
+        opacity: 0,
+        x: -22,
+        duration: 0.7,
+        stagger: 0.1,
+        delay: 0.25,
+        ease: 'power3.out',
+      });
+      gsap.from('.welcome-worlds > div', {
+        opacity: 0,
+        y: 28,
+        rotate: 3,
+        duration: 0.9,
+        stagger: 0.12,
+        delay: 0.3,
+        ease: 'power3.out',
+      });
+    },
+    { scope: ref, dependencies: [reduced], revertOnUpdate: true },
+  );
   const map = mapFor(useGameStore((state) => state.selectedMap)),
     BOARD = boardFor(map.id);
   const { game, online, open, resumeSaved, busy } = useGameStore();
   return (
-    <section className="welcome-menu" aria-labelledby="welcome-title">
+    <section className="welcome-menu" aria-labelledby="welcome-title" ref={ref}>
       <GalaxyBackdrop />
       <div className="welcome-command-status">
         <span>
@@ -46,6 +84,8 @@ export default function WelcomeScreen({ onResumeOnline }) {
         </div>
         <div className="welcome-theater">
           <div className="welcome-target" aria-hidden="true">
+            <div className="welcome-target-orbit orbit-a" />
+            <div className="welcome-target-orbit orbit-b" />
             <Crosshair size={40} />
             <span>DS-01 / BATTLE STATION</span>
             <i />
@@ -67,6 +107,13 @@ export default function WelcomeScreen({ onResumeOnline }) {
             ))}
           </div>
           <span className="welcome-theater-note">22 WORLDS / 40 SECTORS / ONE DESTINY</span>
+          <div className="welcome-mission-note">
+            <span>EVERY MOVE MATTERS</span>
+            <p>
+              A daring deal. An unexpected alliance.
+              <br />A galaxy waiting for your next move.
+            </p>
+          </div>
         </div>
         <div className="welcome-command-menu">
           {game && (
