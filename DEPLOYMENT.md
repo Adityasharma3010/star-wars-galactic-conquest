@@ -4,7 +4,11 @@ Updated 20 November 2026. **Public game: https://monopoly.adityasharma.site** (t
 
 ## Current production update
 
-The current game code was published from commit `2500efd` to deployment `dpl_7YjsoB25ggpEY1WYUZ3La3VyECVq` on 20 November. Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. The original John Williams Main Title played through the official YouTube player on the custom domain; the wide crawl, skip cleanup and resume passed. Two independent guests also passed room joining, callsign edits, readiness, start, dice, chat and refresh recovery. Hosted welcome and custom-setting persistence checks passed against the preceding `68275eb` release.
+The current game code was published from commit `76f82fb` to deployment `dpl_9vGoq6LFq5zQTcUUfjbW7zaK7UCs` on 20 November. Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. This release adds holographic dropdowns, a quiet three-track Galactic radio playlist with fades and looping, and personal background songs stored only in the browser. The original intro player is compact and remains visible as required by YouTube.
+
+Four hosted browser scenarios passed on the custom domain: actual music playback at low volume, a transition near the end of a track, keyboard dropdown selection, pause/resume, personal-song persistence and deletion, no personal-song data in outgoing requests, no match music during the intro, and mobile dropdown placement. Two independent Supabase guests also passed room joining, callsign edits, readiness, start, dice, chat and refresh recovery. Original John Williams Main Title playback, the compact player, wide crawl, skip cleanup and resume passed again on this release.
+
+Hosted welcome and custom-setting persistence checks passed against `68275eb`.
 
 ## Previous production verification (19 November)
 
