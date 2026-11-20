@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "supabase": "supabase",
-    "backend:sync": "node scripts/sync-engine.js"
+    "backend:sync": "node scripts/sync-engine.js",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -30,8 +32,12 @@
     "@testing-library/react": "^16.3.0",
     "@vitejs/plugin-react": "^5.0.3",
     "jsdom": "^26.1.0",
+    "prettier": "^3.10.1",
+    "prettier-plugin-sql": "^0.20.0",
+    "prettier-plugin-toml": "^4.1.0",
+    "sql-formatter": "^15.9.1",
     "supabase": "^2.45.5",
     "vite": "^7.1.5",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }

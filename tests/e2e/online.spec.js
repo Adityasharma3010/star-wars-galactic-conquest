@@ -1,16 +1,94 @@
-import { test,expect } from '@playwright/test';
-test('real Supabase room, independent guests, readiness, sync, turn enforcement, chat and refresh',async({browser})=>{
- test.setTimeout(150000);
- const a=await browser.newContext({viewport:{width:1440,height:900}}),b=await browser.newContext({viewport:{width:1440,height:900}}),host=await a.newPage(),guest=await b.newPage();
- const errors=[];host.on('pageerror',e=>errors.push(e.message));guest.on('pageerror',e=>errors.push(e.message));
- async function signIn(page,name){await page.goto('/');await page.locator('.profile-button').click();await page.getByLabel('CALLSIGN').fill(name);await page.getByRole('button',{name:'Save profile'}).click();await page.getByRole('button',{name:'Online account'}).click();await page.getByRole('button',{name:'Continue as online guest'}).click();await expect(page.getByText('Guest session started.')).toBeVisible({timeout:20000});await page.getByLabel('Close dialog').click();}
- await signIn(host,'Pilot One');await signIn(guest,'Pilot Two');
- await host.getByRole('button',{name:'Find a game',exact:true}).click();await host.getByLabel('ROOM NAME').fill('QA independent-session conquest');await host.getByRole('button',{name:'Create room',exact:true}).click();await expect(host.locator('.room-code>strong')).toBeVisible({timeout:20000});const code=(await host.locator('.room-code>strong').innerText()).trim();
- await guest.getByRole('button',{name:'Find a game',exact:true}).click();await guest.getByLabel('Room invite code').fill(code);await guest.getByRole('button',{name:'Join room',exact:true}).click();await expect(guest.locator('.room-code>strong')).toHaveText(code,{timeout:20000});
- await host.getByRole('button',{name:'Toggle ready'}).click();await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');await guest.getByRole('button',{name:'Toggle ready'}).click();await expect(host.locator('.room-players')).toContainText('Pilot Two',{timeout:15000});await expect(host.locator('.room-players')).toContainText('READY',{timeout:15000});
- await host.getByRole('button',{name:'Start match'}).click();await expect(host.getByRole('dialog')).toHaveCount(0,{timeout:20000});await expect(guest.getByRole('dialog')).toHaveCount(0,{timeout:20000});await expect(host.locator('.connection-badge')).toContainText('ONLINE');
- await expect(guest.getByRole('button',{name:'Roll dice',exact:true})).toBeDisabled();await host.getByRole('button',{name:'Roll dice',exact:true}).click();await expect(host.getByRole('button',{name:'Travelling…'})).toHaveCount(0,{timeout:12000});const hostLog=await host.locator('.log-entry').first().innerText();await expect(guest.locator('.activity-content')).toContainText(hostLog.split('ROUND')[0].trim(),{timeout:20000});
- const buy=host.getByRole('button',{name:/^Acquire /});if(await buy.count()){await buy.click();await expect(host.getByRole('button',{name:'End turn',exact:true}).or(host.getByRole('button',{name:'Continue · doubles',exact:true}))).toBeVisible();}
- await host.getByRole('button',{name:/^Comms/}).click();await host.getByLabel('Chat message').fill('Transmission received, squadron.');await host.getByRole('button',{name:'Send message'}).click();await guest.getByRole('button',{name:/^Comms/}).click();await expect(guest.getByText('Transmission received, squadron.',{exact:true})).toBeVisible({timeout:20000});
- await guest.reload();await expect(guest.locator('.connection-badge')).toContainText('ONLINE',{timeout:20000});await expect(guest.locator('[data-token]')).toHaveCount(4);await host.screenshot({path:'test-results/online-host.png',fullPage:true});await guest.screenshot({path:'test-results/online-guest.png',fullPage:true});expect(errors).toEqual([]);await a.close();await b.close();
+import { test, expect } from '@playwright/test';
+test('real Supabase room, independent guests, readiness, sync, turn enforcement, chat and refresh', async ({
+  browser,
+}) => {
+  test.setTimeout(300000);
+  const a = await browser.newContext({ viewport: { width: 1440, height: 900 } }),
+    b = await browser.newContext({ viewport: { width: 1440, height: 900 } }),
+    host = await a.newPage(),
+    guest = await b.newPage();
+  const errors = [];
+  host.on('pageerror', (e) => errors.push(e.message));
+  guest.on('pageerror', (e) => errors.push(e.message));
+  async function signIn(page, name) {
+    await page.goto('/');
+    await page.locator('.profile-button').click();
+    await page.getByRole('button', { name: 'Online account' }).click();
+    await page.getByLabel('GUEST CALLSIGN').fill(name);
+    await page.getByRole('button', { name: 'Continue as online guest' }).click();
+    await expect(page.getByText('Guest session started.')).toBeVisible({ timeout: 20000 });
+    await page.getByLabel('Close dialog').click();
+  }
+  await signIn(host, 'Pilot One');
+  await signIn(guest, 'Pilot Two');
+  await host.getByRole('button', { name: 'Find a game', exact: true }).click();
+  await host.getByLabel('ROOM NAME').fill('QA independent-session conquest');
+  await host.getByRole('button', { name: 'Create room', exact: true }).click();
+  await expect(host.locator('.room-code>strong')).toBeVisible({ timeout: 20000 });
+  const code = (await host.locator('.room-code>strong').innerText()).trim();
+  await guest.getByRole('button', { name: 'Find a game', exact: true }).click();
+  await guest.getByLabel('Room invite code').fill(code);
+  await guest.getByRole('button', { name: 'Join room', exact: true }).click();
+  await expect(guest.locator('.room-code>strong')).toHaveText(code, { timeout: 20000 });
+  await host.getByRole('button', { name: 'Toggle ready' }).click();
+  await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');
+  await guest.getByLabel('YOUR ONLINE ALLEGIANCE').selectOption('Jedi Order');
+  await guest.getByRole('button', { name: 'Toggle ready' }).click();
+  await guest.getByLabel('YOUR CALLSIGN').fill('Pilot Two Renamed');
+  await expect(guest.getByRole('button', { name: 'Toggle ready' })).toBeDisabled();
+  await guest.getByRole('button', { name: 'Save callsign' }).click();
+  await expect(
+    guest.locator('.room-players > div').filter({ hasText: 'Pilot Two Renamed' }),
+  ).toContainText('NOT READY');
+  await guest.getByRole('button', { name: 'Toggle ready' }).click();
+  await expect(host.locator('.room-players')).toContainText('Pilot Two', { timeout: 15000 });
+  await expect(host.locator('.room-players')).toContainText('READY', { timeout: 15000 });
+  await host.getByRole('button', { name: 'Start match' }).click();
+  await expect(host.locator('.opening-roster')).toContainText('Pilot Two Renamed');
+  await expect(host.locator('.opening-roster')).toContainText('Jedi Order');
+  await host.getByRole('button', { name: /Skip intro/ }).click();
+  await guest.getByRole('button', { name: /Skip intro/ }).click();
+  await expect(host.getByRole('dialog')).toHaveCount(0, { timeout: 20000 });
+  await expect(guest.getByRole('dialog')).toHaveCount(0, { timeout: 20000 });
+  await expect(host.locator('.connection-badge')).toContainText('ONLINE');
+  await expect(guest.getByRole('button', { name: 'Roll dice', exact: true })).toBeDisabled();
+  await host.getByRole('button', { name: 'Roll dice', exact: true }).click();
+  await expect(host.getByRole('button', { name: 'Travelling…' })).toHaveCount(0, {
+    timeout: 12000,
+  });
+  const card = await host.evaluate(
+    () => JSON.parse(localStorage.getItem('galactic-conquest-v1')).state.game.lastCard,
+  );
+  if (card) {
+    await host.getByRole('button', { name: 'Continue mission' }).click();
+    await expect(guest.getByRole('button', { name: 'Continue mission' })).toHaveCount(0);
+  }
+  const hostLog = await host.locator('.log-entry').first().innerText();
+  await expect(guest.locator('.activity-content')).toContainText(hostLog.split('ROUND')[0].trim(), {
+    timeout: 20000,
+  });
+  const buy = host.getByRole('button', { name: /^Acquire / });
+  if (await buy.count()) {
+    await buy.click();
+    await expect(
+      host
+        .getByRole('button', { name: 'End turn', exact: true })
+        .or(host.getByRole('button', { name: 'Continue · doubles', exact: true })),
+    ).toBeVisible();
+  }
+  await host.getByRole('button', { name: /^Comms/ }).click();
+  await host.getByLabel('Chat message').fill('Transmission received, squadron.');
+  await host.getByRole('button', { name: 'Send message' }).click();
+  await guest.getByRole('button', { name: /^Comms/ }).click();
+  await expect(guest.getByText('Transmission received, squadron.', { exact: true })).toBeVisible({
+    timeout: 20000,
+  });
+  await guest.reload();
+  await expect(guest.locator('.connection-badge')).toContainText('ONLINE', { timeout: 20000 });
+  await expect(guest.locator('[data-token]')).toHaveCount(4);
+  await host.screenshot({ path: 'test-results/online-host.png', fullPage: true });
+  await guest.screenshot({ path: 'test-results/online-guest.png', fullPage: true });
+  expect(errors).toEqual([]);
+  await a.close();
+  await b.close();
 });

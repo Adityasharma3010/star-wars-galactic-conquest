@@ -1,15 +1,268 @@
-import { useId,useState,useEffect } from 'react';
+import { useId, useState, useEffect } from 'react';
 import { REFERENCE_IMAGES } from '../assets/referenceImages.js';
-export function Emblem({size=36,className=''}){return <svg className={className} width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="25" stroke="currentColor" strokeWidth="1.5"/><circle cx="32" cy="32" r="19" stroke="currentColor" strokeWidth="1"/><path d="M32 9v13m0 20v13M9 32h13m20 0h13M15 15l10 10m14 14l10 10M15 49l10-10m14-14l10-10" stroke="currentColor" strokeWidth="3"/><path d="m32 24 7 8-7 8-7-8z" fill="currentColor"/></svg>;}
-export function TokenArt({character,size=40}){const symbol=character?.symbol||'saber';return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-label={`${character?.name||'Commander'} abstract token`}>
-  <circle cx="32" cy="32" r="29" fill="currentColor" opacity=".07"/><circle cx="32" cy="32" r="27" stroke="currentColor" opacity=".4"/>
-  {symbol==='saber'?<><path d="m21 43 22-22" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/><path d="m16 49 8-8m-5-5 9 9" stroke="currentColor" strokeWidth="3"/><path d="m34 16 2-5m13 19 5-2" stroke="currentColor" opacity=".5"/></>:symbol==='helmet'?<><path d="M17 45V29c0-20 30-20 30 0v16l-8-5-7 5-7-5z" fill="currentColor" opacity=".2" stroke="currentColor" strokeWidth="1.5"/><path d="M22 28h20l-10 6v11m-10-5 5-4m15 4-5-4" stroke="currentColor" strokeWidth="2"/></>:symbol==='droid'?<><path d="M20 26a12 12 0 0 1 24 0v19H20z" stroke="currentColor" strokeWidth="2"/><path d="M20 26h24M17 33v15m30-15v15M26 33h12v7H26z" stroke="currentColor" strokeWidth="2"/><circle cx="32" cy="21" r="2" fill="currentColor"/></>:symbol==='ship'?<><path d="m32 12 10 26 11 11-21-7-21 7 11-11z" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity=".15"/><path d="M32 22v20m-5 6 5 5 5-5" stroke="currentColor"/></>:symbol==='bolt'?<path d="m38 12-18 24h12l-6 16 19-24H33z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth="2"/>:symbol==='shield'?<><path d="M17 19h30v15c0 10-15 18-15 18s-15-8-15-18z" stroke="currentColor" strokeWidth="2"/><path d="m22 28 20 12m-20-5 18 10" stroke="currentColor"/></>:<path d="m32 12 6 13 15 3-11 10 2 15-12-7-12 7 2-15-11-10 15-3z" fill="currentColor" fillOpacity=".15" stroke="currentColor" strokeWidth="2"/>}
-  </svg>;}
-export function PlanetArt({tile,large=false}){const uid=useId().replaceAll(':',''),[failed,setFailed]=useState(false);const vehicle={5:'millennium-falcon',15:'star-destroyer',25:'blockade-runner',35:'executor'};const photo=REFERENCE_IMAGES[tile?.name]||REFERENCE_IMAGES[vehicle[tile?.id]];useEffect(()=>setFailed(false),[photo?.image]);if(photo&&!failed)return <img className={'planet-art real-art '+(large?'large':'')} src={photo.image+(photo.image.includes('?')?'&':'?')+'width='+(large?'900':'320')} alt={'Star Wars Databank: '+tile.name} title={'© Lucasfilm Ltd. · '+tile.name} decoding="async" referrerPolicy="no-referrer" onError={()=>setFailed(true)}/>;const color=tile?.planetColor||'#7c9eaf';return <svg className={`planet-art ${large?'large':''}`} viewBox="0 0 240 150" role="img" aria-label={`Original illustration of ${tile?.name||'a planet'}`}>
-  <defs><radialGradient id={`p${uid}`} cx="30%" cy="26%"><stop stopColor={color} offset="0"/><stop stopColor={color} offset=".3"/><stop stopColor="#283746" offset=".75"/><stop stopColor="#080e17" offset="1"/></radialGradient><radialGradient id={`g${uid}`}><stop stopColor={color} stopOpacity=".3"/><stop offset="1" stopColor={color} stopOpacity="0"/></radialGradient><clipPath id={`c${uid}`}><circle cx="126" cy="85" r="60"/></clipPath><filter id={`n${uid}`}><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="4" seed={tile?.id||1}/><feColorMatrix type="saturate" values="0"/><feComposite in2="SourceGraphic" operator="in"/><feBlend in="SourceGraphic" mode="soft-light"/></filter></defs>
-  <circle cx="126" cy="85" r="90" fill={`url(#g${uid})`}/><g fill="#ccd8eb" opacity=".5"><circle cx="23" cy="39" r=".7"/><circle cx="213" cy="29" r="1"/><circle cx="45" cy="113" r="1"/><circle cx="203" cy="104" r=".6"/></g>
-  {tile?.name==='Tatooine'&&<><circle cx="32" cy="41" r="11" fill="#eac890" opacity=".7"/><circle cx="53" cy="37" r="7" fill="#dca27c" opacity=".5"/></>}
-  <circle cx="126" cy="85" r="60" fill={`url(#p${uid})`} filter={`url(#n${uid})`}/><g clipPath={`url(#c${uid})`} fill="none" stroke={color} opacity=".22"><path d="M51 58q60-25 150 11M44 88q90-27 156 2M40 106q100-20 152 14M66 39q60 12 110 5" strokeWidth="6"/><path d="M80 28q-30 50 45 130m11-147q-10 80 52 120" strokeWidth="2"/></g><circle cx="126" cy="85" r="60" fill="none" stroke={color} opacity=".35" strokeWidth="1"/>
-  {(tile?.name==='Geonosis'||tile?.name==='Bespin')&&<ellipse cx="126" cy="88" rx="85" ry="20" transform="rotate(-20 126 88)" stroke={color} strokeWidth="3" opacity=".45" fill="none"/>}
-  </svg>;}
-export function BattleStation(){const uid=useId().replaceAll(':','');if(REFERENCE_IMAGES['death-star'])return <img className="battle-station real-battle-station" src={REFERENCE_IMAGES['death-star'].image+'&width=1000'} alt="Death Star · official Star Wars Databank reference" decoding="async" referrerPolicy="no-referrer"/>;return <svg className="battle-station" viewBox="0 0 600 340" aria-label="Original orbital battle station illustration" role="img"><defs><radialGradient id={`s${uid}`} cx="27%" cy="20%"><stop stopColor="#b1bcc3"/><stop offset=".35" stopColor="#59646d"/><stop offset=".7" stopColor="#1c2631"/><stop offset="1" stopColor="#080e16"/></radialGradient><clipPath id={`clip${uid}`}><circle cx="340" cy="165" r="122"/></clipPath><radialGradient id={`a${uid}`}><stop stopColor="#628ba3" stopOpacity=".3"/><stop offset="1" stopColor="#628ba3" stopOpacity="0"/></radialGradient></defs><ellipse cx="340" cy="165" rx="200" ry="170" fill={`url(#a${uid})`}/><circle cx="340" cy="165" r="122" fill={`url(#s${uid})`}/><g clipPath={`url(#clip${uid})`} fill="none" stroke="#8c9ca7" opacity=".25">{Array.from({length:23},(_,i)=><path key={i} d={`M190 ${52+i*10}h290`} strokeWidth={i%4===0?2:.6}/>)}{Array.from({length:20},(_,i)=><path key={i} d={`M${235+i*12} 25v275`} strokeWidth={i%3===0?1.4:.5}/>)}<ellipse cx="340" cy="165" rx="60" ry="122"/><ellipse cx="340" cy="165" rx="100" ry="122"/></g><path d="M218 171h244" stroke="#060c14" strokeWidth="7"/><path d="M222 167h236" stroke="#8796a0" opacity=".3"/><ellipse cx="291" cy="102" rx="32" ry="29" fill="#25333d" stroke="#80909b" strokeWidth="2" transform="rotate(-28 291 102)"/><ellipse cx="290" cy="101" rx="24" ry="21" fill="#101d28" stroke="#5a6e7b"/><path d="m273 91 27 18m-23-1 24-12" stroke="#647a8a" opacity=".5"/><circle cx="290" cy="102" r="5" fill="#85b3b5" opacity=".45"/><circle cx="340" cy="165" r="122" fill="none" stroke="#7f949f" strokeOpacity=".3"/><path d="m83 259 50-11 22 4-22 6z" fill="#a4bbc9" opacity=".7"/><path d="m102 247 17 13m0-16 12 14" stroke="#a4bbc9" opacity=".5"/><path d="m425 310 29-6 13 3-13 3z" fill="#7893a8"/><path d="M100 253 12 273" stroke="#b2a991" strokeOpacity=".13"/></svg>;}
+export function Emblem({ size = 36, className = '' }) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="32" cy="32" r="25" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="32" cy="32" r="19" stroke="currentColor" strokeWidth="1" />
+      <path
+        d="M32 9v13m0 20v13M9 32h13m20 0h13M15 15l10 10m14 14l10 10M15 49l10-10m14-14l10-10"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <path d="m32 24 7 8-7 8-7-8z" fill="currentColor" />
+    </svg>
+  );
+}
+export function TokenArt({ character, size = 40 }) {
+  const symbol = character?.symbol || 'saber';
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-label={`${character?.name || 'Commander'} abstract token`}
+    >
+      <circle cx="32" cy="32" r="29" fill="currentColor" opacity=".07" />
+      <circle cx="32" cy="32" r="27" stroke="currentColor" opacity=".4" />
+      {symbol === 'saber' ? (
+        <>
+          <path d="m21 43 22-22" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <path d="m16 49 8-8m-5-5 9 9" stroke="currentColor" strokeWidth="3" />
+          <path d="m34 16 2-5m13 19 5-2" stroke="currentColor" opacity=".5" />
+        </>
+      ) : symbol === 'helmet' ? (
+        <>
+          <path
+            d="M17 45V29c0-20 30-20 30 0v16l-8-5-7 5-7-5z"
+            fill="currentColor"
+            opacity=".2"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path d="M22 28h20l-10 6v11m-10-5 5-4m15 4-5-4" stroke="currentColor" strokeWidth="2" />
+        </>
+      ) : symbol === 'droid' ? (
+        <>
+          <path d="M20 26a12 12 0 0 1 24 0v19H20z" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M20 26h24M17 33v15m30-15v15M26 33h12v7H26z"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <circle cx="32" cy="21" r="2" fill="currentColor" />
+        </>
+      ) : symbol === 'ship' ? (
+        <>
+          <path
+            d="m32 12 10 26 11 11-21-7-21 7 11-11z"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill="currentColor"
+            fillOpacity=".15"
+          />
+          <path d="M32 22v20m-5 6 5 5 5-5" stroke="currentColor" />
+        </>
+      ) : symbol === 'bolt' ? (
+        <path
+          d="m38 12-18 24h12l-6 16 19-24H33z"
+          fill="currentColor"
+          fillOpacity=".2"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+      ) : symbol === 'shield' ? (
+        <>
+          <path
+            d="M17 19h30v15c0 10-15 18-15 18s-15-8-15-18z"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path d="m22 28 20 12m-20-5 18 10" stroke="currentColor" />
+        </>
+      ) : (
+        <path
+          d="m32 12 6 13 15 3-11 10 2 15-12-7-12 7 2-15-11-10 15-3z"
+          fill="currentColor"
+          fillOpacity=".15"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+      )}
+    </svg>
+  );
+}
+export function PlanetArt({ tile, large = false }) {
+  const uid = useId().replaceAll(':', ''),
+    [failed, setFailed] = useState(false);
+  const vehicle = {
+    5: 'millennium-falcon',
+    15: 'star-destroyer',
+    25: 'blockade-runner',
+    35: 'executor',
+  };
+  const photo = REFERENCE_IMAGES[tile?.name] || REFERENCE_IMAGES[vehicle[tile?.id]];
+  useEffect(() => setFailed(false), [photo?.image]);
+  if (photo && !failed)
+    return (
+      <img
+        className={'planet-art real-art ' + (large ? 'large' : '')}
+        src={
+          photo.image + (photo.image.includes('?') ? '&' : '?') + 'width=' + (large ? '900' : '320')
+        }
+        alt={'Star Wars Databank: ' + tile.name}
+        title={'© Lucasfilm Ltd. · ' + tile.name}
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    );
+  const color = tile?.planetColor || '#7c9eaf';
+  return (
+    <svg
+      className={`planet-art ${large ? 'large' : ''}`}
+      viewBox="0 0 240 150"
+      role="img"
+      aria-label={`Original illustration of ${tile?.name || 'a planet'}`}
+    >
+      <defs>
+        <radialGradient id={`p${uid}`} cx="30%" cy="26%">
+          <stop stopColor={color} offset="0" />
+          <stop stopColor={color} offset=".3" />
+          <stop stopColor="#283746" offset=".75" />
+          <stop stopColor="#080e17" offset="1" />
+        </radialGradient>
+        <radialGradient id={`g${uid}`}>
+          <stop stopColor={color} stopOpacity=".3" />
+          <stop offset="1" stopColor={color} stopOpacity="0" />
+        </radialGradient>
+        <clipPath id={`c${uid}`}>
+          <circle cx="126" cy="85" r="60" />
+        </clipPath>
+        <filter id={`n${uid}`}>
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency=".06"
+            numOctaves="4"
+            seed={tile?.id || 1}
+          />
+          <feColorMatrix type="saturate" values="0" />
+          <feComposite in2="SourceGraphic" operator="in" />
+          <feBlend in="SourceGraphic" mode="soft-light" />
+        </filter>
+      </defs>
+      <circle cx="126" cy="85" r="90" fill={`url(#g${uid})`} />
+      <g fill="#ccd8eb" opacity=".5">
+        <circle cx="23" cy="39" r=".7" />
+        <circle cx="213" cy="29" r="1" />
+        <circle cx="45" cy="113" r="1" />
+        <circle cx="203" cy="104" r=".6" />
+      </g>
+      {tile?.name === 'Tatooine' && (
+        <>
+          <circle cx="32" cy="41" r="11" fill="#eac890" opacity=".7" />
+          <circle cx="53" cy="37" r="7" fill="#dca27c" opacity=".5" />
+        </>
+      )}
+      <circle cx="126" cy="85" r="60" fill={`url(#p${uid})`} filter={`url(#n${uid})`} />
+      <g clipPath={`url(#c${uid})`} fill="none" stroke={color} opacity=".22">
+        <path
+          d="M51 58q60-25 150 11M44 88q90-27 156 2M40 106q100-20 152 14M66 39q60 12 110 5"
+          strokeWidth="6"
+        />
+        <path d="M80 28q-30 50 45 130m11-147q-10 80 52 120" strokeWidth="2" />
+      </g>
+      <circle cx="126" cy="85" r="60" fill="none" stroke={color} opacity=".35" strokeWidth="1" />
+      {(tile?.name === 'Geonosis' || tile?.name === 'Bespin') && (
+        <ellipse
+          cx="126"
+          cy="88"
+          rx="85"
+          ry="20"
+          transform="rotate(-20 126 88)"
+          stroke={color}
+          strokeWidth="3"
+          opacity=".45"
+          fill="none"
+        />
+      )}
+    </svg>
+  );
+}
+export function BattleStation() {
+  const uid = useId().replaceAll(':', '');
+  if (REFERENCE_IMAGES['death-star'])
+    return (
+      <img
+        className="battle-station real-battle-station"
+        src={REFERENCE_IMAGES['death-star'].image + '&width=1000'}
+        alt="Death Star · official Star Wars Databank reference"
+        decoding="async"
+        referrerPolicy="no-referrer"
+      />
+    );
+  return (
+    <svg
+      className="battle-station"
+      viewBox="0 0 600 340"
+      aria-label="Original orbital battle station illustration"
+      role="img"
+    >
+      <defs>
+        <radialGradient id={`s${uid}`} cx="27%" cy="20%">
+          <stop stopColor="#b1bcc3" />
+          <stop offset=".35" stopColor="#59646d" />
+          <stop offset=".7" stopColor="#1c2631" />
+          <stop offset="1" stopColor="#080e16" />
+        </radialGradient>
+        <clipPath id={`clip${uid}`}>
+          <circle cx="340" cy="165" r="122" />
+        </clipPath>
+        <radialGradient id={`a${uid}`}>
+          <stop stopColor="#628ba3" stopOpacity=".3" />
+          <stop offset="1" stopColor="#628ba3" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="340" cy="165" rx="200" ry="170" fill={`url(#a${uid})`} />
+      <circle cx="340" cy="165" r="122" fill={`url(#s${uid})`} />
+      <g clipPath={`url(#clip${uid})`} fill="none" stroke="#8c9ca7" opacity=".25">
+        {Array.from({ length: 23 }, (_, i) => (
+          <path key={i} d={`M190 ${52 + i * 10}h290`} strokeWidth={i % 4 === 0 ? 2 : 0.6} />
+        ))}
+        {Array.from({ length: 20 }, (_, i) => (
+          <path key={i} d={`M${235 + i * 12} 25v275`} strokeWidth={i % 3 === 0 ? 1.4 : 0.5} />
+        ))}
+        <ellipse cx="340" cy="165" rx="60" ry="122" />
+        <ellipse cx="340" cy="165" rx="100" ry="122" />
+      </g>
+      <path d="M218 171h244" stroke="#060c14" strokeWidth="7" />
+      <path d="M222 167h236" stroke="#8796a0" opacity=".3" />
+      <ellipse
+        cx="291"
+        cy="102"
+        rx="32"
+        ry="29"
+        fill="#25333d"
+        stroke="#80909b"
+        strokeWidth="2"
+        transform="rotate(-28 291 102)"
+      />
+      <ellipse cx="290" cy="101" rx="24" ry="21" fill="#101d28" stroke="#5a6e7b" />
+      <path d="m273 91 27 18m-23-1 24-12" stroke="#647a8a" opacity=".5" />
+      <circle cx="290" cy="102" r="5" fill="#85b3b5" opacity=".45" />
+      <circle cx="340" cy="165" r="122" fill="none" stroke="#7f949f" strokeOpacity=".3" />
+      <path d="m83 259 50-11 22 4-22 6z" fill="#a4bbc9" opacity=".7" />
+      <path d="m102 247 17 13m0-16 12 14" stroke="#a4bbc9" opacity=".5" />
+      <path d="m425 310 29-6 13 3-13 3z" fill="#7893a8" />
+      <path d="M100 253 12 273" stroke="#b2a991" strokeOpacity=".13" />
+    </svg>
+  );
+}

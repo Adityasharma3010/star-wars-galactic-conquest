@@ -3,4 +3,10 @@ import { createRoot } from 'react-dom/client';
 import App from './app/App.jsx';
 import './styles/index.css';
 import './styles/holocommand.css';
-createRoot(document.getElementById('root')).render(<React.StrictMode><App /></React.StrictMode>);
+import './styles/welcome.css';
+import './styles/cinematics.css';
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);

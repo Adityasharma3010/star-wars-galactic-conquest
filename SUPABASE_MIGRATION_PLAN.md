@@ -18,13 +18,18 @@ Changes are additive. Table and function creation intentionally fails on conflic
 
 The service-role key stays in the Edge runtime. Future card order and raw internal engine data stay in `galactic_private`. Clients receive only redacted snapshots and cannot write wallets, ownership, auctions, trade outcomes, or match results directly.
 
-## Follow-up migration ready for approval
+## Fourth migration (approved and applied)
 
 The first three migrations are applied. The dry run for `202611190004_lobby_transactions.sql` passed on 19 November 2026.
 
 The fourth migration serializes character readiness, friend acceptance, host changes and lobby rule edits; syncs room callsigns to profiles; maintains auction deadlines; awards team results correctly; and enables global chat with the same blocking controls. It introduces service-only functions and triggers. It relaxes the chat match reference to allow a global channel, replacing only this application's named chat read policy while preserving team and member restrictions. No data is deleted and no unrelated object is changed. Source: `supabase/migrations/202611190004_lobby_transactions.sql`.
 
-After approval: apply this migration, redeploy the JavaScript Edge Function, and verify readiness races, social transactions, RLS and real online play.
+The owner approved it after the dry run. Application, Edge deployment and readiness/social/RLS checks succeeded.
+
+# Sixth migration: waiting-room names (approved and applied)
+
+`supabase/migrations/202611200006_waiting_callsigns.sql` passed the linked CLI dry run on 20 November 2026. It adds a service-only callsign operation that validates room membership, locks the waiting room, saves the chosen name/character/faction and resets readiness. A wrapper around the existing match-start implementation checks that the roster still matches the locked room, preventing a stale name from being used during a concurrent start. Existing games and data are retained. The owner approved this after the dry run. The remote push and Edge deployment succeeded; rollback-only name/readiness/profile/roster/permission checks passed.
+
 # Fifth migration: connection grace (approved and applied)
 
 `supabase/migrations/202611190005_connection_grace.sql` was listed successfully by the linked CLI dry run on 19 November 2026. It does not delete existing game data.

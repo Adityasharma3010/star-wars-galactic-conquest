@@ -1,11 +1,88 @@
-import { test,expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { createGame } from '../../src/game/engine/game.js';
-test('official world images, readable ownership filters and outpost/base badges',async({page})=>{
- test.setTimeout(80000);const players=[{id:'you',name:'QA Commander',character:'luke',faction:'Rebel Alliance',color:'#79b0dc',ai:false},{id:'rival',name:'QA Rival',character:'vader',faction:'Galactic Empire',color:'#d76969',ai:false}],game=createGame(players);
- for(const id of [1,3])game.ownership[id]={owner:'you',level:5,mortgaged:false};for(const id of [6,8,9])game.ownership[id]={owner:'rival',level:2,mortgaged:false};game.ownership[11]={owner:'rival',level:0,mortgaged:true};game.players[0].credits=880;game.players[1].credits=810;game.inventory={bases:10,outposts:26};
- const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(state=>localStorage.setItem('galactic-conquest-v1',JSON.stringify({state,version:1})),{game,online:false,selected:1,profile:{name:'QA Commander',character:'luke',faction:'Rebel Alliance'},settings:{mute:true,reducedMotion:true}});await page.goto('/');await expect(page.locator('.galactic-board img.real-art')).toHaveCount(26);
- await expect.poll(()=>page.locator('.galactic-board img.real-art').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>0)),{timeout:60000}).toBe(true);await expect(page.locator('[data-tile="1"] .owner-sigil')).toHaveAttribute('aria-label','QA Commander owns this world');await expect(page.locator('.owner-chip,.commander-number')).toHaveCount(0);await expect(page.locator('[data-tile="6"] .development')).toHaveAttribute('aria-label','2 outposts');await expect(page.locator('[data-tile="3"] .development')).toHaveAttribute('aria-label','Planetary base');
- await page.getByRole('button',{name:"Highlight QA Commander's worlds"}).click();await expect(page.locator('[data-tile="1"]')).toHaveClass(/owner-emphasis/);await expect(page.locator('[data-tile="6"]')).toHaveClass(/owner-dim/);await page.getByRole('button',{name:'All worlds',exact:true}).click();await page.screenshot({path:'test-results/final-worlds-and-ownership.png',fullPage:true});
- for(const dimensions of [{width:1366,height:768},{width:390,height:844}]){await page.setViewportSize(dimensions);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/final-'+dimensions.width+'-board.png',fullPage:true});}
- expect(errors).toEqual([]);
+test('official world images, readable ownership filters and outpost/base badges', async ({
+  page,
+}) => {
+  test.setTimeout(80000);
+  const players = [
+      {
+        id: 'you',
+        name: 'QA Commander',
+        character: 'luke',
+        faction: 'Rebel Alliance',
+        color: '#79b0dc',
+        ai: false,
+      },
+      {
+        id: 'rival',
+        name: 'QA Rival',
+        character: 'vader',
+        faction: 'Galactic Empire',
+        color: '#d76969',
+        ai: false,
+      },
+    ],
+    game = createGame(players);
+  for (const id of [1, 3]) game.ownership[id] = { owner: 'you', level: 5, mortgaged: false };
+  for (const id of [6, 8, 9]) game.ownership[id] = { owner: 'rival', level: 2, mortgaged: false };
+  game.ownership[11] = { owner: 'rival', level: 0, mortgaged: true };
+  game.players[0].credits = 880;
+  game.players[1].credits = 810;
+  game.inventory = { bases: 10, outposts: 26 };
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript(
+    (state) => localStorage.setItem('galactic-conquest-v1', JSON.stringify({ state, version: 1 })),
+    {
+      game,
+      playing: true,
+      online: false,
+      selected: 1,
+      profile: { name: 'QA Commander', character: 'luke', faction: 'Rebel Alliance' },
+      settings: { mute: true, reducedMotion: true },
+    },
+  );
+  await page.goto('/');
+  await expect(page.locator('.galactic-board img.real-art')).toHaveCount(26);
+  await expect
+    .poll(
+      () =>
+        page
+          .locator('.galactic-board img.real-art')
+          .evaluateAll((images) => images.every((i) => i.complete && i.naturalWidth > 0)),
+      { timeout: 60000 },
+    )
+    .toBe(true);
+  await expect(page.locator('[data-tile="1"] .owner-sigil')).toHaveAttribute(
+    'aria-label',
+    'QA Commander owns this world',
+  );
+  await expect(page.locator('.owner-chip,.commander-number')).toHaveCount(0);
+  await expect(page.locator('[data-tile="6"] .development')).toHaveAttribute(
+    'aria-label',
+    '2 outposts',
+  );
+  await expect(page.locator('[data-tile="3"] .development')).toHaveAttribute(
+    'aria-label',
+    'Planetary base',
+  );
+  await page.getByRole('button', { name: "Highlight QA Commander's worlds" }).click();
+  await expect(page.locator('[data-tile="1"]')).toHaveClass(/owner-emphasis/);
+  await expect(page.locator('[data-tile="6"]')).toHaveClass(/owner-dim/);
+  await page.getByRole('button', { name: 'All worlds', exact: true }).click();
+  await page.screenshot({ path: 'test-results/final-worlds-and-ownership.png', fullPage: true });
+  for (const dimensions of [
+    { width: 1366, height: 768 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(dimensions);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({
+      path: 'test-results/final-' + dimensions.width + '-board.png',
+      fullPage: true,
+    });
+  }
+  expect(errors).toEqual([]);
 });

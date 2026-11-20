@@ -1,12 +1,46 @@
-import {writeFile} from 'node:fs/promises';
-import {createGame,transition} from '../src/game/engine/game.js';
-import {publicState} from '../supabase/functions/galactic-api/authority.js';
-const a='91000000-0000-4000-8000-000000000001',b='91000000-0000-4000-8000-000000000002',outsider='91000000-0000-4000-8000-000000000003',g='91000000-0000-4000-8000-000000000004';
-const one='91000000-0000-4000-8000-000000000011',two='91000000-0000-4000-8000-000000000012';
-const state=createGame([{id:a,name:'QA Host',character:'luke',faction:'Rebel Alliance',color:'#79b0dc',ai:false},{id:b,name:'QA Guest',character:'vader',faction:'Galactic Empire',color:'#dd7777',ai:false}],{id:g,now:Date.now()},()=>.3);
-const action={id:'91000000-0000-4000-8000-000000000005',player:a,type:'ROLL',payload:{},version:0,now:Date.now(),connectionTimeout:true};
-const next=transition(state,action,()=>.3),json=v=>'$json$'+JSON.stringify(v)+'$json$::jsonb';
-const sql=`-- Connection fixtures and automatic-action race checks; all data rolls back.
+import { writeFile } from 'node:fs/promises';
+import { createGame, transition } from '../src/game/engine/game.js';
+import { publicState } from '../supabase/functions/galactic-api/authority.js';
+const a = '91000000-0000-4000-8000-000000000001',
+  b = '91000000-0000-4000-8000-000000000002',
+  outsider = '91000000-0000-4000-8000-000000000003',
+  g = '91000000-0000-4000-8000-000000000004';
+const one = '91000000-0000-4000-8000-000000000011',
+  two = '91000000-0000-4000-8000-000000000012';
+const state = createGame(
+  [
+    {
+      id: a,
+      name: 'QA Host',
+      character: 'luke',
+      faction: 'Rebel Alliance',
+      color: '#79b0dc',
+      ai: false,
+    },
+    {
+      id: b,
+      name: 'QA Guest',
+      character: 'vader',
+      faction: 'Galactic Empire',
+      color: '#dd7777',
+      ai: false,
+    },
+  ],
+  { id: g, now: Date.now() },
+  () => 0.3,
+);
+const action = {
+  id: '91000000-0000-4000-8000-000000000005',
+  player: a,
+  type: 'ROLL',
+  payload: {},
+  version: 0,
+  now: Date.now(),
+  connectionTimeout: true,
+};
+const next = transition(state, action, () => 0.3),
+  json = (v) => '$json$' + JSON.stringify(v) + '$json$::jsonb';
+const sql = `-- Connection fixtures and automatic-action race checks; all data rolls back.
 begin;
 insert into auth.users(id,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
  ('${a}','authenticated','authenticated','{}','{}',now(),now()),('${b}','authenticated','authenticated','{}','{}',now(),now()),('${outsider}','authenticated','authenticated','{}','{}',now(),now());
@@ -46,5 +80,5 @@ reset role;
 select 'PASS: live tabs, two-minute leave, five-minute disconnect, reconnect commit guard, expiry and private authorization; fixtures rolled back' as verification;
 rollback;
 `;
-await writeFile('tests/database/connections.sql',sql);
+await writeFile('tests/database/connections.sql', sql);
 console.log('Generated rollback-only connection security and grace checks.');

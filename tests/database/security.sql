@@ -1,43 +1,1825 @@
 -- Disposable fixtures in one transaction. No test data survives rollback.
 begin;
-insert into auth.users(id,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
- ('90000000-0000-4000-8000-000000000001','authenticated','authenticated','{}','{}',now(),now()),('90000000-0000-4000-8000-000000000002','authenticated','authenticated','{}','{}',now(),now()),('90000000-0000-4000-8000-000000000003','authenticated','authenticated','{}','{}',now(),now());
-create temp table qa_room as select (public.galactic_create_room('90000000-0000-4000-8000-000000000001','QAZ9X2','Rollback database QA',true,'{"name":"QA Host","character":"luke","faction":"Rebel Alliance"}')->'room'->>'id')::uuid as id;
-select public.galactic_join_room('90000000-0000-4000-8000-000000000002','QAZ9X2','{"name":"QA Guest","character":"luke","faction":"Galactic Empire"}');
-select public.galactic_ready((select id from qa_room),'90000000-0000-4000-8000-000000000001','luke');
-do $$begin
- begin perform public.galactic_ready((select id from qa_room),'90000000-0000-4000-8000-000000000002','luke');raise exception 'QA FAIL duplicate readiness accepted';exception when others then if SQLERRM like 'QA FAIL%' then raise;end if;if SQLERRM not like '%Character already%' then raise;end if;end;
- if (select is_ready from room_players where user_id='90000000-0000-4000-8000-000000000002' and room_id=(select id from qa_room)) then raise exception 'QA FAIL failed readiness wrote state';end if;
-end$$;
-select public.galactic_ready((select id from qa_room),'90000000-0000-4000-8000-000000000002','vader');
-select public.galactic_start_match((select id from qa_room),'90000000-0000-4000-8000-000000000001',$json${"id":"90000000-0000-4000-8000-000000000004","version":0,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218456,"phase":"roll","dice":[1,1],"doubles":0,"extraTurn":false,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"payments":[],"pot":0,"inventory":{"outposts":32,"bases":12},"decks":{"force":["f10","f7","f1","f5","f6","f2","f8","f9","f3","f11","f12","f4"],"galactic":["g10","g7","g1","g5","g6","g2","g8","g9","g3","g11","g12","g4"]},"discards":{"force":[],"galactic":[]},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1}],"history":[],"processed":[],"movement":null,"lastCard":null,"winner":null,"eventSequence":1}$json$::jsonb,$json${"id":"90000000-0000-4000-8000-000000000004","version":0,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218456,"phase":"roll","dice":[1,1],"doubles":0,"extraTurn":false,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"pot":0,"inventory":{"outposts":32,"bases":12},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1}],"history":[],"movement":null,"lastCard":null,"winner":null,"eventSequence":1,"deckCounts":{"force":12,"galactic":12}}$json$::jsonb);
-select public.galactic_commit('90000000-0000-4000-8000-000000000004',$json${"id":"90000000-0000-4000-8000-000000000005","player":"90000000-0000-4000-8000-000000000001","type":"ROLL","payload":{},"version":0,"now":1795088128458}$json$::jsonb,0,$json${"id":"90000000-0000-4000-8000-000000000004","version":1,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1300,"position":4,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218458,"phase":"end","dice":[2,2],"doubles":1,"extraTurn":true,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"payments":[],"pot":0,"inventory":{"outposts":32,"bases":12},"decks":{"force":["f10","f7","f1","f5","f6","f2","f8","f9","f3","f11","f12","f4"],"galactic":["g10","g7","g1","g5","g6","g2","g8","g9","g3","g11","g12","g4"]},"discards":{"force":[],"galactic":[]},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1},{"id":"event-2","text":"Database QA Host arrived at Imperial Tax.","type":"move","turn":1},{"id":"event-3","text":"Database QA Host paid 200 credits.","type":"money","turn":1}],"history":[],"processed":["90000000-0000-4000-8000-000000000005"],"movement":{"player":"90000000-0000-4000-8000-000000000001","from":0,"steps":4,"back":false},"lastCard":null,"winner":null,"eventSequence":3}$json$::jsonb,$json${"id":"90000000-0000-4000-8000-000000000004","version":1,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1300,"position":4,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218458,"phase":"end","dice":[2,2],"doubles":1,"extraTurn":true,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"pot":0,"inventory":{"outposts":32,"bases":12},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1},{"id":"event-2","text":"Database QA Host arrived at Imperial Tax.","type":"move","turn":1},{"id":"event-3","text":"Database QA Host paid 200 credits.","type":"money","turn":1}],"history":[],"movement":{"player":"90000000-0000-4000-8000-000000000001","from":0,"steps":4,"back":false},"lastCard":null,"winner":null,"eventSequence":3,"deckCounts":{"force":12,"galactic":12}}$json$::jsonb);
-do $$declare result jsonb;begin
- result:=public.galactic_commit('90000000-0000-4000-8000-000000000004',$json${"id":"90000000-0000-4000-8000-000000000005","player":"90000000-0000-4000-8000-000000000001","type":"ROLL","payload":{},"version":0,"now":1795088128458}$json$::jsonb,0,$json${"id":"90000000-0000-4000-8000-000000000004","version":1,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1300,"position":4,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218458,"phase":"end","dice":[2,2],"doubles":1,"extraTurn":true,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"payments":[],"pot":0,"inventory":{"outposts":32,"bases":12},"decks":{"force":["f10","f7","f1","f5","f6","f2","f8","f9","f3","f11","f12","f4"],"galactic":["g10","g7","g1","g5","g6","g2","g8","g9","g3","g11","g12","g4"]},"discards":{"force":[],"galactic":[]},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1},{"id":"event-2","text":"Database QA Host arrived at Imperial Tax.","type":"move","turn":1},{"id":"event-3","text":"Database QA Host paid 200 credits.","type":"money","turn":1}],"history":[],"processed":["90000000-0000-4000-8000-000000000005"],"movement":{"player":"90000000-0000-4000-8000-000000000001","from":0,"steps":4,"back":false},"lastCard":null,"winner":null,"eventSequence":3}$json$::jsonb,$json${"id":"90000000-0000-4000-8000-000000000004","version":1,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1300,"position":4,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218458,"phase":"end","dice":[2,2],"doubles":1,"extraTurn":true,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"pot":0,"inventory":{"outposts":32,"bases":12},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1},{"id":"event-2","text":"Database QA Host arrived at Imperial Tax.","type":"move","turn":1},{"id":"event-3","text":"Database QA Host paid 200 credits.","type":"money","turn":1}],"history":[],"movement":{"player":"90000000-0000-4000-8000-000000000001","from":0,"steps":4,"back":false},"lastCard":null,"winner":null,"eventSequence":3,"deckCounts":{"force":12,"galactic":12}}$json$::jsonb);
- if (result->>'version')::integer<>1 or (select count(*) from galactic_private.actions where game_id='90000000-0000-4000-8000-000000000004')<>1 then raise exception 'QA FAIL duplicate action';end if;
- begin perform public.galactic_commit('90000000-0000-4000-8000-000000000004',jsonb_set($json${"id":"90000000-0000-4000-8000-000000000005","player":"90000000-0000-4000-8000-000000000001","type":"ROLL","payload":{},"version":0,"now":1795088128458}$json$::jsonb,'{id}','"90000000-0000-4000-8000-000000000006"'),0,$json${"id":"90000000-0000-4000-8000-000000000004","version":1,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1300,"position":4,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218458,"phase":"end","dice":[2,2],"doubles":1,"extraTurn":true,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"payments":[],"pot":0,"inventory":{"outposts":32,"bases":12},"decks":{"force":["f10","f7","f1","f5","f6","f2","f8","f9","f3","f11","f12","f4"],"galactic":["g10","g7","g1","g5","g6","g2","g8","g9","g3","g11","g12","g4"]},"discards":{"force":[],"galactic":[]},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1},{"id":"event-2","text":"Database QA Host arrived at Imperial Tax.","type":"move","turn":1},{"id":"event-3","text":"Database QA Host paid 200 credits.","type":"money","turn":1}],"history":[],"processed":["90000000-0000-4000-8000-000000000005"],"movement":{"player":"90000000-0000-4000-8000-000000000001","from":0,"steps":4,"back":false},"lastCard":null,"winner":null,"eventSequence":3}$json$::jsonb,$json${"id":"90000000-0000-4000-8000-000000000004","version":1,"players":[{"id":"90000000-0000-4000-8000-000000000001","name":"Database QA Host","character":"luke","faction":"Rebel Alliance","color":"#79b0dc","ai":false,"credits":1300,"position":4,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false},{"id":"90000000-0000-4000-8000-000000000002","name":"Database QA Guest","character":"vader","faction":"Galactic Empire","color":"#dd7777","ai":false,"credits":1500,"position":0,"cards":[],"detained":false,"jailAttempts":0,"bankrupt":false}],"rules":{"startingCredits":1500,"startBonus":200,"auctions":true,"freeParking":false,"incomeTax":200,"luxuryTax":100,"outposts":32,"bases":12,"trading":true,"mortgageInterest":0.1,"turnDuration":90,"difficulty":"medium","teams":false,"sharedProperties":false,"noTeamRent":true,"duplicateCharacters":false,"id":"90000000-0000-4000-8000-000000000004","now":1795088128456},"turn":0,"round":1,"turnDeadline":1795088218458,"phase":"end","dice":[2,2],"doubles":1,"extraTurn":true,"ownership":{},"pendingProperty":null,"auction":null,"trades":[],"tradeHistory":[],"debt":null,"pot":0,"inventory":{"outposts":32,"bases":12},"events":[{"id":"event-1","text":"The galaxy is yours to conquer. All commanders receive starting credits.","type":"start","turn":1},{"id":"event-2","text":"Database QA Host arrived at Imperial Tax.","type":"move","turn":1},{"id":"event-3","text":"Database QA Host paid 200 credits.","type":"money","turn":1}],"history":[],"movement":{"player":"90000000-0000-4000-8000-000000000001","from":0,"steps":4,"back":false},"lastCard":null,"winner":null,"eventSequence":3,"deckCounts":{"force":12,"galactic":12}}$json$::jsonb);raise exception 'QA FAIL stale commit accepted';exception when others then if SQLERRM like 'QA FAIL%' then raise;end if;if SQLERRM not like '%Game state changed%' then raise;end if;end;
-end$$;
-create temp table qa_friend(id uuid);
-with request as (insert into friend_requests(sender_id,recipient_id) values('90000000-0000-4000-8000-000000000001','90000000-0000-4000-8000-000000000002') returning id) insert into qa_friend select id from request;
-select public.galactic_friend_response((select id from qa_friend),'90000000-0000-4000-8000-000000000002',true);
-do $$begin
- if (select count(*) from friendships where (user_id='90000000-0000-4000-8000-000000000001' and friend_id='90000000-0000-4000-8000-000000000002') or (user_id='90000000-0000-4000-8000-000000000002' and friend_id='90000000-0000-4000-8000-000000000001'))<>2 then raise exception 'QA FAIL non-atomic friendship';end if;
- begin perform public.galactic_friend_response((select id from qa_friend),'90000000-0000-4000-8000-000000000002',true);raise exception 'QA FAIL duplicate friend response';exception when others then if SQLERRM like 'QA FAIL%' then raise;end if;if SQLERRM not like '%unavailable%' then raise;end if;end;
-end$$;
-set local role authenticated;
-set local request.jwt.claims='{"sub":"90000000-0000-4000-8000-000000000001","role":"authenticated"}';
-do $$declare changed integer;begin
- if (select count(*) from game_state where game_id='90000000-0000-4000-8000-000000000004')<>1 then raise exception 'QA FAIL member snapshot denied';end if;
- if (select count(*) from player_wallets where game_id='90000000-0000-4000-8000-000000000004')<>2 then raise exception 'QA FAIL member wallets denied';end if;
- begin update player_wallets set credits=999999 where game_id='90000000-0000-4000-8000-000000000004';get diagnostics changed=row_count;if changed<>0 then raise exception 'QA FAIL wallet write accepted';end if;exception when insufficient_privilege then null;end;
- begin perform public.galactic_engine('90000000-0000-4000-8000-000000000004');raise exception 'QA FAIL private engine RPC allowed';exception when insufficient_privilege then null;end;
- begin perform public.galactic_ready('90000000-0000-4000-8000-000000000004','90000000-0000-4000-8000-000000000001','luke');raise exception 'QA FAIL readiness RPC allowed';exception when insufficient_privilege then null;end;
- if has_schema_privilege('authenticated','galactic_private','USAGE') then raise exception 'QA FAIL private schema allowed';end if;
-end$$;
-set local request.jwt.claims='{"sub":"90000000-0000-4000-8000-000000000003","role":"authenticated"}';
-do $$begin
- if exists(select 1 from game_state where game_id='90000000-0000-4000-8000-000000000004') or exists(select 1 from player_wallets where game_id='90000000-0000-4000-8000-000000000004') or exists(select 1 from game_rooms where code='QAZ9X2') then raise exception 'QA FAIL outsider read';end if;
-end$$;
+
+insert into
+  auth.users (
+    id,
+    aud,
+    role,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+  )
+values
+  (
+    '90000000-0000-4000-8000-000000000001',
+    'authenticated',
+    'authenticated',
+    '{}',
+    '{}',
+    now(),
+    now()
+  ),
+  (
+    '90000000-0000-4000-8000-000000000002',
+    'authenticated',
+    'authenticated',
+    '{}',
+    '{}',
+    now(),
+    now()
+  ),
+  (
+    '90000000-0000-4000-8000-000000000003',
+    'authenticated',
+    'authenticated',
+    '{}',
+    '{}',
+    now(),
+    now()
+  );
+
+create temp table qa_room as
+select
+  (
+    public.galactic_create_room (
+      '90000000-0000-4000-8000-000000000001',
+      'QAZ9X2',
+      'Rollback database QA',
+      true,
+      '{"name":"QA Host","character":"luke","faction":"Rebel Alliance"}'
+    ) -> 'room' ->> 'id'
+  )::uuid as id;
+
+select
+  public.galactic_join_room (
+    '90000000-0000-4000-8000-000000000002',
+    'QAZ9X2',
+    '{"name":"QA Guest","character":"luke","faction":"Galactic Empire"}'
+  );
+
+select
+  public.galactic_ready (
+    (
+      select
+        id
+      from
+        qa_room
+    ),
+    '90000000-0000-4000-8000-000000000001',
+    'luke'
+  );
+
+do $$
+begin
+begin perform public.galactic_ready (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000002',
+  'luke'
+);
+
+raise exception 'QA FAIL duplicate readiness accepted';
+
+exception when others then if SQLERRM like 'QA FAIL%' then raise;
+
+end if;
+
+if SQLERRM not like '%Character already%' then raise;
+
+end if;
+
+end;
+
+if (
+  select
+    is_ready
+  from
+    room_players
+  where
+    user_id = '90000000-0000-4000-8000-000000000002'
+    and room_id = (
+      select
+        id
+      from
+        qa_room
+    )
+) then raise exception 'QA FAIL failed readiness wrote state';
+
+end if;
+
+end
+$$;
+
+select
+  public.galactic_ready (
+    (
+      select
+        id
+      from
+        qa_room
+    ),
+    '90000000-0000-4000-8000-000000000002',
+    'vader'
+  );
+
+do $$
+begin perform public.galactic_set_callsign (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000002',
+  '{"name":"New Guest","character":"vader","faction":"Jedi Order"}'
+);
+
+if (
+  select
+    is_ready
+  from
+    room_players
+  where
+    user_id = '90000000-0000-4000-8000-000000000002'
+) then raise exception 'QA FAIL renamed commander remains ready';
+
+end if;
+
+if (
+  select
+    display_name
+  from
+    profiles
+  where
+    id = '90000000-0000-4000-8000-000000000002'
+) <> 'New Guest' then raise exception 'QA FAIL profile callsign not synchronized';
+
+end if;
+
+begin perform public.galactic_start_match (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000001',
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 0,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "roll",
+  "dice": [
+    1,
+    1
+  ],
+  "doubles": 0,
+  "extraTurn": false,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "payments": [],
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "decks": {
+    "force": [
+      "f10",
+      "f7",
+      "f1",
+      "f5",
+      "f6",
+      "f2",
+      "f8",
+      "f9",
+      "f3",
+      "f11",
+      "f12",
+      "f4"
+    ],
+    "galactic": [
+      "g10",
+      "g7",
+      "g1",
+      "g5",
+      "g6",
+      "g2",
+      "g8",
+      "g9",
+      "g3",
+      "g11",
+      "g12",
+      "g4"
+    ]
+  },
+  "discards": {
+    "force": [],
+    "galactic": []
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "processed": [],
+  "movement": null,
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 1
+}
+$json$::jsonb,
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 0,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "roll",
+  "dice": [
+    1,
+    1
+  ],
+  "doubles": 0,
+  "extraTurn": false,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "movement": null,
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 1,
+  "deckCounts": {
+    "force": 12,
+    "galactic": 12
+  }
+}
+$json$::jsonb
+);
+
+raise exception 'QA FAIL stale roster accepted';
+
+exception when others then if SQLERRM like 'QA FAIL%' then raise;
+
+end if;
+
+if SQLERRM not like '%roster changed%' then raise;
+
+end if;
+
+end;
+
+begin perform public.galactic_set_callsign (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000003',
+  '{"name":"Intruder","character":"luke","faction":"Jedi Order"}'
+);
+
+raise exception 'QA FAIL outsider callsign accepted';
+
+exception when others then if SQLERRM like 'QA FAIL%' then raise;
+
+end if;
+
+if SQLERRM not like '%membership%' then raise;
+
+end if;
+
+end;
+
+perform public.galactic_set_callsign (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000002',
+  '{"name":"QA Guest","character":"vader","faction":"Galactic Empire"}'
+);
+
+perform public.galactic_ready (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000002',
+  'vader'
+);
+
+end
+$$;
+
+select
+  public.galactic_start_match (
+    (
+      select
+        id
+      from
+        qa_room
+    ),
+    '90000000-0000-4000-8000-000000000001',
+    $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 0,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "roll",
+  "dice": [
+    1,
+    1
+  ],
+  "doubles": 0,
+  "extraTurn": false,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "payments": [],
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "decks": {
+    "force": [
+      "f10",
+      "f7",
+      "f1",
+      "f5",
+      "f6",
+      "f2",
+      "f8",
+      "f9",
+      "f3",
+      "f11",
+      "f12",
+      "f4"
+    ],
+    "galactic": [
+      "g10",
+      "g7",
+      "g1",
+      "g5",
+      "g6",
+      "g2",
+      "g8",
+      "g9",
+      "g3",
+      "g11",
+      "g12",
+      "g4"
+    ]
+  },
+  "discards": {
+    "force": [],
+    "galactic": []
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "processed": [],
+  "movement": null,
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 1
+}
+$json$::jsonb,
+    $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 0,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "roll",
+  "dice": [
+    1,
+    1
+  ],
+  "doubles": 0,
+  "extraTurn": false,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "movement": null,
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 1,
+  "deckCounts": {
+    "force": 12,
+    "galactic": 12
+  }
+}
+$json$::jsonb
+  );
+
+do $$
+begin
+begin perform public.galactic_set_callsign (
+  (
+    select
+      id
+    from
+      qa_room
+  ),
+  '90000000-0000-4000-8000-000000000002',
+  '{"name":"After Start","character":"vader","faction":"Galactic Empire"}'
+);
+
+raise exception 'QA FAIL active match renamed';
+
+exception when others then if SQLERRM like 'QA FAIL%' then raise;
+
+end if;
+
+if SQLERRM not like '%waiting room%' then raise;
+
+end if;
+
+end;
+
+end
+$$;
+
+select
+  public.galactic_commit (
+    '90000000-0000-4000-8000-000000000004',
+    $json$
+{
+  "id": "90000000-0000-4000-8000-000000000005",
+  "player": "90000000-0000-4000-8000-000000000001",
+  "type": "ROLL",
+  "payload": {},
+  "version": 0,
+  "now": 1795153156662
+}
+$json$::jsonb,
+    0,
+    $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1300,
+      "position": 4,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "end",
+  "dice": [
+    2,
+    2
+  ],
+  "doubles": 1,
+  "extraTurn": true,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "payments": [],
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "decks": {
+    "force": [
+      "f10",
+      "f7",
+      "f1",
+      "f5",
+      "f6",
+      "f2",
+      "f8",
+      "f9",
+      "f3",
+      "f11",
+      "f12",
+      "f4"
+    ],
+    "galactic": [
+      "g10",
+      "g7",
+      "g1",
+      "g5",
+      "g6",
+      "g2",
+      "g8",
+      "g9",
+      "g3",
+      "g11",
+      "g12",
+      "g4"
+    ]
+  },
+  "discards": {
+    "force": [],
+    "galactic": []
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    },
+    {
+      "id": "event-2",
+      "text": "QA Host arrived at Imperial Tax.",
+      "type": "move",
+      "turn": 1
+    },
+    {
+      "id": "event-3",
+      "text": "QA Host paid 200 credits.",
+      "type": "money",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "processed": [
+    "90000000-0000-4000-8000-000000000005"
+  ],
+  "movement": {
+    "player": "90000000-0000-4000-8000-000000000001",
+    "from": 0,
+    "steps": 4,
+    "back": false,
+    "path": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 3,
+  "animationUntil": 1795153158902,
+  "lastActionType": "ROLL"
+}
+$json$::jsonb,
+    $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1300,
+      "position": 4,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "end",
+  "dice": [
+    2,
+    2
+  ],
+  "doubles": 1,
+  "extraTurn": true,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    },
+    {
+      "id": "event-2",
+      "text": "QA Host arrived at Imperial Tax.",
+      "type": "move",
+      "turn": 1
+    },
+    {
+      "id": "event-3",
+      "text": "QA Host paid 200 credits.",
+      "type": "money",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "movement": {
+    "player": "90000000-0000-4000-8000-000000000001",
+    "from": 0,
+    "steps": 4,
+    "back": false,
+    "path": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 3,
+  "animationUntil": 1795153158902,
+  "lastActionType": "ROLL",
+  "deckCounts": {
+    "force": 12,
+    "galactic": 12
+  }
+}
+$json$::jsonb
+  );
+
+do $$
+declare result jsonb;
+
+begin result := public.galactic_commit (
+  '90000000-0000-4000-8000-000000000004',
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000005",
+  "player": "90000000-0000-4000-8000-000000000001",
+  "type": "ROLL",
+  "payload": {},
+  "version": 0,
+  "now": 1795153156662
+}
+$json$::jsonb,
+  0,
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1300,
+      "position": 4,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "end",
+  "dice": [
+    2,
+    2
+  ],
+  "doubles": 1,
+  "extraTurn": true,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "payments": [],
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "decks": {
+    "force": [
+      "f10",
+      "f7",
+      "f1",
+      "f5",
+      "f6",
+      "f2",
+      "f8",
+      "f9",
+      "f3",
+      "f11",
+      "f12",
+      "f4"
+    ],
+    "galactic": [
+      "g10",
+      "g7",
+      "g1",
+      "g5",
+      "g6",
+      "g2",
+      "g8",
+      "g9",
+      "g3",
+      "g11",
+      "g12",
+      "g4"
+    ]
+  },
+  "discards": {
+    "force": [],
+    "galactic": []
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    },
+    {
+      "id": "event-2",
+      "text": "QA Host arrived at Imperial Tax.",
+      "type": "move",
+      "turn": 1
+    },
+    {
+      "id": "event-3",
+      "text": "QA Host paid 200 credits.",
+      "type": "money",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "processed": [
+    "90000000-0000-4000-8000-000000000005"
+  ],
+  "movement": {
+    "player": "90000000-0000-4000-8000-000000000001",
+    "from": 0,
+    "steps": 4,
+    "back": false,
+    "path": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 3,
+  "animationUntil": 1795153158902,
+  "lastActionType": "ROLL"
+}
+$json$::jsonb,
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1300,
+      "position": 4,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "end",
+  "dice": [
+    2,
+    2
+  ],
+  "doubles": 1,
+  "extraTurn": true,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    },
+    {
+      "id": "event-2",
+      "text": "QA Host arrived at Imperial Tax.",
+      "type": "move",
+      "turn": 1
+    },
+    {
+      "id": "event-3",
+      "text": "QA Host paid 200 credits.",
+      "type": "money",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "movement": {
+    "player": "90000000-0000-4000-8000-000000000001",
+    "from": 0,
+    "steps": 4,
+    "back": false,
+    "path": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 3,
+  "animationUntil": 1795153158902,
+  "lastActionType": "ROLL",
+  "deckCounts": {
+    "force": 12,
+    "galactic": 12
+  }
+}
+$json$::jsonb
+);
+
+if (result ->> 'version')::integer <> 1
+or (
+  select
+    count(*)
+  from
+    galactic_private.actions
+  where
+    game_id = '90000000-0000-4000-8000-000000000004'
+) <> 1 then raise exception 'QA FAIL duplicate action';
+
+end if;
+
+begin perform public.galactic_commit (
+  '90000000-0000-4000-8000-000000000004',
+  jsonb_set(
+    $json$
+{
+  "id": "90000000-0000-4000-8000-000000000005",
+  "player": "90000000-0000-4000-8000-000000000001",
+  "type": "ROLL",
+  "payload": {},
+  "version": 0,
+  "now": 1795153156662
+}
+$json$::jsonb,
+    '{id}',
+    '"90000000-0000-4000-8000-000000000006"'
+  ),
+  0,
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1300,
+      "position": 4,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "end",
+  "dice": [
+    2,
+    2
+  ],
+  "doubles": 1,
+  "extraTurn": true,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "payments": [],
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "decks": {
+    "force": [
+      "f10",
+      "f7",
+      "f1",
+      "f5",
+      "f6",
+      "f2",
+      "f8",
+      "f9",
+      "f3",
+      "f11",
+      "f12",
+      "f4"
+    ],
+    "galactic": [
+      "g10",
+      "g7",
+      "g1",
+      "g5",
+      "g6",
+      "g2",
+      "g8",
+      "g9",
+      "g3",
+      "g11",
+      "g12",
+      "g4"
+    ]
+  },
+  "discards": {
+    "force": [],
+    "galactic": []
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    },
+    {
+      "id": "event-2",
+      "text": "QA Host arrived at Imperial Tax.",
+      "type": "move",
+      "turn": 1
+    },
+    {
+      "id": "event-3",
+      "text": "QA Host paid 200 credits.",
+      "type": "money",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "processed": [
+    "90000000-0000-4000-8000-000000000005"
+  ],
+  "movement": {
+    "player": "90000000-0000-4000-8000-000000000001",
+    "from": 0,
+    "steps": 4,
+    "back": false,
+    "path": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 3,
+  "animationUntil": 1795153158902,
+  "lastActionType": "ROLL"
+}
+$json$::jsonb,
+  $json$
+{
+  "id": "90000000-0000-4000-8000-000000000004",
+  "version": 1,
+  "players": [
+    {
+      "id": "90000000-0000-4000-8000-000000000001",
+      "name": "QA Host",
+      "character": "luke",
+      "faction": "Rebel Alliance",
+      "color": "#79b0dc",
+      "ai": false,
+      "credits": 1300,
+      "position": 4,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000002",
+      "name": "QA Guest",
+      "character": "vader",
+      "faction": "Galactic Empire",
+      "color": "#dd7777",
+      "ai": false,
+      "credits": 1500,
+      "position": 0,
+      "cards": [],
+      "detained": false,
+      "jailAttempts": 0,
+      "bankrupt": false
+    }
+  ],
+  "rules": {
+    "startingCredits": 1500,
+    "startBonus": 200,
+    "auctions": true,
+    "freeParking": false,
+    "incomeTax": 200,
+    "luxuryTax": 100,
+    "outposts": 32,
+    "bases": 12,
+    "trading": true,
+    "mortgageInterest": 0.1,
+    "roundLimit": 0,
+    "mortgages": true,
+    "difficulty": "medium",
+    "teams": false,
+    "sharedProperties": false,
+    "noTeamRent": true,
+    "duplicateCharacters": false,
+    "id": "90000000-0000-4000-8000-000000000004",
+    "now": 1795153156661
+  },
+  "turn": 0,
+  "round": 1,
+  "turnDeadline": null,
+  "phase": "end",
+  "dice": [
+    2,
+    2
+  ],
+  "doubles": 1,
+  "extraTurn": true,
+  "ownership": {},
+  "pendingProperty": null,
+  "auction": null,
+  "trades": [],
+  "tradeHistory": [],
+  "debt": null,
+  "pot": 0,
+  "inventory": {
+    "outposts": 32,
+    "bases": 12
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "text": "The galaxy is yours to conquer. All commanders receive starting credits.",
+      "type": "start",
+      "turn": 1
+    },
+    {
+      "id": "event-2",
+      "text": "QA Host arrived at Imperial Tax.",
+      "type": "move",
+      "turn": 1
+    },
+    {
+      "id": "event-3",
+      "text": "QA Host paid 200 credits.",
+      "type": "money",
+      "turn": 1
+    }
+  ],
+  "history": [],
+  "movement": {
+    "player": "90000000-0000-4000-8000-000000000001",
+    "from": 0,
+    "steps": 4,
+    "back": false,
+    "path": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lastCard": null,
+  "winner": null,
+  "eventSequence": 3,
+  "animationUntil": 1795153158902,
+  "lastActionType": "ROLL",
+  "deckCounts": {
+    "force": 12,
+    "galactic": 12
+  }
+}
+$json$::jsonb
+);
+
+raise exception 'QA FAIL stale commit accepted';
+
+exception when others then if SQLERRM like 'QA FAIL%' then raise;
+
+end if;
+
+if SQLERRM not like '%Game state changed%' then raise;
+
+end if;
+
+end;
+
+end
+$$;
+
+create temp table qa_friend (id uuid);
+
+with
+  request as (
+    insert into
+      friend_requests (sender_id, recipient_id)
+    values
+      (
+        '90000000-0000-4000-8000-000000000001',
+        '90000000-0000-4000-8000-000000000002'
+      )
+    returning
+      id
+  )
+insert into
+  qa_friend
+select
+  id
+from
+  request;
+
+select
+  public.galactic_friend_response (
+    (
+      select
+        id
+      from
+        qa_friend
+    ),
+    '90000000-0000-4000-8000-000000000002',
+    true
+  );
+
+do $$
+begin if (
+  select
+    count(*)
+  from
+    friendships
+  where
+    (
+      user_id = '90000000-0000-4000-8000-000000000001'
+      and friend_id = '90000000-0000-4000-8000-000000000002'
+    )
+    or (
+      user_id = '90000000-0000-4000-8000-000000000002'
+      and friend_id = '90000000-0000-4000-8000-000000000001'
+    )
+) <> 2 then raise exception 'QA FAIL non-atomic friendship';
+
+end if;
+
+begin perform public.galactic_friend_response (
+  (
+    select
+      id
+    from
+      qa_friend
+  ),
+  '90000000-0000-4000-8000-000000000002',
+  true
+);
+
+raise exception 'QA FAIL duplicate friend response';
+
+exception when others then if SQLERRM like 'QA FAIL%' then raise;
+
+end if;
+
+if SQLERRM not like '%unavailable%' then raise;
+
+end if;
+
+end;
+
+end
+$$;
+
+set
+  local role authenticated;
+
+set
+  local request.jwt.claims = '{"sub":"90000000-0000-4000-8000-000000000001","role":"authenticated"}';
+
+do $$
+declare changed integer;
+
+begin if (
+  select
+    count(*)
+  from
+    game_state
+  where
+    game_id = '90000000-0000-4000-8000-000000000004'
+) <> 1 then raise exception 'QA FAIL member snapshot denied';
+
+end if;
+
+if (
+  select
+    count(*)
+  from
+    player_wallets
+  where
+    game_id = '90000000-0000-4000-8000-000000000004'
+) <> 2 then raise exception 'QA FAIL member wallets denied';
+
+end if;
+
+begin
+update player_wallets
+set
+  credits = 999999
+where
+  game_id = '90000000-0000-4000-8000-000000000004';
+
+get diagnostics changed = row_count;
+
+if changed <> 0 then raise exception 'QA FAIL wallet write accepted';
+
+end if;
+
+exception when insufficient_privilege then null;
+
+end;
+
+begin perform public.galactic_engine ('90000000-0000-4000-8000-000000000004');
+
+raise exception 'QA FAIL private engine RPC allowed';
+
+exception when insufficient_privilege then null;
+
+end;
+
+begin perform public.galactic_ready (
+  '90000000-0000-4000-8000-000000000004',
+  '90000000-0000-4000-8000-000000000001',
+  'luke'
+);
+
+raise exception 'QA FAIL readiness RPC allowed';
+
+exception when insufficient_privilege then null;
+
+end;
+
+if has_function_privilege(
+  'authenticated',
+  'public.galactic_set_callsign(uuid,uuid,jsonb)',
+  'EXECUTE'
+)
+or has_function_privilege(
+  'authenticated',
+  'public.galactic_start_match_core(uuid,uuid,jsonb,jsonb)',
+  'EXECUTE'
+) then raise exception 'QA FAIL roster authority exposed';
+
+end if;
+
+if has_schema_privilege('authenticated', 'galactic_private', 'USAGE') then raise exception 'QA FAIL private schema allowed';
+
+end if;
+
+end
+$$;
+
+set
+  local request.jwt.claims = '{"sub":"90000000-0000-4000-8000-000000000003","role":"authenticated"}';
+
+do $$
+begin if exists (
+  select
+    1
+  from
+    game_state
+  where
+    game_id = '90000000-0000-4000-8000-000000000004'
+)
+or exists (
+  select
+    1
+  from
+    player_wallets
+  where
+    game_id = '90000000-0000-4000-8000-000000000004'
+)
+or exists (
+  select
+    1
+  from
+    game_rooms
+  where
+    code = 'QAZ9X2'
+) then raise exception 'QA FAIL outsider read';
+
+end if;
+
+end
+$$;
+
 reset role;
-select 'PASS: RLS member/outsider reads, denied writes/RPCs, readiness, idempotency, stale commits and atomic friendship; all fixtures rolled back' as verification;
+
+select
+  'PASS: RLS member/outsider reads, denied writes/RPCs, callsign synchronization/readiness reset, stale rosters, idempotency, stale commits and atomic friendship; all fixtures rolled back' as verification;
+
 rollback;

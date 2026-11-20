@@ -1,13 +1,40 @@
-import { mkdir,writeFile } from 'node:fs/promises';
-import { createGame,transition } from '../src/game/engine/game.js';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { createGame, transition } from '../src/game/engine/game.js';
 import { publicState } from '../supabase/functions/galactic-api/authority.js';
-const a='90000000-0000-4000-8000-000000000001',b='90000000-0000-4000-8000-000000000002',outsider='90000000-0000-4000-8000-000000000003',game='90000000-0000-4000-8000-000000000004';
-const ps=[{id:a,name:'Database QA Host',character:'luke',faction:'Rebel Alliance',color:'#79b0dc',ai:false},{id:b,name:'Database QA Guest',character:'vader',faction:'Galactic Empire',color:'#dd7777',ai:false}];
-const state=createGame(ps,{id:game,now:Date.now()},()=>.3);
-const action={id:'90000000-0000-4000-8000-000000000005',player:a,type:'ROLL',payload:{},version:0,now:Date.now()};
-const next=transition(state,action,()=>.3);
-const json=value=>`$json$${JSON.stringify(value)}$json$::jsonb`;
-const sql=`-- Disposable fixtures in one transaction. No test data survives rollback.
+const a = '90000000-0000-4000-8000-000000000001',
+  b = '90000000-0000-4000-8000-000000000002',
+  outsider = '90000000-0000-4000-8000-000000000003',
+  game = '90000000-0000-4000-8000-000000000004';
+const ps = [
+  {
+    id: a,
+    name: 'QA Host',
+    character: 'luke',
+    faction: 'Rebel Alliance',
+    color: '#79b0dc',
+    ai: false,
+  },
+  {
+    id: b,
+    name: 'QA Guest',
+    character: 'vader',
+    faction: 'Galactic Empire',
+    color: '#dd7777',
+    ai: false,
+  },
+];
+const state = createGame(ps, { id: game, now: Date.now() }, () => 0.3);
+const action = {
+  id: '90000000-0000-4000-8000-000000000005',
+  player: a,
+  type: 'ROLL',
+  payload: {},
+  version: 0,
+  now: Date.now(),
+};
+const next = transition(state, action, () => 0.3);
+const json = (value) => `$json$${JSON.stringify(value)}$json$::jsonb`;
+const sql = `-- Disposable fixtures in one transaction. No test data survives rollback.
 begin;
 insert into auth.users(id,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values
  ('${a}','authenticated','authenticated','{}','{}',now(),now()),('${b}','authenticated','authenticated','{}','{}',now(),now()),('${outsider}','authenticated','authenticated','{}','{}',now(),now());
@@ -19,7 +46,19 @@ do $$begin
  if (select is_ready from room_players where user_id='${b}' and room_id=(select id from qa_room)) then raise exception 'QA FAIL failed readiness wrote state';end if;
 end$$;
 select public.galactic_ready((select id from qa_room),'${b}','vader');
+do $$begin
+ perform public.galactic_set_callsign((select id from qa_room),'${b}','{"name":"New Guest","character":"vader","faction":"Jedi Order"}');
+ if (select is_ready from room_players where user_id='${b}') then raise exception 'QA FAIL renamed commander remains ready';end if;
+ if (select display_name from profiles where id='${b}')<>'New Guest' then raise exception 'QA FAIL profile callsign not synchronized';end if;
+ begin perform public.galactic_start_match((select id from qa_room),'${a}',${json(state)},${json(publicState(state))});raise exception 'QA FAIL stale roster accepted';exception when others then if SQLERRM like 'QA FAIL%' then raise;end if;if SQLERRM not like '%roster changed%' then raise;end if;end;
+ begin perform public.galactic_set_callsign((select id from qa_room),'${outsider}','{"name":"Intruder","character":"luke","faction":"Jedi Order"}');raise exception 'QA FAIL outsider callsign accepted';exception when others then if SQLERRM like 'QA FAIL%' then raise;end if;if SQLERRM not like '%membership%' then raise;end if;end;
+ perform public.galactic_set_callsign((select id from qa_room),'${b}','{"name":"QA Guest","character":"vader","faction":"Galactic Empire"}');
+ perform public.galactic_ready((select id from qa_room),'${b}','vader');
+end$$;
 select public.galactic_start_match((select id from qa_room),'${a}',${json(state)},${json(publicState(state))});
+do $$begin
+ begin perform public.galactic_set_callsign((select id from qa_room),'${b}','{"name":"After Start","character":"vader","faction":"Galactic Empire"}');raise exception 'QA FAIL active match renamed';exception when others then if SQLERRM like 'QA FAIL%' then raise;end if;if SQLERRM not like '%waiting room%' then raise;end if;end;
+end$$;
 select public.galactic_commit('${game}',${json(action)},0,${json(next)},${json(publicState(next))});
 do $$declare result jsonb;begin
  result:=public.galactic_commit('${game}',${json(action)},0,${json(next)},${json(publicState(next))});
@@ -29,7 +68,7 @@ end$$;
 create temp table qa_friend as select id from (insert_dummy_placeholder) q;
 rollback;
 `;
-const friendship=`create temp table qa_friend(id uuid);
+const friendship = `create temp table qa_friend(id uuid);
 with request as (insert into friend_requests(sender_id,recipient_id) values('${a}','${b}') returning id) insert into qa_friend select id from request;
 select public.galactic_friend_response((select id from qa_friend),'${b}',true);
 do $$begin
@@ -44,6 +83,7 @@ do $$declare changed integer;begin
  begin update player_wallets set credits=999999 where game_id='${game}';get diagnostics changed=row_count;if changed<>0 then raise exception 'QA FAIL wallet write accepted';end if;exception when insufficient_privilege then null;end;
  begin perform public.galactic_engine('${game}');raise exception 'QA FAIL private engine RPC allowed';exception when insufficient_privilege then null;end;
  begin perform public.galactic_ready('${game}','${a}','luke');raise exception 'QA FAIL readiness RPC allowed';exception when insufficient_privilege then null;end;
+ if has_function_privilege('authenticated','public.galactic_set_callsign(uuid,uuid,jsonb)','EXECUTE') or has_function_privilege('authenticated','public.galactic_start_match_core(uuid,uuid,jsonb,jsonb)','EXECUTE') then raise exception 'QA FAIL roster authority exposed';end if;
  if has_schema_privilege('authenticated','galactic_private','USAGE') then raise exception 'QA FAIL private schema allowed';end if;
 end$$;
 set local request.jwt.claims='{"sub":"${outsider}","role":"authenticated"}';
@@ -51,8 +91,14 @@ do $$begin
  if exists(select 1 from game_state where game_id='${game}') or exists(select 1 from player_wallets where game_id='${game}') or exists(select 1 from game_rooms where code='QAZ9X2') then raise exception 'QA FAIL outsider read';end if;
 end$$;
 reset role;
-select 'PASS: RLS member/outsider reads, denied writes/RPCs, readiness, idempotency, stale commits and atomic friendship; all fixtures rolled back' as verification;
+select 'PASS: RLS member/outsider reads, denied writes/RPCs, callsign synchronization/readiness reset, stale rosters, idempotency, stale commits and atomic friendship; all fixtures rolled back' as verification;
 rollback;`;
-await mkdir('tests/database',{recursive:true});
-await writeFile('tests/database/security.sql',sql.replace('create temp table qa_friend as select id from (insert_dummy_placeholder) q;\nrollback;',()=>friendship));
+await mkdir('tests/database', { recursive: true });
+await writeFile(
+  'tests/database/security.sql',
+  sql.replace(
+    'create temp table qa_friend as select id from (insert_dummy_placeholder) q;\nrollback;',
+    () => friendship,
+  ),
+);
 console.log('Rollback-only remote database tests generated.');

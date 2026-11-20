@@ -1,0 +1,411 @@
+.welcome-screen main {
+  max-width: 1240px;
+  padding: 35px 32px 20px;
+}
+.welcome-menu {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.welcome-hero {
+  position: relative;
+  min-height: 370px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid #304c62;
+  border-radius: 7px;
+  background:
+    radial-gradient(ellipse at 78% 35%, #273a5165, transparent 60%),
+    linear-gradient(100deg, #08131eeb, #08131e90),
+    url('https://lumiere-a.akamaihd.net/v1/images/background-stars-desktop_v2_96b6d74a.jpeg?region=0%2C0%2C2048%2C1600&width=1400');
+  background-size: cover;
+}
+.welcome-hero:before {
+  content: '';
+  position: absolute;
+  left: 34px;
+  top: 0;
+  width: 80px;
+  height: 3px;
+  background: var(--gold);
+  z-index: 2;
+}
+.welcome-intro {
+  position: relative;
+  z-index: 2;
+  padding: 40px 42px;
+  max-width: 55%;
+}
+.welcome-intro .eyebrow {
+  font-size: 8px;
+  letter-spacing: 2.5px;
+}
+.welcome-intro h1 {
+  font-family: Bahnschrift, 'Arial Narrow', sans-serif;
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 1.02;
+  letter-spacing: 3px;
+  margin-top: 21px;
+  font-weight: 600;
+  color: #ecf3f9;
+}
+.welcome-intro h1 span {
+  color: var(--gold);
+}
+.welcome-intro p {
+  color: #a6b8c8;
+  font-size: 13px;
+  line-height: 1.9;
+  margin-top: 19px;
+}
+.welcome-hero-art {
+  position: absolute;
+  inset: 0 0 0 40%;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+.welcome-station {
+  position: absolute;
+  right: 6%;
+  top: 4%;
+  width: 330px;
+  height: 330px;
+}
+.welcome-station .battle-station {
+  position: static;
+  width: 100%;
+  height: 100%;
+  inset: auto;
+  transform: none;
+  object-fit: cover;
+  opacity: 0.48;
+  filter: grayscale(0.2);
+  mix-blend-mode: screen;
+}
+.welcome-starfighter {
+  position: absolute;
+  width: 245px;
+  height: 145px;
+  left: 8%;
+  bottom: 25%;
+  rotate: -18deg;
+  filter: drop-shadow(0 15px 18px #0008);
+  animation: welcome-flight 7s ease-in-out infinite;
+}
+.welcome-orbit {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  right: -20px;
+  top: -55px;
+  border: 1px solid #63849c35;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 35px #64819b07,
+    0 0 0 75px #64819b04;
+}
+.welcome-sector {
+  position: absolute;
+  right: 25px;
+  bottom: 23px;
+  color: #658a9f;
+  font-size: 6px;
+  letter-spacing: 2px;
+}
+.welcome-worlds {
+  display: flex;
+  gap: 8px;
+  margin-top: 27px;
+}
+.welcome-worlds > div {
+  position: relative;
+  width: 91px;
+  height: 50px;
+  overflow: hidden;
+  border: 1px solid #4d6376;
+  border-radius: 3px;
+}
+.welcome-worlds .planet-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+}
+.welcome-worlds > div:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent, #07111edb);
+}
+.welcome-worlds span {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  z-index: 1;
+  font-size: 8px;
+  letter-spacing: 0.4px;
+  color: #d6e6f0;
+}
+.welcome-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 17px;
+  margin-top: 20px;
+}
+.welcome-choice {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #36536a;
+  border-top: 2px solid var(--gold);
+  border-radius: 5px;
+  background: linear-gradient(120deg, #172b3d, #0d1927) !important;
+  text-align: left;
+  min-height: 125px;
+}
+.welcome-choice:hover {
+  border-color: #98b9c7;
+  background: linear-gradient(120deg, #223b4d, #112339) !important;
+  box-shadow: 0 0 25px #83c6dd10;
+}
+.welcome-choice > svg:first-child {
+  color: var(--gold);
+}
+.online-choice {
+  border-top-color: #83c9dc;
+}
+.online-choice > svg:first-child {
+  color: #83c9dc;
+}
+.welcome-choice > span {
+  flex: 1;
+}
+.welcome-choice small {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.7px;
+  color: #8aafc2;
+}
+.welcome-choice strong {
+  display: block;
+  font-family: Bahnschrift, 'Arial Narrow', sans-serif;
+  font-size: 23px;
+  letter-spacing: 0.5px;
+  color: #e2edf4;
+  margin: 8px 0;
+}
+.welcome-choice p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #95aebf;
+  max-width: 310px;
+}
+.welcome-choice > svg:last-child {
+  color: #7ea6b9;
+}
+.welcome-resume {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 21px;
+  margin-top: 19px;
+  border: 1px solid #77704b;
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  background: linear-gradient(100deg, #32352770, #12202f);
+  color: #d5bf83;
+}
+.welcome-resume > div {
+  flex: 1;
+}
+.welcome-resume .eyebrow {
+  font-size: 7px;
+  letter-spacing: 1.7px;
+}
+.welcome-resume strong {
+  display: block;
+  color: #e0e9ef;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 5px;
+}
+.welcome-resume small {
+  margin-left: 14px;
+  color: #90a9bb;
+  font-size: 10px;
+  font-weight: 400;
+}
+.welcome-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  color: #7b9baf;
+  font-size: 9px;
+}
+.welcome-footer > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.welcome-footer .text-button {
+  font-size: 9px;
+}
+.welcome-screen footer {
+  display: flex;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 15px 0;
+  border-top: 1px solid #253746;
+  font-size: 8px;
+}
+.reduce-motion .welcome-starfighter {
+  animation: none;
+}
+@keyframes welcome-flight {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 10px -9px;
+  }
+}
+@media (max-width: 900px) {
+  .welcome-screen main {
+    padding: 27px 23px;
+  }
+  .welcome-intro {
+    max-width: 65%;
+    padding: 33px;
+  }
+  .welcome-station {
+    right: -20%;
+    width: 290px;
+    height: 290px;
+  }
+  .welcome-starfighter {
+    left: 10%;
+    width: 180px;
+    height: 105px;
+  }
+  .welcome-choice {
+    padding: 20px;
+    gap: 12px;
+  }
+  .welcome-choice strong {
+    font-size: 20px;
+  }
+  .welcome-choice > svg:first-child {
+    width: 24px;
+  }
+  .welcome-resume small {
+    display: block;
+    margin-left: 0;
+  }
+  .welcome-screen footer {
+    margin: 0 23px;
+  }
+}
+@media (max-width: 600px) {
+  .welcome-screen main {
+    padding: 18px 14px;
+  }
+  .welcome-hero {
+    min-height: 330px;
+  }
+  .welcome-intro {
+    padding: 27px 22px;
+    max-width: 100%;
+  }
+  .welcome-intro .eyebrow {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+  }
+  .welcome-intro h1 {
+    font-size: 43px;
+    letter-spacing: 2px;
+    margin-top: 22px;
+  }
+  .welcome-intro p {
+    font-size: 11px;
+    max-width: 245px;
+    text-shadow: 0 1px 4px #000;
+  }
+  .welcome-hero-art {
+    left: 35%;
+    opacity: 0.4;
+  }
+  .welcome-station {
+    width: 225px;
+    height: 225px;
+    right: -60%;
+    top: 9%;
+  }
+  .welcome-starfighter {
+    width: 155px;
+    height: 95px;
+    left: 5%;
+    bottom: 25%;
+  }
+  .welcome-sector {
+    display: none;
+  }
+  .welcome-worlds {
+    gap: 7px;
+  }
+  .welcome-worlds > div {
+    width: 72px;
+    height: 42px;
+  }
+  .welcome-choices {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .welcome-choice {
+    padding: 20px;
+    min-height: 110px;
+  }
+  .welcome-choice small {
+    font-size: 6px;
+  }
+  .welcome-choice strong {
+    font-size: 22px;
+  }
+  .welcome-choice p {
+    font-size: 10px;
+    max-width: 245px;
+  }
+  .welcome-resume {
+    flex-wrap: wrap;
+    gap: 11px;
+    padding: 15px;
+  }
+  .welcome-resume > .button {
+    width: 100%;
+  }
+  .welcome-footer {
+    align-items: flex-start;
+    font-size: 7px;
+    gap: 7px;
+  }
+  .welcome-footer .text-button {
+    padding-top: 0;
+    font-size: 8px;
+  }
+  .welcome-screen footer {
+    margin: 0 14px;
+    font-size: 6px;
+    padding: 14px 0;
+  }
+  .welcome-screen footer > span:last-of-type {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-starfighter {
+    animation: none;
+  }
+}

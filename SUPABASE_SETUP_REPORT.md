@@ -1,20 +1,21 @@
 # Supabase setup report
 
-Verified 19 November 2026. Project **star-wars-galactic-conquest**, reference `iheauyxopwcpouogfkvi`, organization **Aditya Org**, Mumbai (`ap-south-1`). [Dashboard](https://supabase.com/dashboard/project/iheauyxopwcpouogfkvi).
+Verified 20 November 2026. Project **star-wars-galactic-conquest**, reference `iheauyxopwcpouogfkvi`, organization **Aditya Org**, Mumbai (`ap-south-1`). [Dashboard](https://supabase.com/dashboard/project/iheauyxopwcpouogfkvi).
 
 The project was created with the owner's authorization. Before migration it contained no public application tables, functions, policies, migration history or auth users. No unrelated application was modified.
 
 ## Applied migrations
 
-All five remote pushes succeeded after their dry runs and the owner's approvals:
+All six remote pushes succeeded after their dry runs and the owner's approvals:
 
 1. `202611190001_schema.sql` — normalized tables, constraints, indexes, RLS, profile trigger, Realtime and Storage.
 2. `202611190002_authority.sql` — trusted room/start/engine/commit/rate RPCs and transactional normalized economy/history.
 3. `202611190003_catalog.sql` — 28 purchasable assets, 24 cards and achievement definitions.
 4. `202611190004_lobby_transactions.sql` — atomic readiness/friend acceptance/lobby edits/host leave, profile sync, auction deadlines, team progression and moderated global chat.
 5. `202611190005_connection_grace.sql` — private document-session leases, service-only heartbeat/connection RPCs and atomic reconnect protection around the existing commit implementation.
+6. `202611200006_waiting_callsigns.sql` — atomic waiting-room identity edits, readiness reset and a stale-roster guard around match start.
 
-The remote migration history contains all five versions. No remote reset was used.
+The remote migration history contains all six versions. No remote reset was used.
 
 ## Verified schema
 
@@ -22,7 +23,7 @@ The remote migration history contains all five versions. No remote reset was use
 
 Public tables: `profiles`, `player_settings`, `friendships`, `friend_requests`, `blocked_players`, `game_rooms`, `room_players`, `room_settings`, `room_invitations`, `games`, `game_players`, `game_state`, `game_events`, `turn_history`, `match_history`, `player_wallets`, `transactions`, `properties`, `property_ownership`, `property_development`, `mortgages`, `trades`, `trade_items`, `trade_history`, `auctions`, `auction_bids`, `card_decks`, `card_definitions`, `player_cards`, `chat_messages`, `player_reports`, `player_statistics`, `achievements`, `player_achievements`, `cosmetic_items`, `player_cosmetics`.
 
-Service-only authority RPCs: `galactic_rate_limit`, `galactic_create_room`, `galactic_join_room`, `galactic_start_match`, `galactic_engine`, `galactic_commit`, `galactic_ready`, `galactic_friend_response`, `galactic_configure_room`, `galactic_leave_room`. Membership helpers and narrowly scoped profile/progression/auction triggers are also installed. Client-side authenticated/anonymous callers cannot execute the authority RPCs or access the private schema.
+Service-only authority RPCs: `galactic_rate_limit`, `galactic_create_room`, `galactic_join_room`, `galactic_start_match`, `galactic_engine`, `galactic_commit`, `galactic_ready`, `galactic_friend_response`, `galactic_configure_room`, `galactic_leave_room`, `galactic_set_callsign`, `galactic_connection`, `galactic_connections`. Membership helpers and narrowly scoped profile/progression/auction triggers are also installed. Client-side authenticated/anonymous callers cannot execute the authority RPCs or access the private schema.
 
 Database lint found no schema errors. The verification scripts are `supabase/verify-remote.sql` and `tests/database/security.sql`.
 
@@ -38,7 +39,7 @@ Guest/anonymous auth and email signup/confirmation are enabled. Private match Pr
 
 Buckets, each limited to 5 MiB: `player-avatars` (private), `game-cosmetics` (public), `board-themes` (public), `profile-decorations` (private). User avatar access is scoped to the authenticated user's folder; theme/cosmetic publication is controlled. Official Star Wars reference images are linked from the Databank CDN; unauthorized artwork was not uploaded into these buckets.
 
-`ALLOW_LAN_ORIGINS=true` enables authenticated requests from private IPv4 addresses on development ports 5173/5174. Unrelated public hosts and other ports remain rejected. LAN guest join, readiness, start and dice rolling were verified through `http://192.168.1.14:5174/` with two independent sessions.
+`ALLOW_LAN_ORIGINS=true` enables authenticated requests from private IPv4 addresses on development ports 5173/5174. Unrelated public hosts and other ports remain rejected. LAN guest join, readiness, start and dice rolling were verified through `http://192.168.29.195:5174/` with two independent sessions.
 
 ## Actual verification
 
@@ -50,4 +51,4 @@ Real browser sessions passed public/private room creation and joining, same-char
 
 The fifth migration's rollback-only fixtures passed live-tab aggregation, two-minute leave grace, five-minute disconnect grace after detection, expiry, reconnect-versus-automatic-action protection and private RPC authorization. The real browser flow also passed a network interruption, leaving and rejoining. Heartbeats do not update game revisions. Normal turns are untimed; auctions close ten seconds after the most recent bid.
 
-`ALLOWED_ORIGINS` includes the verified production address https://star-wars-galactic-conquest.vercel.app and the intended localhost development origins. Auth site URL and redirect configuration were pushed successfully to that production address. Hosted guests, room invitations, readiness, starting, dice, chat and recovery passed in independent browser sessions; publishing details are in `DEPLOYMENT.md`. Email confirmation is configured, but a complete real inbox verification cycle is not claimed. Owner mail delivery and moderation operations need launch-specific configuration. Client polling drives AI/deadline processing; a match with every client offline remains saved until a client returns. See `ASSET_CREDITS.md` for the distinction between creator-licensed audio and official reference-image rights.
+`ALLOWED_ORIGINS` includes the verified production address https://star-wars-galactic-conquest.vercel.app and the intended localhost development origins. Auth site URL now uses https://monopoly.adityasharma.site; both production addresses and localhost are allowed redirects/origins. The custom domain returned HTTP 200 over HTTPS. Hosted guests, room invitations, readiness, starting, dice, chat and recovery passed in independent browser sessions; publishing details are in `DEPLOYMENT.md`. Email confirmation is configured, but a complete real inbox verification cycle is not claimed. Owner mail delivery and moderation operations need launch-specific configuration. Client polling drives AI/deadline processing; a match with every client offline remains saved until a client returns. See `ASSET_CREDITS.md` for the distinction between creator-licensed audio and official reference-image rights.

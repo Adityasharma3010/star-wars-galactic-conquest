@@ -1,13 +1,69 @@
-import {describe,it,expect} from 'vitest';
-import {connectionStatus,automationPlayer,graceExpired,CONNECTION_STALE,DISCONNECT_GRACE,LEAVE_GRACE} from '../../src/game/engine/connections.js';
-import {createGame} from '../../src/game/engine/game.js';
-const players=[{id:'host',ai:false},{id:'guest',ai:false}];
-describe('connection grace and temporary control',()=>{
-  it('has no countdown or automatic action while a human is connected',()=>{const game=createGame(players),connections={host:{status:'online',lastSeen:1000}};expect(connectionStatus(connections.host,2000).deadline).toBeNull();expect(automationPlayer(game,connections,2000)).toBeNull();});
-  it('waits five full minutes after detecting a missing heartbeat',()=>{const connection={status:'online',lastSeen:1000},deadline=1000+CONNECTION_STALE+DISCONNECT_GRACE;expect(connectionStatus(connection,31000)).toMatchObject({status:'disconnected',deadline});expect(graceExpired(connection,deadline-1)).toBe(false);expect(graceExpired(connection,deadline)).toBe(true);});
-  it('uses two minutes when the player explicitly leaves',()=>{const connection={status:'left',lastSeen:1000};expect(connectionStatus(connection,2000).deadline).toBe(1000+LEAVE_GRACE);expect(graceExpired(connection,120999)).toBe(false);expect(graceExpired(connection,121000)).toBe(true);});
-  it('returns control immediately on a fresh heartbeat',()=>{const game=createGame(players),connections={host:{status:'disconnected',lastSeen:1000,deadline:2000}};expect(automationPlayer(game,connections,3000)?.id).toBe('host');connections.host={status:'online',lastSeen:3000,deadline:null};expect(automationPlayer(game,connections,3001)).toBeNull();});
-  it('automates the actual debtor even when another commander is on turn',()=>{const game=createGame(players);game.phase='debt';game.debt={payer:'guest',amount:100};const connections={host:{status:'online',lastSeen:1000},guest:{status:'left',lastSeen:0,deadline:100}};expect(automationPlayer(game,connections,1100)?.id).toBe('guest');});
-  it('does not bid for a disconnected commander before grace expires',()=>{const game=createGame(players);game.phase='auction';game.auction={bidder:null,passed:[]};const connections={host:{status:'left',lastSeen:0,deadline:120000}};expect(automationPlayer(game,connections,10000)).toBeNull();expect(automationPlayer(game,connections,120000)?.id).toBe('host');});
-  it('never automates finished matches or eliminated players',()=>{const game=createGame(players),connections={host:{status:'left',deadline:1,lastSeen:0}};game.players[0].bankrupt=true;expect(automationPlayer(game,connections,100)).toBeNull();game.players[0].bankrupt=false;game.phase='finished';expect(automationPlayer(game,connections,100)).toBeNull();});
+import { describe, it, expect } from 'vitest';
+import {
+  connectionStatus,
+  automationPlayer,
+  graceExpired,
+  CONNECTION_STALE,
+  DISCONNECT_GRACE,
+  LEAVE_GRACE,
+} from '../../src/game/engine/connections.js';
+import { createGame } from '../../src/game/engine/game.js';
+const players = [
+  { id: 'host', ai: false },
+  { id: 'guest', ai: false },
+];
+describe('connection grace and temporary control', () => {
+  it('has no countdown or automatic action while a human is connected', () => {
+    const game = createGame(players),
+      connections = { host: { status: 'online', lastSeen: 1000 } };
+    expect(connectionStatus(connections.host, 2000).deadline).toBeNull();
+    expect(automationPlayer(game, connections, 2000)).toBeNull();
+  });
+  it('waits five full minutes after detecting a missing heartbeat', () => {
+    const connection = { status: 'online', lastSeen: 1000 },
+      deadline = 1000 + CONNECTION_STALE + DISCONNECT_GRACE;
+    expect(connectionStatus(connection, 31000)).toMatchObject({ status: 'disconnected', deadline });
+    expect(graceExpired(connection, deadline - 1)).toBe(false);
+    expect(graceExpired(connection, deadline)).toBe(true);
+  });
+  it('uses two minutes when the player explicitly leaves', () => {
+    const connection = { status: 'left', lastSeen: 1000 };
+    expect(connectionStatus(connection, 2000).deadline).toBe(1000 + LEAVE_GRACE);
+    expect(graceExpired(connection, 120999)).toBe(false);
+    expect(graceExpired(connection, 121000)).toBe(true);
+  });
+  it('returns control immediately on a fresh heartbeat', () => {
+    const game = createGame(players),
+      connections = { host: { status: 'disconnected', lastSeen: 1000, deadline: 2000 } };
+    expect(automationPlayer(game, connections, 3000)?.id).toBe('host');
+    connections.host = { status: 'online', lastSeen: 3000, deadline: null };
+    expect(automationPlayer(game, connections, 3001)).toBeNull();
+  });
+  it('automates the actual debtor even when another commander is on turn', () => {
+    const game = createGame(players);
+    game.phase = 'debt';
+    game.debt = { payer: 'guest', amount: 100 };
+    const connections = {
+      host: { status: 'online', lastSeen: 1000 },
+      guest: { status: 'left', lastSeen: 0, deadline: 100 },
+    };
+    expect(automationPlayer(game, connections, 1100)?.id).toBe('guest');
+  });
+  it('does not bid for a disconnected commander before grace expires', () => {
+    const game = createGame(players);
+    game.phase = 'auction';
+    game.auction = { bidder: null, passed: [] };
+    const connections = { host: { status: 'left', lastSeen: 0, deadline: 120000 } };
+    expect(automationPlayer(game, connections, 10000)).toBeNull();
+    expect(automationPlayer(game, connections, 120000)?.id).toBe('host');
+  });
+  it('never automates finished matches or eliminated players', () => {
+    const game = createGame(players),
+      connections = { host: { status: 'left', deadline: 1, lastSeen: 0 } };
+    game.players[0].bankrupt = true;
+    expect(automationPlayer(game, connections, 100)).toBeNull();
+    game.players[0].bankrupt = false;
+    game.phase = 'finished';
+    expect(automationPlayer(game, connections, 100)).toBeNull();
+  });
 });

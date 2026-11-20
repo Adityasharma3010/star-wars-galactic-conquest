@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.git/
+.env
+.env.*
+.vercel/
+.supabase/
+.npm-cache/
+supabase/.temp/
+test-results/
+playwright-report/
+scripts/asset-research/
+package-lock.json
+*.log

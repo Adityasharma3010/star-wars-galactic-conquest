@@ -1,24 +1,998 @@
 /* Original command-terminal compositions and event animation scenes. */
-.modal-backdrop{background:radial-gradient(ellipse at 50% 40%,#142b42b8,#02060df2 75%);backdrop-filter:blur(9px)}
-.holo-panel{border:1px solid #4b8093;border-radius:7px;background:linear-gradient(145deg,#16304470,transparent 45%),repeating-linear-gradient(0deg,#80d6f603 0 1px,transparent 1px 5px),#08121e;box-shadow:0 0 0 5px #18364645,0 30px 110px #000d,0 0 55px #5acaff0c;position:relative;padding:26px;max-width:calc(100vw - 30px)}
-.holo-panel:before{content:'';position:absolute;top:-1px;left:26px;width:80px;height:3px;background:var(--gold);box-shadow:0 0 15px #e5bd7360;pointer-events:none}
-.holo-panel:after{content:'';position:absolute;right:20px;bottom:12px;width:35px;height:6px;border-top:2px solid #5da6bd;border-bottom:2px solid #5da6bd;opacity:.5;pointer-events:none}
-.holo-panel.wide{width:980px;max-width:calc(100vw - 30px)}.holo-panel .modal-heading{padding:0 0 21px;border-bottom:1px solid #315368;margin-bottom:24px}.holo-panel .modal-heading h2{font-family:Bahnschrift,'Arial Narrow',sans-serif;font-size:28px;font-weight:600;letter-spacing:.7px;margin-top:8px;color:#e9f5ff}.holo-panel .modal-heading p{color:#9bafc2;font-size:12px;line-height:1.6;max-width:90%}.holo-panel .eyebrow{letter-spacing:2px;font-size:9px}.holo-status-light{display:inline-block;width:5px;height:5px;vertical-align:middle;background:#9ce8ee;margin-right:5px;box-shadow:0 0 9px #83e6f8;border-radius:50%}.holo-panel .close-modal{border:1px solid #345269;background:#162638!important;border-radius:3px;color:#abcad9;width:33px;height:33px}.holo-panel .field>span{font-size:9px;color:#8bafc3;letter-spacing:1.25px}.holo-panel input,.holo-panel select{background:#07111de0;border:1px solid #335267;min-height:42px;color:#e5eff8;box-shadow:inset 0 1px 7px #0005}.holo-panel input:focus,.holo-panel select:focus{border-color:#7eb6cb;outline:1px solid #7eb6cb;box-shadow:0 0 14px #68b9d31c}.holo-panel input[type=checkbox]{min-height:0;box-shadow:none}.holo-panel input[type=range]{box-shadow:none;min-height:30px}.holo-panel .button{border-radius:3px;min-height:42px;letter-spacing:.35px}.holo-panel .gold-button{background:linear-gradient(100deg,#f0d99a,#d6b063);box-shadow:0 0 20px #cdb46a18;font-size:12px}.holo-panel .muted{color:#8fa6b7;line-height:1.7}.holo-panel h4{font-family:Bahnschrift,'Arial Narrow',sans-serif;letter-spacing:1px}.holo-panel .notice{border-color:#375e76;background:#122b40}.holo-panel .mode-tabs{background:#06101b;border:1px solid #28465c;padding:4px;gap:3px}.holo-panel .mode-tabs button{border-radius:2px}.holo-panel .mode-tabs button.selected{background:#213f50!important;border-color:#6a9aae;color:#deeff8}.holo-panel .rent-table>div{border-color:#223e52}.holo-panel .rent-table .current{background:#29413a;color:#e9d38f}.holo-panel .character-preview,.holo-panel .room-code{background:radial-gradient(circle at 50% 25%,#35546b70,#0a1622 70%);border-color:#355b74}.holo-panel .room-players>div,.holo-panel .trade-offer,.holo-panel .setup-summary{background:#0d1c2b;border-color:#31516a}.holo-panel .auction-bid{background:radial-gradient(ellipse,#24415940,#0b1522);border:1px solid #3b647a}.holo-panel .auction-bid>strong{color:#efce7d;text-shadow:0 0 22px #e5bd7330}.holo-panel .rules-intro{border-color:#355d75;color:#d7bd7f}.holo-panel .deed-art{background:radial-gradient(ellipse at top,#223b50,#07111d);border-color:#345570}.holo-panel .source-link{color:#a4ccde}.holo-panel .form-error{border-color:#a85450;background:#4b232b;color:#ffd5ce}
+.modal-backdrop {
+  background: radial-gradient(ellipse at 50% 40%, #142b42b8, #02060df2 75%);
+  backdrop-filter: blur(9px);
+}
+.holo-panel {
+  border: 1px solid #4b8093;
+  border-radius: 7px;
+  background:
+    linear-gradient(145deg, #16304470, transparent 45%),
+    repeating-linear-gradient(0deg, #80d6f603 0 1px, transparent 1px 5px), #08121e;
+  box-shadow:
+    0 0 0 5px #18364645,
+    0 30px 110px #000d,
+    0 0 55px #5acaff0c;
+  position: relative;
+  padding: 26px;
+  max-width: calc(100vw - 30px);
+}
+.holo-panel:before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 26px;
+  width: 80px;
+  height: 3px;
+  background: var(--gold);
+  box-shadow: 0 0 15px #e5bd7360;
+  pointer-events: none;
+}
+.holo-panel:after {
+  content: '';
+  position: absolute;
+  right: 20px;
+  bottom: 12px;
+  width: 35px;
+  height: 6px;
+  border-top: 2px solid #5da6bd;
+  border-bottom: 2px solid #5da6bd;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.holo-panel.wide {
+  width: 980px;
+  max-width: calc(100vw - 30px);
+}
+.holo-panel .modal-heading {
+  padding: 0 0 21px;
+  border-bottom: 1px solid #315368;
+  margin-bottom: 24px;
+}
+.holo-panel .modal-heading h2 {
+  font-family: Bahnschrift, 'Arial Narrow', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  margin-top: 8px;
+  color: #e9f5ff;
+}
+.holo-panel .modal-heading p {
+  color: #9bafc2;
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 90%;
+}
+.holo-panel .eyebrow {
+  letter-spacing: 2px;
+  font-size: 9px;
+}
+.holo-status-light {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  vertical-align: middle;
+  background: #9ce8ee;
+  margin-right: 5px;
+  box-shadow: 0 0 9px #83e6f8;
+  border-radius: 50%;
+}
+.holo-panel .close-modal {
+  border: 1px solid #345269;
+  background: #162638 !important;
+  border-radius: 3px;
+  color: #abcad9;
+  width: 33px;
+  height: 33px;
+}
+.holo-panel .field > span {
+  font-size: 9px;
+  color: #8bafc3;
+  letter-spacing: 1.25px;
+}
+.holo-panel input,
+.holo-panel select {
+  background: #07111de0;
+  border: 1px solid #335267;
+  min-height: 42px;
+  color: #e5eff8;
+  box-shadow: inset 0 1px 7px #0005;
+}
+.holo-panel input:focus,
+.holo-panel select:focus {
+  border-color: #7eb6cb;
+  outline: 1px solid #7eb6cb;
+  box-shadow: 0 0 14px #68b9d31c;
+}
+.holo-panel input[type='checkbox'] {
+  min-height: 0;
+  box-shadow: none;
+}
+.holo-panel input[type='range'] {
+  box-shadow: none;
+  min-height: 30px;
+}
+.holo-panel .button {
+  border-radius: 3px;
+  min-height: 42px;
+  letter-spacing: 0.35px;
+}
+.holo-panel .gold-button {
+  background: linear-gradient(100deg, #f0d99a, #d6b063);
+  box-shadow: 0 0 20px #cdb46a18;
+  font-size: 12px;
+}
+.holo-panel .muted {
+  color: #8fa6b7;
+  line-height: 1.7;
+}
+.holo-panel h4 {
+  font-family: Bahnschrift, 'Arial Narrow', sans-serif;
+  letter-spacing: 1px;
+}
+.holo-panel .notice {
+  border-color: #375e76;
+  background: #122b40;
+}
+.holo-panel .mode-tabs {
+  background: #06101b;
+  border: 1px solid #28465c;
+  padding: 4px;
+  gap: 3px;
+}
+.holo-panel .mode-tabs button {
+  border-radius: 2px;
+}
+.holo-panel .mode-tabs button.selected {
+  background: #213f50 !important;
+  border-color: #6a9aae;
+  color: #deeff8;
+}
+.holo-panel .rent-table > div {
+  border-color: #223e52;
+}
+.holo-panel .rent-table .current {
+  background: #29413a;
+  color: #e9d38f;
+}
+.holo-panel .character-preview,
+.holo-panel .room-code {
+  background: radial-gradient(circle at 50% 25%, #35546b70, #0a1622 70%);
+  border-color: #355b74;
+}
+.holo-panel .room-players > div,
+.holo-panel .trade-offer,
+.holo-panel .setup-summary {
+  background: #0d1c2b;
+  border-color: #31516a;
+}
+.holo-panel .auction-bid {
+  background: radial-gradient(ellipse, #24415940, #0b1522);
+  border: 1px solid #3b647a;
+}
+.holo-panel .auction-bid > strong {
+  color: #efce7d;
+  text-shadow: 0 0 22px #e5bd7330;
+}
+.holo-panel .rules-intro {
+  border-color: #355d75;
+  color: #d7bd7f;
+}
+.holo-panel .deed-art {
+  background: radial-gradient(ellipse at top, #223b50, #07111d);
+  border-color: #345570;
+}
+.holo-panel .source-link {
+  color: #a4ccde;
+}
+.holo-panel .form-error {
+  border-color: #a85450;
+  background: #4b232b;
+  color: #ffd5ce;
+}
 
-.trade-banner{display:flex;align-items:center;gap:13px;padding:16px 18px;background:linear-gradient(110deg,#213b4580,#101c2d);border:1px solid #426271;border-left:3px solid #d9c080;margin-bottom:22px;color:#d9c080}.trade-banner p{font-size:13px;line-height:1.7;color:#bdcfdd;margin-top:4px}.hololink-status{margin-left:auto;font-size:8px;letter-spacing:1.2px;color:#7db9b0;white-space:nowrap}.hololink-status i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#8cd6bd;box-shadow:0 0 6px #8cd6bd;margin-right:5px}.trade-grid{grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);gap:12px;align-items:stretch}.trade-side{border:1px solid #35566a;border-top:2px solid #8bafc3;border-radius:4px;padding:18px;background:linear-gradient(155deg,#17304377,#0b1625)}.trade-side:last-child{border-top-color:var(--gold)}.trade-manifest-label{display:block;color:#9dbed0;font-size:9px;letter-spacing:1.3px;padding-bottom:12px;border-bottom:1px solid #315166;min-height:28px}.trade-person{margin-top:12px;margin-bottom:17px}.trade-person strong{font-size:14px}.trade-properties{min-height:120px;max-height:255px;border-top:1px solid #274358;border-bottom:1px solid #274358;margin-bottom:17px}.trade-properties label:has(.trade-world-image){display:grid;grid-template-columns:16px 43px 3px minmax(0,1fr) auto;align-items:center;gap:9px;padding:10px 3px;border-bottom:1px solid #213748;color:#d9e6ef}.trade-properties label:has(input:checked){background:#21405290}.trade-properties label:has(.trade-world-image)>i{width:3px;height:32px;border-radius:1px}.trade-world-image{display:block;width:43px;height:34px;overflow:hidden;border:1px solid #476477;border-radius:2px}.trade-world-image .planet-art{display:block;object-fit:cover;width:100%;height:100%;margin:0}.trade-world-name{font-size:12px!important;line-height:1.4}.trade-world-name small{display:block;color:#839aad;font-size:6px;letter-spacing:.65px;line-height:1.5;margin-top:3px}.trade-properties label>span:last-child{font-size:10px}.trade-transfer{align-self:center;display:flex;flex-direction:column;align-items:center;gap:10px;color:#87becf}.trade-transfer span{font-size:6px;letter-spacing:.8px}.negotiation-deck>.gold-button{margin-top:15px}.pending-trades{border-top:1px solid #315166;margin-top:25px;padding-top:23px}.pending-trades h4{font-size:16px;letter-spacing:1px;margin-bottom:14px}.trade-offer{padding:17px;border-left:2px solid #88bcc9}.trade-offer small{color:#88acbe;letter-spacing:.6px;line-height:1.8}.trade-offer p{color:#a6bfce;font-size:12px;line-height:1.7}.trade-offer.accepted{border-left-color:#8ace9e}.trade-offer.declined,.trade-offer.cancelled{border-left-color:#bc7167;opacity:.7}.trade-offer.countered{border-left-color:#b493d5}
+.trade-banner {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 18px;
+  background: linear-gradient(110deg, #213b4580, #101c2d);
+  border: 1px solid #426271;
+  border-left: 3px solid #d9c080;
+  margin-bottom: 22px;
+  color: #d9c080;
+}
+.trade-banner p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #bdcfdd;
+  margin-top: 4px;
+}
+.hololink-status {
+  margin-left: auto;
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  color: #7db9b0;
+  white-space: nowrap;
+}
+.hololink-status i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8cd6bd;
+  box-shadow: 0 0 6px #8cd6bd;
+  margin-right: 5px;
+}
+.trade-grid {
+  grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+.trade-side {
+  border: 1px solid #35566a;
+  border-top: 2px solid #8bafc3;
+  border-radius: 4px;
+  padding: 18px;
+  background: linear-gradient(155deg, #17304377, #0b1625);
+}
+.trade-side:last-child {
+  border-top-color: var(--gold);
+}
+.trade-manifest-label {
+  display: block;
+  color: #9dbed0;
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #315166;
+  min-height: 28px;
+}
+.trade-person {
+  margin-top: 12px;
+  margin-bottom: 17px;
+}
+.trade-person strong {
+  font-size: 14px;
+}
+.trade-properties {
+  min-height: 120px;
+  max-height: 255px;
+  border-top: 1px solid #274358;
+  border-bottom: 1px solid #274358;
+  margin-bottom: 17px;
+}
+.trade-properties label:has(.trade-world-image) {
+  display: grid;
+  grid-template-columns: 16px 43px 3px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 3px;
+  border-bottom: 1px solid #213748;
+  color: #d9e6ef;
+}
+.trade-properties label:has(input:checked) {
+  background: #21405290;
+}
+.trade-properties label:has(.trade-world-image) > i {
+  width: 3px;
+  height: 32px;
+  border-radius: 1px;
+}
+.trade-world-image {
+  display: block;
+  width: 43px;
+  height: 34px;
+  overflow: hidden;
+  border: 1px solid #476477;
+  border-radius: 2px;
+}
+.trade-world-image .planet-art {
+  display: block;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.trade-world-name {
+  font-size: 12px !important;
+  line-height: 1.4;
+}
+.trade-world-name small {
+  display: block;
+  color: #839aad;
+  font-size: 6px;
+  letter-spacing: 0.65px;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+.trade-properties label > span:last-child {
+  font-size: 10px;
+}
+.trade-transfer {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #87becf;
+}
+.trade-transfer span {
+  font-size: 6px;
+  letter-spacing: 0.8px;
+}
+.negotiation-deck > .gold-button {
+  margin-top: 15px;
+}
+.pending-trades {
+  border-top: 1px solid #315166;
+  margin-top: 25px;
+  padding-top: 23px;
+}
+.pending-trades h4 {
+  font-size: 16px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+.trade-offer {
+  padding: 17px;
+  border-left: 2px solid #88bcc9;
+}
+.trade-offer small {
+  color: #88acbe;
+  letter-spacing: 0.6px;
+  line-height: 1.8;
+}
+.trade-offer p {
+  color: #a6bfce;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.trade-offer.accepted {
+  border-left-color: #8ace9e;
+}
+.trade-offer.declined,
+.trade-offer.cancelled {
+  border-left-color: #bc7167;
+  opacity: 0.7;
+}
+.trade-offer.countered {
+  border-left-color: #b493d5;
+}
 
-.modal-force-event,.modal-galactic-event{display:grid;grid-template-columns:1.2fr 1fr;column-gap:28px;width:940px!important}.modal-force-event .modal-heading,.modal-galactic-event .modal-heading{grid-column:1/-1}.event-scene{position:relative;height:350px;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 50% 45%,#153e5b,#030a14 75%);border:1px solid #325d75;border-radius:4px;--scene-color:#82d5ff}.force-scene{background:radial-gradient(ellipse at 50% 60%,#193f5850,#030810 75%);--scene-color:#a4dfed}.imperial-scene{--scene-color:#f2827f;background:radial-gradient(ellipse at 50% 60%,#572a4150,#0a0711 75%)}.event-nebula{position:absolute;inset:-40px;background:radial-gradient(ellipse at 65% 30%,#6262ac45,transparent 60%),radial-gradient(ellipse at 20% 90%,#337cb630,transparent 70%);filter:blur(20px);animation:nebula-drift 9s ease-in-out infinite alternate}.scene-coordinate{position:absolute;left:15px;top:15px;font-size:7px;letter-spacing:1.35px;color:#84adbf;z-index:3}.event-star-trails{position:absolute;inset:0;display:grid;place-items:center;opacity:.7}.event-star-trails i{position:absolute;width:65px;height:1px;background:linear-gradient(90deg,transparent,#a3e7ff);transform-origin:0 0;animation:hyperspace-trail 3s linear infinite;animation-delay:var(--delay)}.holocron-rings{position:absolute;width:190px;height:190px;left:50%;top:45%;transform:translate(-50%,-50%);color:var(--scene-color)}.holocron-rings i{position:absolute;inset:0;border:1px solid currentColor;border-radius:50%;opacity:.35;animation:holocron-orbit 12s linear infinite}.holocron-rings i:nth-child(2){inset:-22px;border-style:dashed;opacity:.15;animation-direction:reverse}.holocron-rings i:nth-child(3){inset:20px;border-width:3px;opacity:.13}.holocron-emblem{position:absolute;left:50%;top:45%;width:128px;height:148px;transform:translate(-50%,-50%);color:var(--scene-color);filter:drop-shadow(0 0 13px #a4d9fb70);animation:hologram-pulse 4s ease-in-out infinite}.holocron-emblem svg{width:100%;height:100%}.holocron-base{position:absolute;width:190px;height:35px;left:50%;bottom:82px;transform:translateX(-50%);border:2px solid #86bdcc60;border-radius:50%;background:radial-gradient(ellipse,#5dbcd230,transparent);box-shadow:0 -17px 30px #67c8e31a}.saber-beam{position:absolute;top:83px;height:154px;width:4px;background:#edffff;border-radius:5px;box-shadow:0 0 5px 2px #defbff,0 0 22px 7px #57bfff70;animation:saber-ignite 1s cubic-bezier(.2,.7,.1,1) both;transform-origin:center bottom;z-index:4}.saber-left{left:17%;rotate:-25deg}.saber-right{right:17%;rotate:25deg;box-shadow:0 0 5px 2px #edffe8,0 0 22px 7px #8aff6770}.imperial-scene .saber-beam{box-shadow:0 0 6px 2px #ffdddd,0 0 22px 7px #ff525d70}.saber-beam:after{content:'';position:absolute;top:100%;left:-3px;width:10px;height:23px;background:linear-gradient(90deg,#607585,#cad8dc,#536c7a);border-radius:2px;border:1px solid #b1c4cc}.scene-caption{position:absolute;bottom:27px;left:15px;right:15px;text-align:center;z-index:5;font-family:Bahnschrift,'Arial Narrow',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#cfebf9}.scene-caption span{display:block;font-size:6px;color:#759bad;letter-spacing:2.4px;margin-top:9px}.transmission-planet{position:absolute;right:-70px;top:20px;width:260px;height:260px;border-radius:50%;overflow:hidden;border:1px solid #698aa9;box-shadow:-12px 0 35px #3c7cad22;opacity:.6}.transmission-planet .planet-art{width:100%;height:100%;object-fit:cover}.transmission-planet:after{content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(100deg,#000e,transparent 60%)}.transmission-grid{position:absolute;inset:0;background-image:linear-gradient(#437b9425 1px,transparent 1px),linear-gradient(90deg,#437b9425 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(transparent,#000)}.transmission-radar{position:absolute;width:230px;height:230px;left:-70px;top:95px;border:1px solid #76c5df40;border-radius:50%;background:conic-gradient(from 30deg,transparent 60%,#68d9f125,transparent);animation:holocron-orbit 12s linear infinite}.transmission-radar i{position:absolute;inset:25px;border:1px solid #77b6cb30;border-radius:50%}.transmission-radar i:nth-child(2){inset:55px}.transmission-radar i:nth-child(3){inset:85px}.event-starfighter{position:absolute;width:220px;height:125px;left:50%;top:37%;transform:translate(-50%,-50%) rotate(-15deg);filter:drop-shadow(0 13px 11px #0009) drop-shadow(0 0 8px #89bdcf40);animation:starfighter-arrival 2.5s cubic-bezier(.18,.8,.3,1) both,starfighter-float 6s 2.5s ease-in-out infinite}.transmission-signal{position:absolute;top:70%;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:7px;letter-spacing:1.7px;color:#9ed7e5}.event-briefing{display:flex;flex-direction:column;justify-content:center;min-width:0}.event-type{display:flex;align-items:center;gap:11px;color:#a0d3e4;margin-bottom:21px}.event-type>span{font-size:9px;letter-spacing:1.5px;flex:1}.event-type small{display:block;font-size:6px;color:#6b91a7;letter-spacing:1.8px;margin-top:5px}.event-type>svg:last-child{opacity:.3}.event-briefing h3{font-family:Bahnschrift,'Arial Narrow',sans-serif;font-size:29px;font-weight:600;line-height:1.18;letter-spacing:.3px;color:#e5f3fb}.event-briefing p{font-size:14px;line-height:1.85;color:#a4bccd;margin:17px 0 26px}.event-footer{display:flex;justify-content:center;align-items:center;gap:5px;font-size:8px;color:#7194a6;margin-top:13px}
+.modal-force-event,
+.modal-galactic-event {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  column-gap: 28px;
+  width: 940px !important;
+}
+.modal-force-event .modal-heading,
+.modal-galactic-event .modal-heading {
+  grid-column: 1/-1;
+}
+.event-scene {
+  position: relative;
+  height: 350px;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(ellipse at 50% 45%, #153e5b, #030a14 75%);
+  border: 1px solid #325d75;
+  border-radius: 4px;
+  --scene-color: #82d5ff;
+}
+.force-scene {
+  background: radial-gradient(ellipse at 50% 60%, #193f5850, #030810 75%);
+  --scene-color: #a4dfed;
+}
+.imperial-scene {
+  --scene-color: #f2827f;
+  background: radial-gradient(ellipse at 50% 60%, #572a4150, #0a0711 75%);
+}
+.event-nebula {
+  position: absolute;
+  inset: -40px;
+  background:
+    radial-gradient(ellipse at 65% 30%, #6262ac45, transparent 60%),
+    radial-gradient(ellipse at 20% 90%, #337cb630, transparent 70%);
+  filter: blur(20px);
+  animation: nebula-drift 9s ease-in-out infinite alternate;
+}
+.scene-coordinate {
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  font-size: 7px;
+  letter-spacing: 1.35px;
+  color: #84adbf;
+  z-index: 3;
+}
+.event-star-trails {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0.7;
+}
+.event-star-trails i {
+  position: absolute;
+  width: 65px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a3e7ff);
+  transform-origin: 0 0;
+  animation: hyperspace-trail 3s linear infinite;
+  animation-delay: var(--delay);
+}
+.holocron-rings {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  color: var(--scene-color);
+}
+.holocron-rings i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.35;
+  animation: holocron-orbit 12s linear infinite;
+}
+.holocron-rings i:nth-child(2) {
+  inset: -22px;
+  border-style: dashed;
+  opacity: 0.15;
+  animation-direction: reverse;
+}
+.holocron-rings i:nth-child(3) {
+  inset: 20px;
+  border-width: 3px;
+  opacity: 0.13;
+}
+.holocron-emblem {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 128px;
+  height: 148px;
+  transform: translate(-50%, -50%);
+  color: var(--scene-color);
+  filter: drop-shadow(0 0 13px #a4d9fb70);
+  animation: hologram-pulse 4s ease-in-out infinite;
+}
+.holocron-emblem svg {
+  width: 100%;
+  height: 100%;
+}
+.holocron-base {
+  position: absolute;
+  width: 190px;
+  height: 35px;
+  left: 50%;
+  bottom: 82px;
+  transform: translateX(-50%);
+  border: 2px solid #86bdcc60;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #5dbcd230, transparent);
+  box-shadow: 0 -17px 30px #67c8e31a;
+}
+.saber-beam {
+  position: absolute;
+  top: 83px;
+  height: 154px;
+  width: 4px;
+  background: #edffff;
+  border-radius: 5px;
+  box-shadow:
+    0 0 5px 2px #defbff,
+    0 0 22px 7px #57bfff70;
+  animation: saber-ignite 1s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  transform-origin: center bottom;
+  z-index: 4;
+}
+.saber-left {
+  left: 17%;
+  rotate: -25deg;
+}
+.saber-right {
+  right: 17%;
+  rotate: 25deg;
+  box-shadow:
+    0 0 5px 2px #edffe8,
+    0 0 22px 7px #8aff6770;
+}
+.imperial-scene .saber-beam {
+  box-shadow:
+    0 0 6px 2px #ffdddd,
+    0 0 22px 7px #ff525d70;
+}
+.saber-beam:after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: -3px;
+  width: 10px;
+  height: 23px;
+  background: linear-gradient(90deg, #607585, #cad8dc, #536c7a);
+  border-radius: 2px;
+  border: 1px solid #b1c4cc;
+}
+.scene-caption {
+  position: absolute;
+  bottom: 27px;
+  left: 15px;
+  right: 15px;
+  text-align: center;
+  z-index: 5;
+  font-family: Bahnschrift, 'Arial Narrow', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #cfebf9;
+}
+.scene-caption span {
+  display: block;
+  font-size: 6px;
+  color: #759bad;
+  letter-spacing: 2.4px;
+  margin-top: 9px;
+}
+.transmission-planet {
+  position: absolute;
+  right: -70px;
+  top: 20px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #698aa9;
+  box-shadow: -12px 0 35px #3c7cad22;
+  opacity: 0.6;
+}
+.transmission-planet .planet-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.transmission-planet:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(100deg, #000e, transparent 60%);
+}
+.transmission-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(#437b9425 1px, transparent 1px),
+    linear-gradient(90deg, #437b9425 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(transparent, #000);
+}
+.transmission-radar {
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  left: -70px;
+  top: 95px;
+  border: 1px solid #76c5df40;
+  border-radius: 50%;
+  background: conic-gradient(from 30deg, transparent 60%, #68d9f125, transparent);
+  animation: holocron-orbit 12s linear infinite;
+}
+.transmission-radar i {
+  position: absolute;
+  inset: 25px;
+  border: 1px solid #77b6cb30;
+  border-radius: 50%;
+}
+.transmission-radar i:nth-child(2) {
+  inset: 55px;
+}
+.transmission-radar i:nth-child(3) {
+  inset: 85px;
+}
+.event-starfighter {
+  position: absolute;
+  width: 220px;
+  height: 125px;
+  left: 50%;
+  top: 37%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  filter: drop-shadow(0 13px 11px #0009) drop-shadow(0 0 8px #89bdcf40);
+  animation:
+    starfighter-arrival 2.5s cubic-bezier(0.18, 0.8, 0.3, 1) both,
+    starfighter-float 6s 2.5s ease-in-out infinite;
+}
+.transmission-signal {
+  position: absolute;
+  top: 70%;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 7px;
+  letter-spacing: 1.7px;
+  color: #9ed7e5;
+}
+.event-briefing {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.event-type {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #a0d3e4;
+  margin-bottom: 21px;
+}
+.event-type > span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  flex: 1;
+}
+.event-type small {
+  display: block;
+  font-size: 6px;
+  color: #6b91a7;
+  letter-spacing: 1.8px;
+  margin-top: 5px;
+}
+.event-type > svg:last-child {
+  opacity: 0.3;
+}
+.event-briefing h3 {
+  font-family: Bahnschrift, 'Arial Narrow', sans-serif;
+  font-size: 29px;
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: 0.3px;
+  color: #e5f3fb;
+}
+.event-briefing p {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #a4bccd;
+  margin: 17px 0 26px;
+}
+.event-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  color: #7194a6;
+  margin-top: 13px;
+}
 
-.owner-sigil{position:absolute;top:6px;left:3px;width:16px;height:16px;z-index:8;background:#071321b0;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 6px #0006}.owner-sigil>svg:first-child{width:15px;height:15px}.owner-sigil>svg+svg{position:absolute;right:-4px;bottom:-4px;background:#17222f;border-radius:2px}.ownership-legend>button>svg{color:var(--player)}.commander-card{border-top-color:#446178}.property-panel{box-shadow:inset 0 2px #4c738780}.activity-panel{border-top-color:#42657b}.connection-grace{display:flex;align-items:center;gap:6px;max-width:170px;font-size:6px;letter-spacing:.6px;color:#e4ba7b;background:#302c22;border:1px solid #64553b;padding:6px 7px;border-radius:3px}.connection-grace>span{display:flex;align-items:center;gap:8px}.connection-grace strong{font-size:12px;font-variant-numeric:tabular-nums;color:#f6d49b;letter-spacing:.5px}.connection-grace.autopilot{color:#9cbdcf;background:#182b3a;border-color:#3c617b}.commander-card>.connection-grace{margin-top:9px;max-width:100%}.commander-card.active>.connection-grace{display:none}.leave-match-button{font-size:10px;padding:8px 11px;min-height:34px;color:#b8c8d3;border-color:#385265}.match-away-banner{display:flex;align-items:center;gap:14px;border:1px solid #586376;background:linear-gradient(90deg,#1b3447,#121c2a);padding:18px;margin:15px 0;color:#a9d1e5}.match-away-banner>div{flex:1}.match-away-banner strong{font-size:15px}.match-away-banner p{font-size:11px;line-height:1.6;margin-top:4px;color:#98b0c2}
+.owner-sigil {
+  position: absolute;
+  top: 6px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  z-index: 8;
+  background: #071321b0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 6px #0006;
+}
+.owner-sigil > svg:first-child {
+  width: 15px;
+  height: 15px;
+}
+.owner-sigil > svg + svg {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  background: #17222f;
+  border-radius: 2px;
+}
+.ownership-legend > button > svg {
+  color: var(--player);
+}
+.commander-card {
+  border-top-color: #446178;
+}
+.property-panel {
+  box-shadow: inset 0 2px #4c738780;
+}
+.activity-panel {
+  border-top-color: #42657b;
+}
+.connection-grace {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 170px;
+  font-size: 6px;
+  letter-spacing: 0.6px;
+  color: #e4ba7b;
+  background: #302c22;
+  border: 1px solid #64553b;
+  padding: 6px 7px;
+  border-radius: 3px;
+}
+.connection-grace > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.connection-grace strong {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #f6d49b;
+  letter-spacing: 0.5px;
+}
+.connection-grace.autopilot {
+  color: #9cbdcf;
+  background: #182b3a;
+  border-color: #3c617b;
+}
+.commander-card > .connection-grace {
+  margin-top: 9px;
+  max-width: 100%;
+}
+.commander-card.active > .connection-grace {
+  display: none;
+}
+.leave-match-button {
+  font-size: 10px;
+  padding: 8px 11px;
+  min-height: 34px;
+  color: #b8c8d3;
+  border-color: #385265;
+}
+.match-away-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #586376;
+  background: linear-gradient(90deg, #1b3447, #121c2a);
+  padding: 18px;
+  margin: 15px 0;
+  color: #a9d1e5;
+}
+.match-away-banner > div {
+  flex: 1;
+}
+.match-away-banner strong {
+  font-size: 15px;
+}
+.match-away-banner p {
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 4px;
+  color: #98b0c2;
+}
 
-@keyframes saber-ignite{from{scale:1 .05;opacity:0}to{scale:1 1;opacity:1}}
-@keyframes holocron-orbit{to{rotate:360deg}}
-@keyframes hologram-pulse{0%,100%{opacity:.95;filter:drop-shadow(0 0 13px #a4d9fb70)}50%{opacity:.7;filter:drop-shadow(0 0 25px #a4d9fb50)}}
-@keyframes hyperspace-trail{0%{transform:rotate(var(--angle)) translateX(20px) scaleX(.1);opacity:0}25%{opacity:.8}100%{transform:rotate(var(--angle)) translateX(var(--distance)) scaleX(1.4);opacity:0}}
-@keyframes nebula-drift{to{translate:15px -10px;scale:1.1}}
-@keyframes starfighter-arrival{from{transform:translate(-210%,-20%) rotate(-22deg) scale(.15);opacity:0}to{transform:translate(-50%,-50%) rotate(-15deg);opacity:1}}
-@keyframes starfighter-float{0%,100%{translate:0 0}50%{translate:5px -8px}}
-@media(max-width:700px){.holo-panel{padding:20px;max-width:calc(100vw - 22px)}.holo-panel .modal-heading h2{font-size:23px}.holo-panel .modal-heading .eyebrow{font-size:7px;letter-spacing:1px}.holo-panel .modal-heading p{font-size:11px}.trade-grid{grid-template-columns:minmax(0,1fr);gap:10px}.trade-transfer{padding:8px;flex-direction:row;justify-content:center;rotate:0deg}.trade-side{padding:14px}.trade-banner{padding:12px;gap:9px;flex-wrap:wrap}.trade-banner p{font-size:11px}.hololink-status{margin-left:47px;font-size:6px}.trade-world-name{font-size:11px!important}.trade-properties label:has(.trade-world-image){gap:7px}.modal-force-event,.modal-galactic-event{grid-template-columns:1fr;gap:0}.event-scene{height:260px}.event-briefing{padding-top:22px}.event-briefing h3{font-size:26px}.event-briefing p{font-size:13px;margin:12px 0 19px}.event-type{margin-bottom:14px}.holocron-rings{width:145px;height:145px}.holocron-emblem{width:95px;height:112px}.saber-beam{height:110px;top:60px}.holocron-base{bottom:70px;width:140px}.scene-caption{font-size:9px;bottom:20px}.event-starfighter{width:180px}.transmission-planet{width:210px;height:210px;right:-55px}.transmission-signal{font-size:6px}.match-away-banner{flex-wrap:wrap;padding:13px}.match-away-banner>.button{margin-left:38px}.mission-actions{gap:7px;flex-wrap:wrap;justify-content:flex-end}.leave-match-button{font-size:8px;padding:6px}.connection-grace{padding:4px;font-size:5px;max-width:130px}.connection-grace strong{font-size:10px}.owner-sigil{width:12px;height:12px;top:5px;left:2px}.owner-sigil>svg:first-child{width:11px;height:11px}.ownership-legend>button>svg{width:16px;height:16px}}
-@media(prefers-reduced-motion:reduce){.event-scene *{animation:none!important}.event-star-trails{display:none}}
-.reduce-motion .event-scene *{animation:none!important}.reduce-motion .event-star-trails{display:none}
-.trade-properties .trade-world-name{margin-left:0;text-align:left;color:#d5e8f2}
+@keyframes saber-ignite {
+  from {
+    scale: 1 0.05;
+    opacity: 0;
+  }
+  to {
+    scale: 1 1;
+    opacity: 1;
+  }
+}
+@keyframes holocron-orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes hologram-pulse {
+  0%,
+  100% {
+    opacity: 0.95;
+    filter: drop-shadow(0 0 13px #a4d9fb70);
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 25px #a4d9fb50);
+  }
+}
+@keyframes hyperspace-trail {
+  0% {
+    transform: rotate(var(--angle)) translateX(20px) scaleX(0.1);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateX(var(--distance)) scaleX(1.4);
+    opacity: 0;
+  }
+}
+@keyframes nebula-drift {
+  to {
+    translate: 15px -10px;
+    scale: 1.1;
+  }
+}
+@keyframes starfighter-arrival {
+  from {
+    transform: translate(-210%, -20%) rotate(-22deg) scale(0.15);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-15deg);
+    opacity: 1;
+  }
+}
+@keyframes starfighter-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 5px -8px;
+  }
+}
+@media (max-width: 700px) {
+  .holo-panel {
+    padding: 20px;
+    max-width: calc(100vw - 22px);
+  }
+  .holo-panel .modal-heading h2 {
+    font-size: 23px;
+  }
+  .holo-panel .modal-heading .eyebrow {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .holo-panel .modal-heading p {
+    font-size: 11px;
+  }
+  .trade-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .trade-transfer {
+    padding: 8px;
+    flex-direction: row;
+    justify-content: center;
+    rotate: 0deg;
+  }
+  .trade-side {
+    padding: 14px;
+  }
+  .trade-banner {
+    padding: 12px;
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+  .trade-banner p {
+    font-size: 11px;
+  }
+  .hololink-status {
+    margin-left: 47px;
+    font-size: 6px;
+  }
+  .trade-world-name {
+    font-size: 11px !important;
+  }
+  .trade-properties label:has(.trade-world-image) {
+    gap: 7px;
+  }
+  .modal-force-event,
+  .modal-galactic-event {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .event-scene {
+    height: 260px;
+  }
+  .event-briefing {
+    padding-top: 22px;
+  }
+  .event-briefing h3 {
+    font-size: 26px;
+  }
+  .event-briefing p {
+    font-size: 13px;
+    margin: 12px 0 19px;
+  }
+  .event-type {
+    margin-bottom: 14px;
+  }
+  .holocron-rings {
+    width: 145px;
+    height: 145px;
+  }
+  .holocron-emblem {
+    width: 95px;
+    height: 112px;
+  }
+  .saber-beam {
+    height: 110px;
+    top: 60px;
+  }
+  .holocron-base {
+    bottom: 70px;
+    width: 140px;
+  }
+  .scene-caption {
+    font-size: 9px;
+    bottom: 20px;
+  }
+  .event-starfighter {
+    width: 180px;
+  }
+  .transmission-planet {
+    width: 210px;
+    height: 210px;
+    right: -55px;
+  }
+  .transmission-signal {
+    font-size: 6px;
+  }
+  .match-away-banner {
+    flex-wrap: wrap;
+    padding: 13px;
+  }
+  .match-away-banner > .button {
+    margin-left: 38px;
+  }
+  .mission-actions {
+    gap: 7px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .leave-match-button {
+    font-size: 8px;
+    padding: 6px;
+  }
+  .connection-grace {
+    padding: 4px;
+    font-size: 5px;
+    max-width: 130px;
+  }
+  .connection-grace strong {
+    font-size: 10px;
+  }
+  .owner-sigil {
+    width: 12px;
+    height: 12px;
+    top: 5px;
+    left: 2px;
+  }
+  .owner-sigil > svg:first-child {
+    width: 11px;
+    height: 11px;
+  }
+  .ownership-legend > button > svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-scene * {
+    animation: none !important;
+  }
+  .event-star-trails {
+    display: none;
+  }
+}
+.reduce-motion .event-scene * {
+  animation: none !important;
+}
+.reduce-motion .event-star-trails {
+  display: none;
+}
+.trade-properties .trade-world-name {
+  margin-left: 0;
+  text-align: left;
+  color: #d5e8f2;
+}

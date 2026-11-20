@@ -1,7 +1,37 @@
-import { test,expect } from '@playwright/test';
-test('a shared LAN room invitation joins with a fresh guest session',async({browser})=>{
- test.setTimeout(90000);const contexts=await Promise.all([0,1].map(()=>browser.newContext()));const host=await contexts[0].newPage(),guest=await contexts[1].newPage();const address=process.env.GAME_LAN_URL||'http://192.168.1.14:5174';
- await host.goto(address);await host.getByRole('button',{name:'Find a game',exact:true}).click();await host.getByLabel('YOUR CALLSIGN').fill('LAN Host');await host.getByLabel('ROOM NAME').fill('QA LAN invite');await host.getByRole('button',{name:'Create room',exact:true}).click();await expect(host.locator('.room-code>strong')).toBeVisible({timeout:20000});const code=(await host.locator('.room-code>strong').innerText()).trim();
- await guest.goto(address+'/?room='+code);await expect(guest.getByLabel('Room invite code')).toHaveValue(code);await guest.getByLabel('YOUR CALLSIGN').fill('LAN Guest');await guest.getByRole('button',{name:'Join room',exact:true}).click();await expect(guest.locator('.room-code>strong')).toHaveText(code,{timeout:20000});await expect(host.locator('.room-players')).toContainText('LAN Guest',{timeout:15000});await expect(guest.locator('.form-error')).toHaveCount(0);
- await host.getByRole('button',{name:'Toggle ready'}).click();await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');await guest.getByRole('button',{name:'Toggle ready'}).click();await expect(host.getByRole('button',{name:'Start match'})).toBeEnabled({timeout:15000});await host.getByRole('button',{name:'Start match'}).click();await expect(host.getByRole('dialog')).toHaveCount(0,{timeout:15000});await host.getByRole('button',{name:'Roll dice',exact:true}).click();await expect(host.locator('.activity-content')).toContainText(/arrived|detention/,{timeout:20000});await expect(host.locator('.error-toast')).toHaveCount(0);await host.screenshot({path:'test-results/lan-game.png',fullPage:true});await Promise.all(contexts.map(c=>c.close()));
+import { test, expect } from '@playwright/test';
+test('a shared LAN room invitation joins with a fresh guest session', async ({ browser }) => {
+  test.setTimeout(150000);
+  const contexts = await Promise.all([0, 1].map(() => browser.newContext()));
+  const host = await contexts[0].newPage(),
+    guest = await contexts[1].newPage();
+  const address = process.env.GAME_LAN_URL || 'http://192.168.1.14:5174';
+  await host.goto(address);
+  await host.getByRole('button', { name: 'Find a game', exact: true }).click();
+  await host.getByLabel('YOUR CALLSIGN').fill('LAN Host');
+  await host.getByLabel('ROOM NAME').fill('QA LAN invite');
+  await host.getByRole('button', { name: 'Create room', exact: true }).click();
+  await expect(host.locator('.room-code>strong')).toBeVisible({ timeout: 20000 });
+  const code = (await host.locator('.room-code>strong').innerText()).trim();
+  await guest.goto(address + '/?room=' + code);
+  await expect(guest.getByLabel('Room invite code')).toHaveValue(code);
+  await guest.getByLabel('YOUR CALLSIGN').fill('LAN Guest');
+  await guest.getByRole('button', { name: 'Join room', exact: true }).click();
+  await expect(guest.locator('.room-code>strong')).toHaveText(code, { timeout: 20000 });
+  await expect(host.locator('.room-players')).toContainText('LAN Guest', { timeout: 15000 });
+  await expect(guest.locator('.form-error')).toHaveCount(0);
+  await host.getByRole('button', { name: 'Toggle ready' }).click();
+  await guest.getByLabel('YOUR ONLINE CHARACTER').selectOption('vader');
+  await guest.getByRole('button', { name: 'Toggle ready' }).click();
+  await expect(host.getByRole('button', { name: 'Start match' })).toBeEnabled({ timeout: 15000 });
+  await host.getByRole('button', { name: 'Start match' }).click();
+  await host.getByRole('button', { name: /Skip intro/ }).click();
+  await guest.getByRole('button', { name: /Skip intro/ }).click();
+  await expect(host.getByRole('dialog')).toHaveCount(0, { timeout: 15000 });
+  await host.getByRole('button', { name: 'Roll dice', exact: true }).click();
+  await expect(host.locator('.activity-content')).toContainText(/arrived|detention/, {
+    timeout: 20000,
+  });
+  await expect(host.locator('.error-toast')).toHaveCount(0);
+  await host.screenshot({ path: 'test-results/lan-game.png', fullPage: true });
+  await Promise.all(contexts.map((c) => c.close()));
 });

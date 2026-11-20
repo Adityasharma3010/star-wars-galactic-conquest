@@ -1,9 +1,50 @@
-import {describe,it,expect} from 'vitest';
-import {useGameStore} from '../../src/stores/gameStore.js';
-import {createGame,transition} from '../../src/game/engine/game.js';
-const players=[{id:'you',ai:false,name:'You'},{id:'rival',ai:false,name:'Rival'}];
-function draw(state,id){state.phase='roll';state.players[0].position=4;state.decks.force=['f1'];let n=0;return transition(state,{id,type:'ROLL',player:'you',version:state.version,payload:{},now:1000},()=>[.01,.18][n++%2]);}
-describe('event presentation queue',()=>{
-  it('keeps the card visible through subsequent updates without applying its effect again',()=>{const state=createGame(players);useGameStore.setState({game:state,eventQueue:[],online:false,settings:{mute:true}});const next=draw(state,'first-draw');useGameStore.getState().commit(next);expect(useGameStore.getState().eventQueue).toHaveLength(1);expect(next.players[0].credits).toBe(1600);const ended=transition(next,{id:'end',type:'END',player:'you',version:next.version,payload:{},now:2000},()=>.3);useGameStore.getState().commit(ended);useGameStore.getState().commit(ended);expect(useGameStore.getState().eventQueue).toHaveLength(1);expect(useGameStore.getState().game.players[0].credits).toBe(1600);useGameStore.getState().dismissEvent();expect(useGameStore.getState().eventQueue).toHaveLength(0);});
-  it('presents a new draw of the same card as a separate event',()=>{const state=createGame(players);useGameStore.setState({game:state,eventQueue:[],online:false,settings:{mute:true}});const first=draw(state,'first');useGameStore.getState().commit(first);useGameStore.getState().commit(draw(first,'second'));const queue=useGameStore.getState().eventQueue;expect(queue).toHaveLength(2);expect(queue[0].id).not.toBe(queue[1].id);expect(queue.map(e=>e.card.id)).toEqual(['f1','f1']);});
+import { describe, it, expect } from 'vitest';
+import { useGameStore } from '../../src/stores/gameStore.js';
+import { createGame, transition } from '../../src/game/engine/game.js';
+const players = [
+  { id: 'you', ai: false, name: 'You' },
+  { id: 'rival', ai: false, name: 'Rival' },
+];
+function draw(state, id) {
+  state.phase = 'roll';
+  state.players[0].position = 4;
+  state.decks.force = ['f1'];
+  let n = 0;
+  return transition(
+    state,
+    { id, type: 'ROLL', player: 'you', version: state.version, payload: {}, now: 1000 },
+    () => [0.01, 0.18][n++ % 2],
+  );
+}
+describe('event presentation queue', () => {
+  it('keeps the card visible through subsequent updates without applying its effect again', () => {
+    const state = createGame(players);
+    useGameStore.setState({ game: state, eventQueue: [], online: false, settings: { mute: true } });
+    const next = draw(state, 'first-draw');
+    useGameStore.getState().commit(next);
+    expect(useGameStore.getState().eventQueue).toHaveLength(1);
+    expect(next.players[0].credits).toBe(1600);
+    const ended = transition(
+      next,
+      { id: 'end', type: 'END', player: 'you', version: next.version, payload: {}, now: 2000 },
+      () => 0.3,
+    );
+    useGameStore.getState().commit(ended);
+    useGameStore.getState().commit(ended);
+    expect(useGameStore.getState().eventQueue).toHaveLength(1);
+    expect(useGameStore.getState().game.players[0].credits).toBe(1600);
+    useGameStore.getState().dismissEvent();
+    expect(useGameStore.getState().eventQueue).toHaveLength(0);
+  });
+  it('presents a new draw of the same card as a separate event', () => {
+    const state = createGame(players);
+    useGameStore.setState({ game: state, eventQueue: [], online: false, settings: { mute: true } });
+    const first = draw(state, 'first');
+    useGameStore.getState().commit(first);
+    useGameStore.getState().commit(draw(first, 'second'));
+    const queue = useGameStore.getState().eventQueue;
+    expect(queue).toHaveLength(2);
+    expect(queue[0].id).not.toBe(queue[1].id);
+    expect(queue.map((e) => e.card.id)).toEqual(['f1', 'f1']);
+  });
 });

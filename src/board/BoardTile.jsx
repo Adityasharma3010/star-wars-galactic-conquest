@@ -1,14 +1,115 @@
-import { Flame, Sparkles, Orbit, ShieldAlert, Radio, Zap, Rocket, LockKeyhole, ArrowUpRight, Coins } from 'lucide-react';
+import {
+  Flame,
+  Sparkles,
+  Orbit,
+  ShieldAlert,
+  Radio,
+  Zap,
+  Rocket,
+  LockKeyhole,
+  ArrowUpRight,
+  Coins,
+} from 'lucide-react';
 import DevelopmentArt from '../components/DevelopmentArt.jsx';
 import { PlanetArt, TokenArt } from '../components/Art.jsx';
 import { useGameStore } from '../stores/gameStore.js';
 import { CHARACTERS } from '../game/rules/data.js';
-const icons={force:Sparkles,galactic:Orbit,tax:Coins,transport:Rocket,utility:Zap,start:ArrowUpRight,detention:LockKeyhole,parking:Orbit,goDetention:ShieldAlert};
-export function tilePosition(id){if(id<=10)return {row:1,col:1+id};if(id<=20)return {row:id-9,col:11};if(id<=30)return {row:11,col:31-id};return {row:41-id,col:1};}
-export default function BoardTile({tile,ownership,players,rules={},pot=0,selected,onSelect}){const hoveredPlayer=useGameStore(s=>s.hoveredPlayer),filter=useGameStore(s=>s.boardOwnerFilter),hovered=players.find(p=>p.id===hoveredPlayer),isLocation=hovered?.position===tile.id;const pos=tilePosition(tile.id),Icon=tile.id===28?Radio:icons[tile.type];const owner=players.find(p=>p.id===ownership?.owner);return <button data-tile={tile.id} aria-label={`${tile.name}${tile.price?`, ${tile.price} credits`:''}${owner?`, owned by ${owner.name}`:''}`} className={`board-tile ${isLocation?'player-location':''} ${tile.id%10===0?'corner':''} ${tile.type} ${selected?'selected':''} ${ownership?.mortgaged?'mortgaged':''} ${owner?'owned':''} ${filter?(ownership?.owner===filter?'owner-emphasis':'owner-dim'):''}`} style={{gridRow:pos.row,gridColumn:pos.col,'--group':tile.color||'#667991','--owner':owner?.color||'transparent','--hover-color':hovered?.color||'#e5bd73'}} onClick={()=>onSelect(tile.id)}>
-  {tile.color&&<span className="group-stripe"/>}<span className="tile-number">{String(tile.id).padStart(2,'0')}</span>
-  {(tile.type==='property'||tile.type==='transport')?<PlanetArt tile={tile}/>:<Icon className="tile-symbol" size={tile.id%10===0?27:19} strokeWidth={1.3}/>}
-  <span className="tile-name">{tile.id===25?'Blockade Runner':tile.name}</span>{isLocation&&<span className="hover-location-label">{hovered.name}</span>}<span className="tile-price">{tile.price?`◈ ${tile.price}`:tile.type==='start'?'COLLECT '+(rules.startBonus??200):tile.type==='tax'?'◈ '+(tile.id===4?rules.incomeTax??200:rules.luxuryTax??100):tile.type==='parking'&&rules.freeParking?'POOL ◈ '+pot:tile.label|| (tile.type==='tax'?`◈ ${tile.tax}`:tile.type==='transport'?'TRANSPORT':'DRAW A CARD')}</span>
-  {ownership?.level>0&&<span className="development" aria-label={ownership.level===5?'Planetary base':ownership.level+' outposts'}><DevelopmentArt base={ownership.level===5}/><b>{ownership.level===5?'BASE':ownership.level+' OUTPOST'+(ownership.level>1?'S':'')}</b></span>}
-  {owner&&<span className="owner-sigil" style={{color:owner.color}} title={owner.name+' owns this world'} aria-label={owner.name+' owns this world'}><TokenArt character={CHARACTERS.find(c=>c.id===owner.character)} size={18}/>{ownership?.mortgaged&&<LockKeyhole size={9}/>}</span>}
-  </button>;}
+const icons = {
+  force: Sparkles,
+  galactic: Orbit,
+  tax: Coins,
+  transport: Rocket,
+  utility: Zap,
+  start: ArrowUpRight,
+  detention: LockKeyhole,
+  parking: Orbit,
+  goDetention: ShieldAlert,
+};
+export function tilePosition(id) {
+  if (id <= 10) return { row: 1, col: 1 + id };
+  if (id <= 20) return { row: id - 9, col: 11 };
+  if (id <= 30) return { row: 11, col: 31 - id };
+  return { row: 41 - id, col: 1 };
+}
+export default function BoardTile({
+  tile,
+  ownership,
+  players,
+  rules = {},
+  pot = 0,
+  selected,
+  onSelect,
+}) {
+  const hoveredPlayer = useGameStore((s) => s.hoveredPlayer),
+    filter = useGameStore((s) => s.boardOwnerFilter),
+    hovered = players.find((p) => p.id === hoveredPlayer),
+    isLocation = hovered?.position === tile.id;
+  const pos = tilePosition(tile.id),
+    Icon = tile.id === 28 ? Radio : icons[tile.type];
+  const owner = players.find((p) => p.id === ownership?.owner);
+  return (
+    <button
+      data-tile={tile.id}
+      aria-label={`${tile.name}${tile.price ? `, ${tile.price} credits` : ''}${owner ? `, owned by ${owner.name}` : ''}`}
+      className={`board-tile ${isLocation ? 'player-location' : ''} ${tile.id % 10 === 0 ? 'corner' : ''} ${tile.type} ${selected ? 'selected' : ''} ${ownership?.mortgaged ? 'mortgaged' : ''} ${owner ? 'owned' : ''} ${filter ? (ownership?.owner === filter ? 'owner-emphasis' : 'owner-dim') : ''}`}
+      style={{
+        gridRow: pos.row,
+        gridColumn: pos.col,
+        '--group': tile.color || '#667991',
+        '--owner': owner?.color || 'transparent',
+        '--hover-color': hovered?.color || '#e5bd73',
+      }}
+      onClick={() => onSelect(tile.id)}
+    >
+      {tile.color && <span className="group-stripe" />}
+      <span className="tile-number">{String(tile.id).padStart(2, '0')}</span>
+      {tile.type === 'property' || tile.type === 'transport' ? (
+        <PlanetArt tile={tile} />
+      ) : (
+        <Icon className="tile-symbol" size={tile.id % 10 === 0 ? 27 : 19} strokeWidth={1.3} />
+      )}
+      <span className="tile-name">{tile.id === 25 ? 'Blockade Runner' : tile.name}</span>
+      {isLocation && <span className="hover-location-label">{hovered.name}</span>}
+      <span className="tile-price">
+        {tile.price
+          ? `◈ ${tile.price}`
+          : tile.type === 'start'
+            ? 'COLLECT ' + (rules.startBonus ?? 200)
+            : tile.type === 'tax'
+              ? '◈ ' + (tile.id === 4 ? (rules.incomeTax ?? 200) : (rules.luxuryTax ?? 100))
+              : tile.type === 'parking' && rules.freeParking
+                ? 'POOL ◈ ' + pot
+                : tile.label ||
+                  (tile.type === 'tax'
+                    ? `◈ ${tile.tax}`
+                    : tile.type === 'transport'
+                      ? 'TRANSPORT'
+                      : 'DRAW A CARD')}
+      </span>
+      {ownership?.level > 0 && (
+        <span
+          className="development"
+          aria-label={ownership.level === 5 ? 'Planetary base' : ownership.level + ' outposts'}
+        >
+          <DevelopmentArt base={ownership.level === 5} />
+          <b>
+            {ownership.level === 5
+              ? 'BASE'
+              : ownership.level + ' OUTPOST' + (ownership.level > 1 ? 'S' : '')}
+          </b>
+        </span>
+      )}
+      {owner && (
+        <span
+          className="owner-sigil"
+          style={{ color: owner.color }}
+          title={owner.name + ' owns this world'}
+          aria-label={owner.name + ' owns this world'}
+        >
+          <TokenArt character={CHARACTERS.find((c) => c.id === owner.character)} size={18} />
+          {ownership?.mortgaged && <LockKeyhole size={9} />}
+        </span>
+      )}
+    </button>
+  );
+}

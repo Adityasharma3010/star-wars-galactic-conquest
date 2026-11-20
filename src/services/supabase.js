@@ -1,37 +1,211 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomId } from '../utils/ids.js';
 let pageSessionId;
-export function matchSessionId(){return pageSessionId||=randomId();}
-const url=import.meta.env.VITE_SUPABASE_URL;
-const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-export const backendConfigured=Boolean(url&&key&&!url.includes('YOUR_PROJECT')&&!key.includes('YOUR_'));
-export const supabase=backendConfigured?createClient(url,key):null;
-export function requireBackend(){if(!supabase)throw new Error('Connect a Supabase project to enable online play. Solo and pass & play are available now.');return supabase;}
-const pendingMatchRequests=new Map(),pausedMatches=new Set();
-export function pauseMatchRequests(gameId){pausedMatches.add(gameId);}
-export function resumeMatchRequests(gameId){pausedMatches.delete(gameId);}
-export async function flushMatchRequests(gameId){await Promise.allSettled([...(pendingMatchRequests.get(gameId)||[])]);}
-export async function serverCall(command,payload={}) {
- const client=requireBackend(),gameId=payload.gameId;
- if(pausedMatches.has(gameId)&&['snapshot','action','connection'].includes(command)&&payload.status!=='left')throw new Error('Your seat is reserved. Rejoin to resume.');
- const request=client.functions.invoke('galactic-api',{body:{command,sessionId:matchSessionId(),...payload}});
- if(gameId){if(!pendingMatchRequests.has(gameId))pendingMatchRequests.set(gameId,new Set());pendingMatchRequests.get(gameId).add(request);}
- try{
-  const {data,error}=await request;
-  if(error){let message=error.message;try{message=(await error.context.json()).error||message;}catch{}throw new Error(message);}
-  if(data?.error)throw new Error(data.error);return data;
- }finally{if(gameId){const pending=pendingMatchRequests.get(gameId);pending?.delete(request);if(!pending?.size)pendingMatchRequests.delete(gameId);}}
+export function matchSessionId() {
+  return (pageSessionId ||= randomId());
 }
-export async function authenticate(email,password,register=false){const client=requireBackend();const {data,error}=register?await client.auth.signUp({email,password}):await client.auth.signInWithPassword({email,password});if(error)throw error;return data;}
-export async function guestAuth(){const {data,error}=await requireBackend().auth.signInAnonymously();if(error)throw error;return data;}
-export async function loadChat(gameId,scope='match'){let query=requireBackend().from('chat_messages').select('id,body,sender_id,team,created_at,profiles(display_name)');query=scope==='global'?query.is('game_id',null):query.eq('game_id',gameId);if(scope==='match')query=query.is('team',null);if(scope==='team')query=query.not('team','is',null);const {data,error}=await query.order('created_at',{ascending:false}).limit(100);if(error)throw error;return data.reverse().map(m=>({id:m.id,text:m.body,name:m.profiles?.display_name||'Commander',time:m.created_at,sender:m.sender_id,team:m.team}));}
-export async function roomList(){const {data,error}=await requireBackend().from('game_rooms').select('id,code,name,status,max_players,created_at').eq('is_private',false).eq('status','waiting').order('created_at',{ascending:false});if(error)throw error;return data;}
-export async function subscribeGame(gameId,onState,onPresence,onConnections){const client=requireBackend();await client.realtime.setAuth();const channel=client.channel(`game:${gameId}`,{config:{private:true,presence:{key:(await client.auth.getUser()).data.user.id}}});channel.on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_state',filter:`game_id=eq.${gameId}`},e=>onState(e.new.snapshot));channel.on('presence',{event:'sync'},()=>onPresence?.(channel.presenceState()));channel.subscribe(async status=>{if(status==='SUBSCRIBED'){await channel.track({online_at:new Date().toISOString()});const data=await serverCall('snapshot',{gameId});onState(data.state);onConnections?.(data.connections);}});return()=>client.removeChannel(channel);}
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+export const backendConfigured = Boolean(
+  url && key && !url.includes('YOUR_PROJECT') && !key.includes('YOUR_'),
+);
+export const supabase = backendConfigured ? createClient(url, key) : null;
+export function requireBackend() {
+  if (!supabase)
+    throw new Error(
+      'Connect a Supabase project to enable online play. Solo and pass & play are available now.',
+    );
+  return supabase;
+}
+const pendingMatchRequests = new Map(),
+  pausedMatches = new Set();
+export function pauseMatchRequests(gameId) {
+  pausedMatches.add(gameId);
+}
+export function resumeMatchRequests(gameId) {
+  pausedMatches.delete(gameId);
+}
+export async function flushMatchRequests(gameId) {
+  await Promise.allSettled([...(pendingMatchRequests.get(gameId) || [])]);
+}
+export async function serverCall(command, payload = {}) {
+  const client = requireBackend(),
+    gameId = payload.gameId;
+  if (
+    pausedMatches.has(gameId) &&
+    ['snapshot', 'action', 'connection'].includes(command) &&
+    payload.status !== 'left'
+  )
+    throw new Error('Your seat is reserved. Rejoin to resume.');
+  const request = client.functions.invoke('galactic-api', {
+    body: { command, sessionId: matchSessionId(), ...payload },
+  });
+  if (gameId) {
+    if (!pendingMatchRequests.has(gameId)) pendingMatchRequests.set(gameId, new Set());
+    pendingMatchRequests.get(gameId).add(request);
+  }
+  try {
+    const { data, error } = await request;
+    if (error) {
+      let message = error.message;
+      try {
+        message = (await error.context.json()).error || message;
+      } catch {}
+      throw new Error(message);
+    }
+    if (data?.error) throw new Error(data.error);
+    return data;
+  } finally {
+    if (gameId) {
+      const pending = pendingMatchRequests.get(gameId);
+      pending?.delete(request);
+      if (!pending?.size) pendingMatchRequests.delete(gameId);
+    }
+  }
+}
+export async function authenticate(email, password, register = false) {
+  const client = requireBackend();
+  const { data, error } = register
+    ? await client.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: publicGameOrigin() },
+      })
+    : await client.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+export async function guestAuth() {
+  const { data, error } = await requireBackend().auth.signInAnonymously();
+  if (error) throw error;
+  return data;
+}
+export async function loadChat(gameId, scope = 'match') {
+  let query = requireBackend()
+    .from('chat_messages')
+    .select('id,body,sender_id,team,created_at,profiles(display_name)');
+  query = scope === 'global' ? query.is('game_id', null) : query.eq('game_id', gameId);
+  if (scope === 'match') query = query.is('team', null);
+  if (scope === 'team') query = query.not('team', 'is', null);
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
+  if (error) throw error;
+  return data.reverse().map((m) => ({
+    id: m.id,
+    text: m.body,
+    name: m.profiles?.display_name || 'Commander',
+    time: m.created_at,
+    sender: m.sender_id,
+    team: m.team,
+  }));
+}
+export async function roomList() {
+  const { data, error } = await requireBackend()
+    .from('game_rooms')
+    .select('id,code,name,status,max_players,created_at')
+    .eq('is_private', false)
+    .eq('status', 'waiting')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+export async function subscribeGame(gameId, onState, onPresence, onConnections) {
+  const client = requireBackend();
+  await client.realtime.setAuth();
+  const channel = client.channel(`game:${gameId}`, {
+    config: { private: true, presence: { key: (await client.auth.getUser()).data.user.id } },
+  });
+  channel.on(
+    'postgres_changes',
+    { event: 'UPDATE', schema: 'public', table: 'game_state', filter: `game_id=eq.${gameId}` },
+    (e) => onState(e.new.snapshot),
+  );
+  channel.on('presence', { event: 'sync' }, () => onPresence?.(channel.presenceState()));
+  channel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      await channel.track({ online_at: new Date().toISOString() });
+      const data = await serverCall('snapshot', { gameId });
+      onState(data.state);
+      onConnections?.(data.connections);
+    }
+  });
+  return () => client.removeChannel(channel);
+}
 
-export async function syncProfile(profile){if(!supabase)return;const {data:{session}}=await supabase.auth.getSession();if(!session)return;const {error}=await supabase.from('profiles').update({display_name:profile.name,character:profile.character,faction:profile.faction,updated_at:new Date().toISOString()}).eq('id',session.user.id);if(error)throw error;}
-export async function syncSettings(preferences){if(!supabase)return;const {data:{session}}=await supabase.auth.getSession();if(!session)return;const {error}=await supabase.from('player_settings').update({preferences,updated_at:new Date().toISOString()}).eq('user_id',session.user.id);if(error)throw error;}
+export async function syncProfile(profile) {
+  if (!supabase) return;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      display_name: profile.name,
+      character: profile.character,
+      faction: profile.faction,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', session.user.id);
+  if (error) throw error;
+}
+export async function syncSettings(preferences) {
+  if (!supabase) return;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return;
+  const { error } = await supabase
+    .from('player_settings')
+    .update({ preferences, updated_at: new Date().toISOString() })
+    .eq('user_id', session.user.id);
+  if (error) throw error;
+}
 
-export async function cloudProfile(){if(!supabase)return null;const {data:{session}}=await supabase.auth.getSession();if(!session)return null;const result=await Promise.all([supabase.from('profiles').select('*').eq('id',session.user.id).single(),supabase.from('player_statistics').select('*').eq('user_id',session.user.id).single(),supabase.from('player_achievements').select('achievements(title,description)').eq('user_id',session.user.id),supabase.from('match_history').select('game_id,won,final_wealth,created_at').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(50),supabase.from('player_settings').select('preferences').eq('user_id',session.user.id).single()]);for(const r of result)if(r.error)throw r.error;return {user:session.user,profile:result[0].data,statistics:result[1].data,achievements:result[2].data,matches:result[3].data,settings:result[4].data.preferences};}
+export async function cloudProfile() {
+  if (!supabase) return null;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return null;
+  const result = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+    supabase.from('player_statistics').select('*').eq('user_id', session.user.id).single(),
+    supabase
+      .from('player_achievements')
+      .select('achievements(title,description)')
+      .eq('user_id', session.user.id),
+    supabase
+      .from('match_history')
+      .select('game_id,won,final_wealth,created_at')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(50),
+    supabase.from('player_settings').select('preferences').eq('user_id', session.user.id).single(),
+  ]);
+  for (const r of result) if (r.error) throw r.error;
+  return {
+    user: session.user,
+    profile: result[0].data,
+    statistics: result[1].data,
+    achievements: result[2].data,
+    matches: result[3].data,
+    settings: result[4].data.preferences,
+  };
+}
 
-export async function ensureOnlineSession(profile){const client=requireBackend();let {data:{session}}=await client.auth.getSession();if(!session)session=(await guestAuth()).session;await syncProfile(profile);return session.user;}
-export function inviteUrl(code){const host=import.meta.env.VITE_PUBLIC_GAME_URL;const origin=host&&!host.includes('YOUR_')?host.replace(/\/$/,''):location.origin;return origin+'/?room='+encodeURIComponent(code);}
+export async function ensureOnlineSession(profile) {
+  const client = requireBackend();
+  let {
+    data: { session },
+  } = await client.auth.getSession();
+  if (!session) session = (await guestAuth()).session;
+  await syncProfile(profile);
+  return session.user;
+}
+export function publicGameOrigin() {
+  const host = import.meta.env.DEV ? import.meta.env.VITE_PUBLIC_GAME_URL : null;
+  return host && !host.includes('YOUR_') ? host.replace(/\/$/, '') : location.origin;
+}
+export function inviteUrl(code) {
+  return publicGameOrigin() + '/?room=' + encodeURIComponent(code);
+}

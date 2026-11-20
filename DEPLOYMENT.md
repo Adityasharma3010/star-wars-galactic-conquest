@@ -1,6 +1,6 @@
 # Hosting and deployment
 
-Verified 19 November 2026. **Public game: https://star-wars-galactic-conquest.vercel.app**.
+Updated 20 November 2026. **Public game: https://monopoly.adityasharma.site** (the original Vercel alias remains active).
 
 ## Actual production verification
 
@@ -25,13 +25,13 @@ Production has only these client-visible Supabase environment values:
 - VITE_SUPABASE_URL: the linked project's public HTTPS URL.
 - VITE_SUPABASE_PUBLISHABLE_KEY: its public publishable key.
 
-VITE_PUBLIC_GAME_URL=https://star-wars-galactic-conquest.vercel.app is configured locally so invitation buttons can share a public link while playing on localhost/LAN. Hosted invites already use the hosted origin. Service-role keys, database passwords and deployment tokens are never Vite variables or committed files.
+VITE_PUBLIC_GAME_URL=https://monopoly.adityasharma.site is configured locally so invitation buttons can share a public link while playing on localhost/LAN. Hosted invites already use the hosted origin. Service-role keys, database passwords and deployment tokens are never Vite variables or committed files.
 
 ## Deployed Supabase configuration
 
-Project iheauyxopwcpouogfkvi, Mumbai, organization Aditya Org. Five approved migrations and the synchronized JavaScript galactic-api Edge Function are deployed. See SUPABASE_SETUP_REPORT.md.
+Project iheauyxopwcpouogfkvi, Mumbai, organization Aditya Org. Six approved migrations and the synchronized JavaScript galactic-api Edge Function are deployed. See SUPABASE_SETUP_REPORT.md.
 
-ALLOWED_ORIGINS includes the exact public Vercel origin and localhost development addresses. ALLOW_LAN_ORIGINS=true permits private IPv4 addresses only on development ports 5173/5174. Auth site_url and redirect URLs include the actual HTTPS public alias; the configuration push succeeded.
+ALLOWED_ORIGINS includes the exact public Vercel origin and localhost development addresses. ALLOW_LAN_ORIGINS=true permits private IPv4 addresses only on development ports 5173/5174. Auth site_url uses the custom domain and redirect URLs include both production aliases; the configuration push succeeded.
 
 Deploy later changes with the linked, authenticated CLIs:
 

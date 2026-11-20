@@ -1,0 +1,143 @@
+import { test, expect } from '@playwright/test';
+import { createGame } from '../../src/game/engine/game.js';
+import { getCard } from '../../src/game/cards/decks.js';
+
+test('account and profile dialogs fit desktop/mobile and retain usable callsign editing', async ({
+  page,
+}) => {
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/');
+  await page.locator('.profile-button').click();
+  await expect(page.getByLabel('CALLSIGN')).toBeVisible();
+  expect((await page.getByRole('dialog').boundingBox()).width).toBeLessThanOrEqual(591);
+  await page.getByLabel('CALLSIGN').fill('Nova Pilot');
+  await page.getByRole('button', { name: 'Save profile' }).click();
+  await expect(page.getByRole('button', { name: 'Profile saved' })).toBeVisible();
+  await expect(page.locator('.profile-button')).toContainText('Nova Pilot');
+  await page.screenshot({ path: 'test-results/profile-compact.png', fullPage: true });
+  await page.getByRole('button', { name: 'Online account' }).click();
+  await expect(page.getByLabel('GUEST CALLSIGN')).toHaveValue('Nova Pilot');
+  expect((await page.getByRole('dialog').boundingBox()).width).toBeLessThanOrEqual(451);
+  await page.screenshot({ path: 'test-results/account-compact.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole('button', { name: 'Continue as online guest' })).toBeVisible();
+  const box = await page.getByRole('dialog').boundingBox();
+  expect(box.x).toBeGreaterThanOrEqual(10);
+  expect(box.x + box.width).toBeLessThanOrEqual(380);
+  await page.screenshot({ path: 'test-results/account-compact-mobile.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test('personalized opening animates, plays decodable music, skips cleanly, and does not replay', async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.addInitScript(() => {
+    window.openingAudio = { started: 0, stopped: 0 };
+    const start = AudioBufferSourceNode.prototype.start,
+      stop = AudioBufferSourceNode.prototype.stop;
+    AudioBufferSourceNode.prototype.start = function (...args) {
+      if (this.buffer?.duration > 40) window.openingAudio.started++;
+      return start.apply(this, args);
+    };
+    AudioBufferSourceNode.prototype.stop = function (...args) {
+      if (this.buffer?.duration > 40) window.openingAudio.stopped++;
+      return stop.apply(this, args);
+    };
+  });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: /Play locally/ }).click();
+  await page.getByLabel('COMMANDER NAME').fill('Nova Pilot');
+  await page.getByLabel('ALLEGIANCE').selectOption('Jedi Order');
+  await page.getByRole('button', { name: 'Launch conquest' }).click();
+  await expect(page.getByRole('dialog', { name: 'Opening crawl' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Roll dice', exact: true })).toHaveCount(0);
+  await expect(page.locator('.opening-title')).toBeVisible({ timeout: 10000 });
+  await page.screenshot({ path: 'test-results/opening-title.png', fullPage: true });
+  await expect(page.locator('.opening-crawl')).toContainText('Nova Pilot of the Jedi Order', {
+    timeout: 10000,
+  });
+  expect(
+    await page.locator('.opening-crawl').evaluate((el) => getComputedStyle(el).animationName),
+  ).toBe('opening-crawl');
+  await expect.poll(() => page.evaluate(() => window.openingAudio.started)).toBe(1);
+  const duration = await page.evaluate(async () => {
+    const ctx = new AudioContext();
+    const buffer = await ctx.decodeAudioData(
+      await (await fetch('/audio/opening.mp3')).arrayBuffer(),
+    );
+    await ctx.close();
+    return buffer.duration;
+  });
+  expect(duration).toBeGreaterThan(40);
+  await page.screenshot({ path: 'test-results/opening-crawl.png', fullPage: true });
+  await page.getByRole('button', { name: /Skip intro/ }).click();
+  await expect(page.getByTestId('game-board')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.openingAudio.stopped)).toBe(1);
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game' }).click();
+  await expect(page.getByTestId('game-board')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Opening crawl' })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('reduced-motion opening stays readable with a manual entry button on mobile', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Play locally/ }).click();
+  await page.getByLabel('COMMANDER NAME').fill('Sky Pilot');
+  await page.getByLabel('ALLEGIANCE').selectOption('Rebel Alliance');
+  await page.getByRole('button', { name: 'Launch conquest' }).click();
+  await expect(page.getByRole('button', { name: 'Enter the galaxy' })).toBeVisible({
+    timeout: 10000,
+  });
+  expect(
+    await page.locator('.opening-crawl').evaluate((el) => getComputedStyle(el).animationName),
+  ).toBe('none');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/opening-static-mobile.png', fullPage: true });
+  await page.getByRole('button', { name: 'Enter the galaxy' }).click();
+  await expect(page.getByTestId('game-board')).toBeVisible();
+});
+
+test('AI missions are informational and another commander debt does not open human financing', async ({
+  page,
+}) => {
+  const game = createGame([
+    { id: 'you', name: 'Nova', character: 'luke', ai: false },
+    { id: 'ai', name: 'Vader', character: 'vader', ai: true },
+  ]);
+  game.phase = 'debt';
+  game.debt = { payer: 'ai', amount: 100, creditor: null };
+  game.ownership[1] = { owner: 'you', level: 0, mortgaged: false };
+  await page.addInitScript(
+    (state) => localStorage.setItem('galactic-conquest-v1', JSON.stringify({ state, version: 1 })),
+    {
+      game,
+      playing: true,
+      online: false,
+      selected: 1,
+      settings: { mute: true, reducedMotion: true },
+      observedEvent: {
+        id: 'observer',
+        card: getCard('f1'),
+        player: game.players[1],
+        readyAt: Date.now() + 1500,
+      },
+    },
+  );
+  await page.goto('/');
+  await expect(page.locator('.mission-transmission')).toContainText('The mission belongs to Vader');
+  await expect(page.getByRole('button', { name: 'Continue mission' })).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Waiting for Vader', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Mortgage', exact: true })).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/observer-transmission.png', fullPage: true });
+});

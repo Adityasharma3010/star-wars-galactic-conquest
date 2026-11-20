@@ -1,0 +1,133 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Volume2, VolumeX, ArrowRight } from 'lucide-react';
+import { useReducedMotion } from 'motion/react';
+import { useGameStore } from '../stores/gameStore.js';
+import { openingStory } from '../game/openingStory.js';
+import { playOpeningMusic } from '../services/starWarsAudio.js';
+import HoloLoader from './HoloLoader.jsx';
+
+export default function MatchOpening() {
+  const { game, intro, finishIntro, settings } = useGameStore();
+  const reduced = useReducedMotion() || settings.reducedMotion;
+  const [phase, setPhase] = useState('loading');
+  const [music, setMusic] = useState(!settings.mute && settings.introMusic !== false);
+  const root = useRef();
+  const crawl = useRef();
+  useLayoutEffect(() => {
+    if (phase === 'crawl' && crawl.current && !reduced)
+      crawl.current.style.setProperty(
+        '--crawl-end',
+        -(crawl.current.offsetHeight + window.innerHeight * 0.9) + 'px',
+      );
+  }, [phase, reduced]);
+  useEffect(() => {
+    if (!intro) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    root.current?.querySelector('.opening-skip')?.focus();
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [intro?.gameId]);
+  useEffect(() => {
+    if (!intro) return;
+    setPhase('loading');
+    const timers = [
+      setTimeout(() => setPhase('prologue'), 700),
+      setTimeout(() => setPhase('title'), 2900),
+      setTimeout(() => setPhase('crawl'), 5100),
+    ];
+    if (!reduced) timers.push(setTimeout(finishIntro, 31000));
+    return () => timers.forEach(clearTimeout);
+  }, [intro?.gameId, reduced, finishIntro]);
+  useEffect(() => {
+    if (!intro || phase === 'loading' || phase === 'prologue' || !music || settings.mute) return;
+    let disposed = false,
+      stop;
+    playOpeningMusic(settings, () => disposed).then((fn) => {
+      if (disposed) fn();
+      else stop = fn;
+    });
+    return () => {
+      disposed = true;
+      stop?.();
+    };
+  }, [intro?.gameId, music, settings.mute, phase === 'loading' || phase === 'prologue']);
+  if (!intro || !game) return null;
+  const story = openingStory(game);
+  return (
+    <section
+      ref={root}
+      className={'match-opening opening-phase-' + phase + (reduced ? ' opening-reduced' : '')}
+      aria-label="Opening crawl"
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') finishIntro();
+        if (event.key === 'Tab') {
+          const buttons = [...root.current.querySelectorAll('button')];
+          if (event.shiftKey && document.activeElement === buttons[0]) {
+            event.preventDefault();
+            buttons.at(-1).focus();
+          } else if (!event.shiftKey && document.activeElement === buttons.at(-1)) {
+            event.preventDefault();
+            buttons[0].focus();
+          }
+        }
+      }}
+    >
+      <div className="opening-stars" aria-hidden="true" />
+      <div className="opening-controls">
+        <button
+          className="text-button"
+          data-opening-control
+          onClick={() => setMusic(!music)}
+          aria-label={music ? 'Mute opening music' : 'Play opening music'}
+        >
+          {music ? <Volume2 size={17} /> : <VolumeX size={17} />}
+        </button>
+        <button className="button opening-skip" data-opening-control onClick={finishIntro}>
+          Skip intro <ArrowRight size={15} />
+        </button>
+      </div>
+      {phase === 'loading' && <HoloLoader label="Preparing your squadron…" />}
+      {phase === 'prologue' && (
+        <p className="opening-prologue">A long time ago in a galaxy far, far away…</p>
+      )}
+      {phase === 'title' && (
+        <div className="opening-title">
+          <span>STAR WARS</span>
+          <h1>
+            GALACTIC
+            <br />
+            CONQUEST
+          </h1>
+        </div>
+      )}
+      {phase === 'crawl' && (
+        <div className="opening-perspective">
+          <div ref={crawl} className="opening-crawl">
+            <span className="opening-episode">EPISODE I</span>
+            <h2>{story.title}</h2>
+            {story.paragraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      )}
+      {reduced && phase === 'crawl' && (
+        <button
+          className="button gold-button opening-enter"
+          data-opening-control
+          onClick={finishIntro}
+        >
+          Enter the galaxy <ArrowRight size={17} />
+        </button>
+      )}
+      <div className="opening-roster">
+        <span>{story.commanders.join(' · ')}</span>
+        {story.teams.length > 0 && <small>{story.teams.join(' / ')}</small>}
+      </div>
+    </section>
+  );
+}
