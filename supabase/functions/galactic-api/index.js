@@ -2,9 +2,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { commitAction } from './commit.js';
 import { createGame, transition } from './_shared/game/engine/game.js';
 import { CHARACTERS, BOARD } from './_shared/game/rules/data.js';
+import { tokensFor, isClassic } from './_shared/game/maps.js';
 import { secureRandom } from './_shared/game/engine/random.js';
 import { timeoutAction } from './_shared/game/engine/timeouts.js';
-import { automationPlayer } from './_shared/game/engine/connections.js';
+import { automationPlayer, graceExpired } from './_shared/game/engine/connections.js';
 import { chooseAction } from './_shared/game/ai/commander.js';
 import { allowedOrigin } from './origins.js';
 import { validId, cleanProfile, publicState, validateAction, safeRules } from './authority.js';
@@ -29,17 +30,37 @@ const code = () =>
     { length: 6 },
     () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(secureRandom() * 32)],
   ).join('');
-async function membership(gameId, userId) {
+const mapProfile = (value, rules) => {
+  const profile = cleanProfile(value);
+  const characters = tokensFor(rules);
+  const token = characters.find((character) => character.id === profile.character) || characters[0];
+  return {
+    ...profile,
+    character: token.id,
+    faction: isClassic(rules)
+      ? 'Classic'
+      : profile.faction === 'Classic'
+        ? token.faction
+        : profile.faction,
+  };
+};
+async function membership(gameId, userId, playerOnly = false) {
   validId(gameId);
   const rows = await checked(
     service
       .from('game_players')
-      .select('player_id,team')
+      .select('player_id,team,bankrupt')
       .eq('game_id', gameId)
       .eq('user_id', userId),
   );
-  if (!rows.length) throw new Error('You are not a member of this match.');
-  return rows[0];
+  if (rows.length && !rows[0].bankrupt) return { ...rows[0], role: 'player' };
+  if (playerOnly) throw new Error('An active player seat is required. Spectators cannot play.');
+  if (rows.length) return { ...rows[0], role: 'spectator' };
+  const viewers = await checked(
+    service.from('game_spectators').select('user_id').eq('game_id', gameId).eq('user_id', userId),
+  );
+  if (!viewers.length) throw new Error('You are not a member of this match.');
+  return { role: 'spectator', player_id: null, team: null };
 }
 async function roomInfo(roomId, userId, host = false) {
   validId(roomId);
@@ -47,9 +68,25 @@ async function roomInfo(roomId, userId, host = false) {
   const players = await checked(
     service.from('room_players').select('*').eq('room_id', roomId).order('joined_at'),
   );
-  if (!players.some((p) => p.user_id === userId) || (host && room.host_id !== userId))
-    throw new Error(host ? 'Only the host can perform this action.' : 'Room membership required.');
   const games = await checked(service.from('games').select('id').eq('room_id', roomId));
+  const spectators =
+    host || !games.length
+      ? []
+      : await checked(
+          service
+            .from('game_spectators')
+            .select('user_id')
+            .eq('user_id', userId)
+            .in(
+              'game_id',
+              games.map((game) => game.id),
+            ),
+        );
+  if (
+    (!players.some((p) => p.user_id === userId) && !spectators.length) ||
+    (host && room.host_id !== userId)
+  )
+    throw new Error(host ? 'Only the host can perform this action.' : 'Room membership required.');
   const config = await checked(
     service.from('room_settings').select('rules').eq('room_id', roomId).single(),
   );
@@ -84,13 +121,29 @@ async function tick(gameId) {
   for (let n = 0; n < 6; n++) {
     const state = await rpc('galactic_engine', { p_game: gameId });
     if (state.phase === 'finished') return publicState(state);
+    const connections = await rpc('galactic_connections', { p_game: gameId });
+    const abandoned = state.players.filter(
+      (player) => !player.ai && !player.bankrupt && graceExpired(connections[player.id]),
+    );
+    if (abandoned.length) {
+      const next = await commit(state, {
+        type: 'FORFEIT',
+        player: abandoned[0].id,
+        payload: { players: abandoned.map((player) => player.id) },
+        id: uuid(),
+        version: state.version,
+        now: Date.now(),
+        connectionTimeout: true,
+      });
+      if (next.version === state.version) return next;
+      continue;
+    }
     const expired = timeoutAction(state);
     if (expired) {
       await commit(state, { ...expired, id: uuid(), version: state.version, now: Date.now() });
       continue;
     }
     if (state.animationUntil > Date.now()) return publicState(state);
-    const connections = await rpc('galactic_connections', { p_game: gameId });
     const player = automationPlayer(state, connections);
     if (!player) return publicState(state);
     const chosen = chooseAction(state, { ...player, difficulty: player.difficulty || 'medium' });
@@ -142,9 +195,10 @@ Deno.serve(async (request) => {
     await rpc('galactic_rate_limit', { p_user: user.id });
     switch (body.command) {
       case 'createRoom': {
-        const profile = cleanProfile(body.profile);
+        const rules = safeRules(body.rules),
+          profile = mapProfile(body.profile, rules);
         return respond(
-          await rpc('galactic_create_room', {
+          await rpc('galactic_create_configured_room', {
             p_user: user.id,
             p_code: code(),
             p_name:
@@ -153,22 +207,49 @@ Deno.serve(async (request) => {
                 .slice(0, 50) || 'Galactic conquest',
             p_private: Boolean(body.isPrivate),
             p_profile: profile,
+            p_rules: rules,
+            p_max: body.maxPlayers || 8,
           }),
         );
       }
       case 'joinRoom': {
         const key = String(body.code || '').toUpperCase();
         if (!/^[A-Z0-9]{6}$/.test(key)) throw new Error('Enter a six-character room code.');
-        return respond(
+        const room = await checked(
+          service.from('game_rooms').select('id,status').eq('code', key).single(),
+        );
+        if (room.status !== 'waiting') {
+          const watched = await rpc('galactic_watch_room', { p_user: user.id, p_code: key });
+          return respond(watched);
+        }
+        try {
+          const config = await checked(
+            service.from('room_settings').select('rules').eq('room_id', room.id).single(),
+          );
           await rpc('galactic_join_room', {
             p_user: user.id,
             p_code: key,
+            p_profile: mapProfile(body.profile, config.rules),
+          });
+          return respond(await roomInfo(room.id, user.id));
+        } catch (error) {
+          if (!error.message.includes('already started')) throw error;
+          return respond(await rpc('galactic_watch_room', { p_user: user.id, p_code: key }));
+        }
+      }
+      case 'room':
+        return respond(await roomInfo(body.roomId, user.id));
+      case 'nextRoom': {
+        await membership(body.gameId, user.id);
+        return respond(
+          await rpc('galactic_next_room', {
+            p_game: body.gameId,
+            p_user: user.id,
+            p_code: code(),
             p_profile: cleanProfile(body.profile),
           }),
         );
       }
-      case 'room':
-        return respond(await roomInfo(body.roomId, user.id));
       case 'ready': {
         validId(body.roomId);
         const profile = cleanProfile({ character: body.character, faction: body.faction });
@@ -237,9 +318,10 @@ Deno.serve(async (request) => {
           )
         ).rules;
         const rules = safeRules(config),
+          characters = tokensFor(rules),
           used = new Set(info.players.map((p) => p.character));
         let ps = info.players.map((p, i) => {
-          const c = CHARACTERS.find((c) => c.id === p.character) || CHARACTERS[0];
+          const c = characters.find((c) => c.id === p.character) || characters[0];
           return {
             id: p.user_id,
             name: p.display_name,
@@ -247,7 +329,13 @@ Deno.serve(async (request) => {
             faction: p.faction,
             color: c.color,
             ai: false,
-            team: rules.teams ? (i % 2 === 0 ? 'Rebel Squadron' : 'Imperial Squadron') : null,
+            team: rules.teams
+              ? isClassic(rules)
+                ? `Team ${(i % 2) + 1}`
+                : i % 2 === 0
+                  ? 'Rebel Squadron'
+                  : 'Imperial Squadron'
+              : null,
           };
         });
         const aiCount = Math.max(
@@ -259,7 +347,7 @@ Deno.serve(async (request) => {
               : 0,
           ),
         );
-        for (const c of CHARACTERS.filter((c) => !used.has(c.id)).slice(0, aiCount)) {
+        for (const c of characters.filter((c) => !used.has(c.id)).slice(0, aiCount)) {
           ps.push({
             id: uuid(),
             name: c.name,
@@ -269,9 +357,11 @@ Deno.serve(async (request) => {
             ai: true,
             difficulty: rules.difficulty,
             team: rules.teams
-              ? ps.length % 2 === 0
-                ? 'Rebel Squadron'
-                : 'Imperial Squadron'
+              ? isClassic(rules)
+                ? `Team ${(ps.length % 2) + 1}`
+                : ps.length % 2 === 0
+                  ? 'Rebel Squadron'
+                  : 'Imperial Squadron'
               : null,
           });
         }
@@ -286,16 +376,24 @@ Deno.serve(async (request) => {
         return respond({ state: snapshot, connections });
       }
       case 'snapshot': {
-        await membership(body.gameId, user.id);
-        await connection(body.gameId, user.id, body.sessionId);
+        const access = await membership(body.gameId, user.id);
+        if (access.role === 'player') {
+          try {
+            await connection(body.gameId, user.id, body.sessionId);
+          } catch (error) {
+            if (!/Rejoin period expired/.test(error.message)) throw error;
+          }
+        }
         const state = await tick(body.gameId);
+        const player = state.players.find((player) => player.id === user.id && !player.bankrupt);
         return respond({
           state,
+          role: player ? 'player' : 'spectator',
           connections: await rpc('galactic_connections', { p_game: body.gameId }),
         });
       }
       case 'connection': {
-        await membership(body.gameId, user.id);
+        await membership(body.gameId, user.id, true);
         return respond({
           connections: await connection(
             body.gameId,
@@ -306,7 +404,7 @@ Deno.serve(async (request) => {
         });
       }
       case 'action': {
-        await membership(body.gameId, user.id);
+        await membership(body.gameId, user.id, true);
         await connection(body.gameId, user.id, body.sessionId);
         const state = await rpc('galactic_engine', { p_game: body.gameId });
         if (state.processed.includes(body.action?.id))
@@ -316,7 +414,7 @@ Deno.serve(async (request) => {
         return respond({ state: snapshot });
       }
       case 'chat': {
-        const member = body.gameId ? await membership(body.gameId, user.id) : null;
+        const member = body.gameId ? await membership(body.gameId, user.id, true) : null;
         if (body.team && !member?.team) throw new Error('A team channel requires team membership.');
         const text = String(body.text || '').trim();
         if (!text || text.length > 300)

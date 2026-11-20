@@ -1,0 +1,293 @@
+.classic-theme {
+  background: #eef1e8;
+  color: #274036;
+  --gold: #9a7136 !important;
+}
+.classic-theme .app-header {
+  background: #193e32;
+  border-color: #385c48;
+}
+.classic-theme .app-header nav a,
+.classic-theme .app-header nav button,
+.classic-theme .profile-button {
+  color: #d7e3d9;
+}
+.classic-theme .mission-heading h2 {
+  color: #294e3a;
+}
+.classic-theme .mission-heading p,
+.classic-theme .breadcrumb {
+  color: #5d7668;
+}
+.classic-theme .galactic-board {
+  background: #dde7d9;
+  border-color: #89a58c;
+  box-shadow: 0 12px 30px #31573f22;
+}
+.classic-theme .board-tile {
+  background: #f1f3e8 !important;
+  border-color: #b8c5b2;
+  color: #254c37;
+}
+.classic-theme .board-tile::after {
+  background: linear-gradient(180deg, transparent 10%, #f1f3e855 32%, #f1f3e8ee 58%, #f1f3e8);
+}
+.classic-theme .board-tile.selected::after {
+  background: linear-gradient(180deg, transparent 10%, #fff5d355 32%, #fff5d3ee 58%, #fff5d3);
+}
+.classic-theme .board-tile .tile-name {
+  color: #254c37;
+  text-shadow: none;
+}
+.classic-theme .tile-price,
+.classic-theme .tile-number {
+  color: #657951;
+  text-shadow: none;
+}
+.classic-theme .board-tile.selected {
+  background: #fff5d3 !important;
+  outline-color: #9b783d;
+}
+.classic-theme .board-tile .real-art {
+  filter: none;
+  opacity: 1;
+}
+.classic-theme .board-center {
+  background: radial-gradient(ellipse at 60% 25%, #ffffffbd, transparent 65%), #dce9d6;
+}
+.classic-theme .star-field,
+.classic-theme .orbit-line,
+.classic-theme .center-coordinate,
+.classic-theme .center-rule {
+  display: none;
+}
+.classic-theme .center-title h1,
+.classic-theme .center-title h1 span {
+  color: #2c6546;
+  text-shadow: none;
+  -webkit-text-stroke: 0;
+}
+.classic-theme .center-title h1 {
+  font-size: clamp(26px, 3vw, 44px);
+}
+.classic-theme .center-title p,
+.classic-theme .center-bottom,
+.classic-theme .board-footnote,
+.classic-theme .board-topline {
+  color: #5b7863;
+}
+.classic-theme .turn-console {
+  background: #f8faef;
+  border-color: #96af92;
+  box-shadow: 0 10px 20px #315a341a;
+}
+.classic-theme .turn-banner h3 {
+  color: #345340;
+}
+.classic-theme .turn-banner h3 small,
+.classic-theme .turn-banner .eyebrow {
+  color: #6e7d59;
+}
+.classic-theme .commander-card,
+.classic-theme .property-panel,
+.classic-theme .activity-panel,
+.classic-theme .portfolio {
+  background: #f8faf1 !important;
+  border-color: #b5c6ae;
+}
+.classic-theme .commander-card.active {
+  background: #f1edda !important;
+}
+.classic-theme .current-turn-line,
+.classic-theme .commander-name small {
+  color: #67765b;
+}
+.classic-theme .commander-stats strong,
+.classic-theme .commander-stats small {
+  color: #456a4c;
+}
+.classic-theme .trade-side,
+.classic-theme .trade-banner,
+.classic-theme .rule-section,
+.classic-theme .deed-modal .rent-table,
+.classic-theme .auction-bid {
+  background: #e6eddc;
+  border-color: #a5b79d;
+}
+.classic-theme .trade-world-name,
+.classic-theme .trade-side .trade-manifest-label,
+.classic-theme .trade-side .trade-person small,
+.classic-theme .modal .muted,
+.classic-theme .modal .music-helper,
+.classic-theme .modal .field small {
+  color: #4f6f54;
+}
+.classic-theme .subtle-button,
+.classic-theme .ownership-legend button {
+  background: #e3ebdb !important;
+  color: #385b41;
+  border-color: #a8bd9f;
+}
+.classic-theme .turn-marker {
+  background: #d9e5d1;
+}
+.classic-theme .modal {
+  background: #f6f8ee;
+  color: #36573e;
+  border-color: #8baa83;
+  box-shadow: 0 24px 80px #16392355;
+}
+.classic-theme .modal-heading h2,
+.classic-theme .modal h3,
+.classic-theme .modal h4,
+.classic-theme .modal label,
+.classic-theme .modal .field > span {
+  color: #3d6249;
+}
+.classic-theme .modal .field input,
+.classic-theme .modal .holo-select-trigger {
+  background: #eef1e5;
+  color: #2d583d;
+  border-color: #a9b89d;
+}
+.classic-theme .modal-heading::before,
+.classic-theme .sidebar-bottom {
+  display: none;
+}
+.classic-theme .commander-name,
+.classic-theme .commander-stats,
+.classic-theme .empire-value strong,
+.classic-theme .property-body h3 {
+  color: #2e523c;
+}
+.classic-theme .panel-heading,
+.classic-theme .property-body p,
+.classic-theme .activity-content,
+.classic-theme .owned-worlds button {
+  color: #62775d;
+}
+.classic-theme .property-body,
+.classic-theme .property-hero {
+  background: #f7f9ee;
+}
+.classic-theme .deed-detail,
+.classic-theme .deed-detail strong,
+.classic-theme .deed-detail span {
+  color: #476f50;
+}
+.classic-theme .gold-button {
+  background: #d7ad65 !important;
+  color: #294a33;
+  border-color: #c49f5d;
+}
+.classic-theme .match-radio {
+  background: #e5ebdc;
+  border-color: #a5b79e;
+}
+.classic-theme .match-radio-title strong,
+.classic-theme .match-radio button {
+  color: #3a5b44;
+}
+.classic-theme footer {
+  background: #e3eada;
+  border-color: #b8c8b0;
+  color: #6c805e;
+}
+.classic-event-card {
+  text-align: center;
+  padding: 25px 8px;
+  color: #dbc286;
+}
+.classic-event-card > span {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 18px 0;
+  font-size: 11px;
+}
+.classic-event-card h3 {
+  font-size: 26px;
+  color: #e5eee7;
+  margin: 15px 0;
+}
+.classic-event-card p {
+  color: #a9bcaf;
+  line-height: 1.8;
+  font-size: 13px;
+  margin: 16px 0 25px;
+}
+.spectator-banner {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  flex-basis: 100%;
+  padding: 13px 18px;
+  margin: 12px 0;
+  border: 1px solid #4f7a91;
+  border-left: 3px solid #92c9d9;
+  color: #a3cedd;
+  background: #1630447d;
+}
+.spectator-banner strong {
+  display: block;
+  font-size: 14px;
+  color: #d8e8ee;
+}
+.spectator-banner p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.classic-theme .spectator-banner {
+  background: #dae7d5;
+  color: #456c50;
+  border-color: #94b18e;
+}
+.classic-theme .spectator-banner strong {
+  color: #325e43;
+}
+.mission-heading:has(.spectator-banner) {
+  flex-wrap: wrap;
+}
+.color-pill {
+  display: inline-block;
+  flex: none;
+  position: relative;
+  border: 1px solid #ffffffa0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffffff85, transparent 45%, #0003), currentColor;
+  box-shadow:
+    inset 0 -3px 4px #0002,
+    0 3px 5px #0003;
+}
+.color-pill::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  left: 15%;
+  width: 45%;
+  height: 20%;
+  background: #ffffff90;
+  border-radius: 99px;
+}
+.classic-theme .player-token {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.classic-theme .character-grid button {
+  justify-content: center;
+  min-height: 62px;
+}
+.classic-theme .character-preview .color-pill {
+  margin: 25px;
+}
+@media (max-width: 600px) {
+  .classic-theme .center-title h1 {
+    font-size: 28px;
+  }
+  .spectator-banner {
+    padding: 12px;
+  }
+}

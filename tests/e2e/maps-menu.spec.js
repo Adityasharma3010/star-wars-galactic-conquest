@@ -24,12 +24,10 @@ test('cinematic menu and routed map categories stay readable and launch the exis
     .getByRole('link', { name: /Default/ })
     .click();
   await expect(page).toHaveURL(/\/maps\/default$/);
-  await expect(page.getByText('Default maps are coming soon.', { exact: false })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Play locally/ })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'India', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Play locally/ })).toBeVisible();
   await page.reload();
-  await expect(
-    page.getByRole('heading', { name: 'Classic streets. A familiar rivalry.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'India', exact: true })).toBeVisible();
   await page.screenshot({ path: 'test-results/default-map-category.png', fullPage: true });
   await page
     .getByRole('navigation', { name: 'Map categories' })

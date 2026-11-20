@@ -6,6 +6,7 @@ import { restoreSession } from '../game/restoreSession.js';
 import { leaveMatch } from '../services/matchConnection.js';
 import { canAcceptMission, missionRecipient } from '../game/missions.js';
 import { getCard } from '../game/cards/decks.js';
+import { mapFor } from '../game/maps.js';
 import { secureRandom } from '../game/engine/random.js';
 import { serverCall, syncProfile, syncSettings } from '../services/supabase.js';
 import { playSound } from '../services/audio.js';
@@ -32,6 +33,9 @@ export const useGameStore = create(
       playing: false,
       online: false,
       onlinePlayer: null,
+      onlineRole: 'player',
+      selectedMap: 'galactic-conquest',
+      chooseMap: (selectedMap) => set({ selectedMap }),
       lobbyRoom: null,
       selected: 1,
       error: null,
@@ -61,7 +65,7 @@ export const useGameStore = create(
       returnHome: async () => {
         const state = get();
         set({ playing: false, modal: null, eventQueue: [], intro: null, observedEvent: null });
-        if (state.online && state.game?.phase !== 'finished') {
+        if (state.online && state.onlineRole !== 'spectator' && state.game?.phase !== 'finished') {
           set({ busy: true, matchAway: true });
           try {
             const d = await leaveMatch(state.game.id);
@@ -99,7 +103,7 @@ export const useGameStore = create(
           );
           set({
             game,
-            intro: { gameId: game.id },
+            intro: mapFor(game).intro ? { gameId: game.id } : null,
             introducedGames: [...get().introducedGames, game.id].slice(-24),
             playing: true,
             eventQueue: [],
@@ -107,6 +111,7 @@ export const useGameStore = create(
             matchAway: false,
             online: false,
             onlinePlayer: null,
+            onlineRole: 'player',
             messages: [],
             selected: 1,
             modal: null,
@@ -140,6 +145,7 @@ export const useGameStore = create(
           history = [
             {
               id: randomId(),
+              mapId: game.rules.mapId,
               date: new Date().toISOString(),
               winner: game.players.find((p) => p.id === game.winner)?.name,
               rounds: game.round,
@@ -161,22 +167,35 @@ export const useGameStore = create(
         const cards = draws
           .map((e) => ({
             id: game.id + ':' + e.id,
-            card: getCard(e.cardId) || game.lastCard,
+            card: getCard(e.cardId, game) || game.lastCard,
             player: missionRecipient(game, e),
             interactive: canAcceptMission(game, e, get().online, get().onlinePlayer),
             readyAt: Date.now() + (game.movement ? game.movement.steps * 260 + 400 : 0),
           }))
           .filter((e) => e.card);
+        const lostSeat =
+          get().online &&
+          get().onlinePlayer &&
+          game.players.find((player) => player.id === get().onlinePlayer)?.bankrupt;
         set({
           game,
           history,
+          ...(lostSeat ? { onlinePlayer: null, onlineRole: 'spectator', matchAway: false } : {}),
           eventQueue: [...get().eventQueue, ...cards.filter((card) => card.interactive)],
           observedEvent: cards.findLast((card) => !card.interactive) || get().observedEvent,
         });
       },
       dispatch: async (type, payload = {}, player) => {
         const { game, online, settings, busy, matchAway } = get();
-        if (!game || !get().playing || get().intro || busy || matchAway) return;
+        if (
+          !game ||
+          !get().playing ||
+          get().intro ||
+          busy ||
+          matchAway ||
+          (online && get().onlineRole === 'spectator')
+        )
+          return;
         set({ error: null });
         const actor =
           player || get().onlinePlayer || game.debt?.payer || game.players[game.turn].id;
@@ -207,11 +226,13 @@ export const useGameStore = create(
       attachOnline: (game, player, connections = {}) => {
         if (get().playing && get().online && !get().matchAway && get().game?.id === game.id) {
           get().commit(game);
-          set({ connections });
+          set({ connections, onlinePlayer: player, onlineRole: player ? 'player' : 'spectator' });
           return;
         }
         set({
           intro:
+            player &&
+            mapFor(game).intro &&
             !get().introducedGames.includes(game.id) &&
             game.phase !== 'finished' &&
             (game.version === 0 || Date.now() - (game.rules.now || 0) < 120000)
@@ -226,6 +247,8 @@ export const useGameStore = create(
           matchAway: false,
           online: true,
           onlinePlayer: player,
+          onlineRole: player ? 'player' : 'spectator',
+          selectedMap: game.rules.mapId || 'galactic-conquest',
           modal: null,
           busy: false,
           messages: [],
@@ -272,6 +295,8 @@ export const useGameStore = create(
         online: s.online,
         onlinePlayer: s.onlinePlayer,
         lobbyRoom: s.lobbyRoom,
+        selectedMap: s.selectedMap,
+        onlineRole: s.onlineRole,
         matchAway: s.matchAway,
         introducedGames: s.introducedGames,
         ruleDrafts: s.ruleDrafts,

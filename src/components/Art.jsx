@@ -1,5 +1,6 @@
 import { useId, useState, useEffect } from 'react';
 import { REFERENCE_IMAGES } from '../assets/referenceImages.js';
+import INDIA_IMAGES from '../assets/indiaImages.json';
 export function Emblem({ size = 36, className = '' }) {
   return (
     <svg
@@ -23,6 +24,54 @@ export function Emblem({ size = 36, className = '' }) {
 }
 export function TokenArt({ character, size = 40 }) {
   const symbol = character?.symbol || 'saber';
+  if (symbol === 'pill')
+    return (
+      <span
+        className="color-pill"
+        role="img"
+        aria-label={(character.name || 'Player') + ' colored token'}
+        style={{
+          width: size * 0.78,
+          height: size * 0.44,
+          color: character.color || 'currentColor',
+        }}
+      />
+    );
+  const classic = {
+    hat: 'M15 45h34M23 45V19h20v26M23 35h20',
+    car: 'M10 39h44v-12l-9-8H25l-8 8h-7zM19 39v6m27-6v6M20 27h29',
+    dog: 'M19 46V28h18l8-12h10v19H43v11M13 28 8 18m20 16v12',
+    'classic-ship': 'M10 37h45l-9 12H19zM23 37V24h22v13M32 24V14m-3 0h15',
+    boot: 'M24 14h17v23l12 5v8H15V39l9-2z',
+    thimble: 'M18 46 23 17h20l5 29zM18 46h30M28 25h3m6 0h3m-14 8h3m7 0h3',
+    wheelbarrow: 'M9 21h38l-8 19H21zM13 43h6m20-3 7 10m-5-30 13-7',
+    iron: 'M12 43h44L45 24H20zM26 24v-8h17v8',
+  };
+  if (classic[symbol])
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 64 64"
+        fill="none"
+        aria-label={character.name + ' token'}
+      >
+        <circle cx="32" cy="32" r="29" fill="currentColor" opacity=".09" />
+        <path
+          d={classic[symbol]}
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {symbol === 'car' && (
+          <>
+            <circle cx="20" cy="42" r="5" fill="currentColor" />
+            <circle cx="45" cy="42" r="5" fill="currentColor" />
+          </>
+        )}
+      </svg>
+    );
   return (
     <svg
       width={size}
@@ -109,23 +158,44 @@ export function PlanetArt({ tile, large = false }) {
     25: 'blockade-runner',
     35: 'executor',
   };
-  const photo = REFERENCE_IMAGES[tile?.name] || REFERENCE_IMAGES[vehicle[tile?.id]];
+  const classic = tile?.mapId === 'india';
+  const photo = classic
+    ? INDIA_IMAGES[tile?.name]
+    : REFERENCE_IMAGES[tile?.name] || REFERENCE_IMAGES[vehicle[tile?.id]];
   useEffect(() => setFailed(false), [photo?.image]);
   if (photo && !failed)
     return (
       <img
         className={'planet-art real-art ' + (large ? 'large' : '')}
         src={
-          photo.image + (photo.image.includes('?') ? '&' : '?') + 'width=' + (large ? '900' : '320')
+          classic
+            ? photo.image
+            : photo.image +
+              (photo.image.includes('?') ? '&' : '?') +
+              'width=' +
+              (large ? '900' : '320')
         }
-        alt={'Star Wars Databank: ' + tile.name}
-        title={'© Lucasfilm Ltd. · ' + tile.name}
+        alt={classic ? tile.name + ' · ' + tile.state : 'Star Wars Databank: ' + tile.name}
+        title={classic ? photo.author + ' · ' + photo.license : '© Lucasfilm Ltd. · ' + tile.name}
         decoding="async"
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
       />
     );
   const color = tile?.planetColor || '#7c9eaf';
+  if (classic)
+    return (
+      <svg className="planet-art" viewBox="0 0 120 80" role="img" aria-label={tile.name}>
+        <path
+          d="M20 63h80M30 56V22h60v34M37 30h17v14H37m29-14h17v14H66M30 54h60M40 61l-9 10m49-10 9 10"
+          stroke="#4a685c"
+          strokeWidth="4"
+          fill="#d8e2d9"
+        />
+        <circle cx="40" cy="55" r="4" fill="#56786a" />
+        <circle cx="80" cy="55" r="4" fill="#56786a" />
+      </svg>
+    );
   return (
     <svg
       className={`planet-art ${large ? 'large' : ''}`}

@@ -734,7 +734,7 @@
   color: #f6d49b;
   letter-spacing: 0.5px;
 }
-.connection-grace.autopilot {
+.connection-grace.expired {
   color: #9cbdcf;
   background: #182b3a;
   border-color: #3c617b;

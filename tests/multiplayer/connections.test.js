@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   connectionStatus,
   automationPlayer,
+  expiredPlayer,
   graceExpired,
   CONNECTION_STALE,
   DISCONNECT_GRACE,
@@ -12,7 +13,7 @@ const players = [
   { id: 'host', ai: false },
   { id: 'guest', ai: false },
 ];
-describe('connection grace and temporary control', () => {
+describe('connection grace and expiration', () => {
   it('has no countdown or automatic action while a human is connected', () => {
     const game = createGame(players),
       connections = { host: { status: 'online', lastSeen: 1000 } };
@@ -35,7 +36,8 @@ describe('connection grace and temporary control', () => {
   it('returns control immediately on a fresh heartbeat', () => {
     const game = createGame(players),
       connections = { host: { status: 'disconnected', lastSeen: 1000, deadline: 2000 } };
-    expect(automationPlayer(game, connections, 3000)?.id).toBe('host');
+    expect(automationPlayer(game, connections, 3000)).toBeNull();
+    expect(expiredPlayer(game, connections, 3000)?.id).toBe('host');
     connections.host = { status: 'online', lastSeen: 3000, deadline: null };
     expect(automationPlayer(game, connections, 3001)).toBeNull();
   });
@@ -47,7 +49,8 @@ describe('connection grace and temporary control', () => {
       host: { status: 'online', lastSeen: 1000 },
       guest: { status: 'left', lastSeen: 0, deadline: 100 },
     };
-    expect(automationPlayer(game, connections, 1100)?.id).toBe('guest');
+    expect(automationPlayer(game, connections, 1100)).toBeNull();
+    expect(expiredPlayer(game, connections, 1100)?.id).toBe('guest');
   });
   it('does not bid for a disconnected commander before grace expires', () => {
     const game = createGame(players);
@@ -55,7 +58,8 @@ describe('connection grace and temporary control', () => {
     game.auction = { bidder: null, passed: [] };
     const connections = { host: { status: 'left', lastSeen: 0, deadline: 120000 } };
     expect(automationPlayer(game, connections, 10000)).toBeNull();
-    expect(automationPlayer(game, connections, 120000)?.id).toBe('host');
+    expect(automationPlayer(game, connections, 120000)).toBeNull();
+    expect(expiredPlayer(game, connections, 120000)?.id).toBe('host');
   });
   it('never automates finished matches or eliminated players', () => {
     const game = createGame(players),

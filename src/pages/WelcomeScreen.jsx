@@ -13,9 +13,11 @@ import { Link } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore.js';
 import { PlanetArt, Emblem } from '../components/Art.jsx';
 import GalaxyBackdrop from '../components/GalaxyBackdrop.jsx';
-import { BOARD } from '../game/rules/data.js';
+import { boardFor, mapFor } from '../game/maps.js';
 
 export default function WelcomeScreen({ onResumeOnline }) {
+  const map = mapFor(useGameStore((state) => state.selectedMap)),
+    BOARD = boardFor(map.id);
   const { game, online, open, resumeSaved, busy } = useGameStore();
   return (
     <section className="welcome-menu" aria-labelledby="welcome-title">
@@ -48,11 +50,11 @@ export default function WelcomeScreen({ onResumeOnline }) {
             <span>DS-01 / BATTLE STATION</span>
             <i />
           </div>
-          <Link to="/maps/star-wars" className="welcome-map-link">
+          <Link to={'/maps/' + map.category} className="welcome-map-link">
             <Map size={21} />
             <span>
-              <small>ACTIVE MAP / STAR WARS</small>
-              <strong>Galactic Conquest</strong>
+              <small>ACTIVE MAP / {map.category === 'default' ? 'DEFAULT' : 'STAR WARS'}</small>
+              <strong>{map.name}</strong>
             </span>
             <ArrowRight size={20} />
           </Link>
@@ -131,7 +133,7 @@ export default function WelcomeScreen({ onResumeOnline }) {
               <span>
                 <small>03 / CHART A NEW COURSE</small>
                 <strong>Choose maps</strong>
-                <p>Explore Star Wars worlds and upcoming classic boards.</p>
+                <p>Explore Star Wars worlds and Indian city capitals.</p>
               </span>
               <ArrowRight size={22} />
             </Link>

@@ -1,5 +1,6 @@
 import { BOARD, DEFAULT_RULES } from '../rules/data.js';
-import { CARDS, getCard } from '../cards/decks.js';
+import { cardsFor, getCard } from '../cards/decks.js';
+import { boardFor, mapFor, isClassic, GAME_MAPS } from '../maps.js';
 import { dice, shuffled } from './random.js';
 
 const fail = (message) => {
@@ -9,7 +10,7 @@ const active = (s) => s.players[s.turn];
 const byId = (s, id) => s.players.find((p) => p.id === id);
 const own = (s, id) => s.ownership[id];
 export const groupTiles = (tile) =>
-  BOARD.filter((t) => t.type === 'property' && t.group === tile.group);
+  boardFor(tile.mapId).filter((t) => t.type === 'property' && t.group === tile.group);
 export const ownsGroup = (s, p, t) =>
   groupTiles(t).every(
     (x) =>
@@ -22,7 +23,7 @@ export const ownsGroup = (s, p, t) =>
 export function wealth(s, p) {
   return (
     p.credits +
-    BOARD.reduce(
+    boardFor(s).reduce(
       (n, t) =>
         n +
         (own(s, t.id)?.owner === p.id
@@ -34,12 +35,29 @@ export function wealth(s, p) {
   );
 }
 function log(s, text, type = 'info', details = {}) {
+  if (isClassic(s))
+    text = text
+      .replaceAll('credits', 'rupees')
+      .replaceAll('Hyperspace', 'GO')
+      .replaceAll('detention', 'jail')
+      .replaceAll('Galactic Conquest', 'India')
+      .replaceAll('world', 'city')
+      .replaceAll('outpost', 'house')
+      .replaceAll('planetary base', 'hotel')
+      .replaceAll('Free Orbit', 'Free Parking');
   s.eventSequence = (s.eventSequence || 0) + 1;
   s.events.push({ id: `event-${s.eventSequence}`, text, type, turn: s.round, ...details });
   if (s.events.length > 120) s.events.shift();
 }
 function checkWin(s) {
   const alive = s.players.filter((p) => !p.bankrupt);
+  if (!alive.length) {
+    s.phase = 'finished';
+    s.winner = null;
+    s.winningTeam = null;
+    log(s, 'The match ended with no active players.', 'finished');
+    return;
+  }
   const teams = new Set(alive.map((p) => p.team || p.id));
   if (alive.length === 1 || (s.rules.teams && teams.size === 1)) {
     s.phase = 'finished';
@@ -116,6 +134,7 @@ function payQueue(s) {
   }
 }
 export function rent(s, t, roll = 7, multiplier = 1) {
+  const BOARD = boardFor(s);
   const o = own(s, t.id);
   if (!o || o.mortgaged) return 0;
   const p = byId(s, o.owner);
@@ -136,7 +155,7 @@ function draw(s, p, deck, rng) {
     s.decks[deck] = shuffled(s.discards[deck], rng);
     s.discards[deck] = [];
   }
-  const c = getCard(s.decks[deck].shift());
+  const c = getCard(s.decks[deck].shift(), s);
   if (!c) return;
   const returnCard = () => s.discards[deck].push(c.id);
   s.lastCard = c;
@@ -163,7 +182,7 @@ function draw(s, p, deck, rng) {
       break;
     case 'nearest': {
       let steps = 1;
-      while (BOARD[(p.position + steps) % 40].type !== c.target) steps++;
+      while (boardFor(s)[(p.position + steps) % 40].type !== c.target) steps++;
       movement(s, p, steps);
       land(s, p, rng, c.value);
       break;
@@ -189,7 +208,7 @@ function draw(s, p, deck, rng) {
   }
 }
 function land(s, p, rng, multiplier = 1) {
-  const t = BOARD[p.position];
+  const t = boardFor(s)[p.position];
   log(s, `${p.name} arrived at ${t.name}.`, 'move');
   s.phase = 'end';
   if (t.price) {
@@ -203,7 +222,7 @@ function land(s, p, rng, multiplier = 1) {
         queuePay(s, p.id, o.owner, rent(s, t, s.dice[0] + s.dice[1], multiplier));
     }
   } else if (t.type === 'tax')
-    queuePay(s, p.id, null, t.id === 4 ? s.rules.incomeTax : s.rules.luxuryTax);
+    queuePay(s, p.id, null, t.id === 4 ? incomeTax(s, p) : s.rules.luxuryTax);
   else if (t.type === 'goDetention') detention(s, p);
   else if (t.type === 'parking' && s.rules.freeParking) {
     p.credits += s.pot;
@@ -216,6 +235,8 @@ export function createGame(players, rules = {}, rng = () => 0.5) {
   if (players.length < 2 || players.length > 8) fail('A match needs 2–8 players.');
   if (new Set(players.map((p) => p.id)).size !== players.length) fail('Player IDs must be unique.');
   const config = { ...DEFAULT_RULES, ...rules };
+  if (!GAME_MAPS.some((map) => map.id === config.mapId)) fail('Unknown map.');
+  if (!['cash', 'wealth'].includes(config.taxBasis)) fail('Tax basis must be cash or wealth.');
   if (
     !Number.isInteger(config.startingCredits) ||
     config.startingCredits < 100 ||
@@ -274,11 +295,15 @@ export function createGame(players, rules = {}, rng = () => 0.5) {
     inventory: { outposts: config.outposts, bases: config.bases },
     decks: {
       force: shuffled(
-        CARDS.filter((c) => c.deck === 'force').map((c) => c.id),
+        cardsFor(config)
+          .filter((c) => c.deck === 'force')
+          .map((c) => c.id),
         rng,
       ),
       galactic: shuffled(
-        CARDS.filter((c) => c.deck === 'galactic').map((c) => c.id),
+        cardsFor(config)
+          .filter((c) => c.deck === 'galactic')
+          .map((c) => c.id),
         rng,
       ),
     },
@@ -290,10 +315,17 @@ export function createGame(players, rules = {}, rng = () => 0.5) {
     lastCard: null,
     winner: null,
   };
-  log(s, 'The galaxy is yours to conquer. All commanders receive starting credits.', 'start');
+  log(
+    s,
+    isClassic(s)
+      ? 'The India match begins. All players receive their starting balance.'
+      : 'The galaxy is yours to conquer. All commanders receive starting credits.',
+    'start',
+  );
   return s;
 }
 function transferLegal(s, ids, p) {
+  const BOARD = boardFor(s);
   for (const id of ids) {
     const o = own(s, id),
       t = BOARD[id];
@@ -349,6 +381,7 @@ function offerTrade(s, p, a, id) {
   log(s, `${p.name} offered a trade to ${other.name}.`, 'trade');
 }
 export function transition(state, action, rng = () => 0.5) {
+  const BOARD = boardFor(state);
   if (!action?.id || typeof action.id !== 'string') fail('Action ID is required.');
   if (state.processed.includes(action.id)) return state;
   if (action.version !== undefined && action.version !== state.version)
@@ -358,6 +391,73 @@ export function transition(state, action, rng = () => 0.5) {
     p = byId(s, action.player),
     current = active(s);
   if (!p || p.bankrupt) fail('Player is not active.');
+  if (action.type === 'FORFEIT') {
+    if (!action.connectionTimeout || p.ai) fail('Only an expired human connection can forfeit.');
+    const leaving = [...new Set(action.payload?.players || [p.id])];
+    if (
+      !leaving.length ||
+      leaving.some((id) => !byId(s, id) || byId(s, id).ai || byId(s, id).bankrupt)
+    )
+      fail('Invalid expired players.');
+    for (const id of leaving) {
+      const p = byId(s, id);
+      for (const [id, owned] of Object.entries(s.ownership)) {
+        if (owned.owner !== p.id) continue;
+        if (owned.level === 5) s.inventory.bases++;
+        else s.inventory.outposts += owned.level || 0;
+        delete s.ownership[id];
+      }
+      p.cards.forEach((id) => s.discards[getCard(id, s).deck].push(id));
+      p.cards = [];
+      p.credits = 0;
+      p.bankrupt = true;
+      p.forfeited = true;
+      p.eliminationReason = 'Rejoin period expired';
+      s.trades
+        .filter((trade) => trade.status === 'pending' && (trade.from === p.id || trade.to === p.id))
+        .forEach((trade) => (trade.status = 'cancelled'));
+      s.payments = s.payments
+        .filter((payment) => payment.payer !== p.id)
+        .map((payment) => (payment.creditor === p.id ? { ...payment, creditor: null } : payment));
+      if (s.debt?.payer === p.id) {
+        s.phase = s.debt.resume === 'jailRelease' ? 'end' : s.debt.resume;
+        s.debt = null;
+      } else if (s.debt?.creditor === p.id) s.debt.creditor = null;
+      if (s.auction) {
+        if (!s.auction.passed.includes(p.id)) s.auction.passed.push(p.id);
+        if (s.auction.bidder === p.id) {
+          s.auction.bidder = null;
+          s.auction.bid = 0;
+        }
+      }
+      log(s, p.name + ' was eliminated after their rejoin period expired.', 'forfeit', {
+        player: p.id,
+      });
+    }
+    settleAuction(s);
+    checkWin(s);
+    if (s.phase !== 'finished' && leaving.includes(current.id)) {
+      let turn = s.turn;
+      do {
+        turn = (turn + 1) % s.players.length;
+        if (turn === 0) s.round++;
+      } while (s.players[turn].bankrupt);
+      s.turn = turn;
+      s.extraTurn = false;
+      s.doubles = 0;
+      if (!s.auction && !s.debt) {
+        s.phase = 'roll';
+        s.pendingProperty = null;
+      }
+    }
+    if (s.phase !== 'finished') payQueue(s);
+    s.movement = null;
+    s.lastCard = null;
+    s.version++;
+    s.processed.push(action.id);
+    s.lastActionType = 'FORFEIT';
+    return s;
+  }
   const a = action.payload || {};
   const publicActions = [
     'BID',
@@ -716,21 +816,7 @@ export function transition(state, action, rng = () => 0.5) {
     default:
       fail('Unknown game action.');
   }
-  if (s.auction) {
-    const q = s.auction,
-      eligible = s.players.filter((x) => !x.bankrupt && !q.passed.includes(x.id));
-    if ((q.bidder && eligible.every((x) => x.id === q.bidder)) || !eligible.length) {
-      if (q.bidder) {
-        const winner = byId(s, q.bidder);
-        winner.credits -= q.bid;
-        s.ownership[q.property] = { owner: winner.id, level: 0, mortgaged: false };
-        log(s, `${winner.name} won ${BOARD[q.property].name} for ${q.bid}.`, 'purchase');
-      } else log(s, 'All commanders passed. The property remains with the bank.', 'auction');
-      s.auction = null;
-      s.pendingProperty = null;
-      s.phase = 'end';
-    }
-  }
+  settleAuction(s);
   if (action.type === 'END') roundLimitVictory(s);
   s.turnDeadline = null;
   s.animationUntil =
@@ -742,4 +828,36 @@ export function transition(state, action, rng = () => 0.5) {
   s.processed.push(action.id);
   if (s.processed.length > 500) s.processed.shift();
   return s;
+}
+
+export function incomeTax(state, player) {
+  return Math.ceil(
+    Math.max(0, state.rules.taxBasis === 'wealth' ? wealth(state, player) : player.credits) * 0.1,
+  );
+}
+
+function settleAuction(state) {
+  if (!state.auction) return;
+  const auction = state.auction,
+    eligible = state.players.filter(
+      (player) => !player.bankrupt && !auction.passed.includes(player.id),
+    );
+  if (
+    (auction.bidder && eligible.every((player) => player.id === auction.bidder)) ||
+    !eligible.length
+  ) {
+    if (auction.bidder) {
+      const winner = byId(state, auction.bidder);
+      winner.credits -= auction.bid;
+      state.ownership[auction.property] = { owner: winner.id, level: 0, mortgaged: false };
+      log(
+        state,
+        `${winner.name} won ${boardFor(state)[auction.property].name} for ${auction.bid}.`,
+        'purchase',
+      );
+    } else log(state, 'All players passed. The property remains with the bank.', 'auction');
+    state.auction = null;
+    state.pendingProperty = null;
+    state.phase = 'end';
+  }
 }

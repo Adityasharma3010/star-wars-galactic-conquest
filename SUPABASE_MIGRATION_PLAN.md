@@ -42,3 +42,18 @@ The owner approved it after the dry run. Application, Edge deployment and readin
 - Separate connection updates from game versions, so heartbeats cannot replay movement or invalidate human actions. Multiple active tabs keep a player connected when one tab closes.
 
 The owner approved this migration after the dry run; application and Edge Function deployment succeeded. Rollback-only connection/race/security fixtures and the real two-player disconnect/leave/rejoin browser checks passed.
+
+# Seventh migration: spectators, expired seats and next matches (approved and applied)
+
+Project: `iheauyxopwcpouogfkvi`. Source: `supabase/migrations/202611200007_spectators_and_forfeits.sql`.
+
+- Add an RLS-protected `game_spectators` membership table. Spectators can read only their own access record, the match metadata and its public snapshot. They gain read access to that match's private Realtime channel, without presence-writing or game-action privileges.
+- Add a service-only watch-room RPC. A late visitor is never inserted into the player roster. Existing players can reclaim their active seat only before the established deadline; eliminated players can watch.
+- Keep five-minute disconnect and two-minute explicit-leave periods. Reject a reconnect after the deadline. Commit expired-seat eliminations as one transaction protected by the existing reconnect lock; a simultaneous valid reconnect cancels the pending batch.
+- Expired human seats leave the active roster and return assets/developments to the bank. Their archived player records and all prior game history remain. No replacement AI is created. A sole remaining participant wins; if everyone expires together, no disconnected player is awarded a fabricated win.
+- Add atomic room creation/configuration, so map selection and the fixed 10% tax basis cannot be lost between requests. Add a nullable `next_room_id` link and a service-only next-room operation: after the old game finishes, viewers can join a fresh waiting room. The old room and match history remain intact.
+- Expose public active rooms for viewing. Private rooms still require a valid invite code and enforce the existing host-block checks. Unauthenticated clients and outsider accounts gain no match access.
+
+The new SQL was compiled and tested inside a single database transaction that was rolled back. Checks passed: classic room rules, spectator snapshot RLS, unchanged player count, denied write RPC grants, expired reconnect rejection, two-seat atomic elimination, sole-player victory, and a spectator joining the next waiting room. No fixture data or validation DDL was committed.
+
+The owner approved the seventh migration after its linked CLI dry run. `supabase db push --linked --yes` succeeded on 20 November 2026. Remote migration history contains all seven versions. The rollback-only checks passed again against the applied schema, and the updated JavaScript Edge Function was deployed successfully. No remote reset was used.

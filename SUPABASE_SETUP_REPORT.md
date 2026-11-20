@@ -6,7 +6,7 @@ The project was created with the owner's authorization. Before migration it cont
 
 ## Applied migrations
 
-All six remote pushes succeeded after their dry runs and the owner's approvals:
+All seven remote pushes succeeded after their dry runs and the owner's approvals:
 
 1. `202611190001_schema.sql` — normalized tables, constraints, indexes, RLS, profile trigger, Realtime and Storage.
 2. `202611190002_authority.sql` — trusted room/start/engine/commit/rate RPCs and transactional normalized economy/history.
@@ -15,11 +15,13 @@ All six remote pushes succeeded after their dry runs and the owner's approvals:
 5. `202611190005_connection_grace.sql` — private document-session leases, service-only heartbeat/connection RPCs and atomic reconnect protection around the existing commit implementation.
 6. `202611200006_waiting_callsigns.sql` — atomic waiting-room identity edits, readiness reset and a stale-roster guard around match start.
 
-The remote migration history contains all six versions. No remote reset was used.
+7. `202611200007_spectators_and_forfeits.sql` — read-only spectators, strict rejoin deadlines, atomic expired-seat removal, map-aware room creation and linked next-match waiting rooms. Approved and applied on 20 November 2026.
+
+The remote migration history contains all seven versions. No remote reset was used.
 
 ## Verified schema
 
-**36 public tables, all 36 with RLS; 80 public indexes; 39 public policies.** The private engine, action, rate-limit and connection-lease tables are in `galactic_private`. Connection leases also have RLS enabled and no client schema/table access.
+**37 public tables, all 37 with RLS; 81 public indexes; 43 public policies**, inspected after migration seven. The added table is `game_spectators`. The private engine, action, rate-limit and connection-lease tables are in `galactic_private`. Connection leases also have RLS enabled and no client schema/table access.
 
 Public tables: `profiles`, `player_settings`, `friendships`, `friend_requests`, `blocked_players`, `game_rooms`, `room_players`, `room_settings`, `room_invitations`, `games`, `game_players`, `game_state`, `game_events`, `turn_history`, `match_history`, `player_wallets`, `transactions`, `properties`, `property_ownership`, `property_development`, `mortgages`, `trades`, `trade_items`, `trade_history`, `auctions`, `auction_bids`, `card_decks`, `card_definitions`, `player_cards`, `chat_messages`, `player_reports`, `player_statistics`, `achievements`, `player_achievements`, `cosmetic_items`, `player_cosmetics`.
 
@@ -42,6 +44,8 @@ Buckets, each limited to 5 MiB: `player-avatars` (private), `game-cosmetics` (pu
 `ALLOW_LAN_ORIGINS=true` enables authenticated requests from private IPv4 addresses on development ports 5173/5174. Unrelated public hosts and other ports remain rejected. LAN guest join, readiness, start and dice rolling were verified through `http://192.168.29.195:5174/` with two independent sessions.
 
 ## Actual verification
+
+Migration-seven rollback-only fixtures passed against the applied schema: India configured rules, spectator snapshot RLS, unchanged player count, denied write RPCs, expired reconnect rejection, atomic elimination, sole-survivor victory and next-room joining. Three real independent browser guests passed India creation/join/readiness/start with zero AI, late read-only spectating, Realtime/refresh, forged-action/chat rejection, within-grace rejoin, expired-seat removal, host victory and both viewers entering the same next room. Fast expiry changed only the departed lease in the newly created named QA match. The map-aware JavaScript Edge Function is deployed.
 
 Rollback-only SQL fixtures passed member versus outsider reads, denied wallet writes, denied private/authority access, atomic readiness and friendship, duplicate commit idempotency and stale-version rejection. All fixtures rolled back.
 

@@ -1,7 +1,33 @@
-import { SOUND_PACK, playSound } from '../services/starWarsAudio.js';
+import { SOUND_PACK } from '../services/starWarsAudio.js';
+import { playSound } from '../services/audio.js';
+import { isClassic } from '../game/maps.js';
 import { useGameStore } from '../stores/gameStore.js';
 export default function BuiltInSoundPack() {
   const settings = useGameStore((s) => s.settings);
+  const classic = isClassic(
+    useGameStore.getState().playing
+      ? useGameStore.getState().game
+      : useGameStore.getState().selectedMap,
+  );
+  if (classic)
+    return (
+      <div className="sound-pack">
+        <h4>Classic sound effects</h4>
+        <p className="muted">Soft button taps, dice rolls, card shuffles and coin chimes.</p>
+        {['click', 'roll', 'card', 'purchase', 'build', 'victory'].map((kind) => (
+          <div className="sound-row" key={kind}>
+            <span>{kind}</span>
+            <button
+              className="button"
+              data-audio-preview
+              onClick={() => playSound(kind, { ...settings, mute: false })}
+            >
+              Preview
+            </button>
+          </div>
+        ))}
+      </div>
+    );
   return (
     <div className="sound-pack">
       <h4>Star Wars sound pack</h4>

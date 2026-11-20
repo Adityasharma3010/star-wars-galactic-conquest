@@ -1,4 +1,6 @@
 import { CHARACTERS, FACTIONS, DEFAULT_RULES } from './_shared/game/rules/data.js';
+import { CLASSIC_TOKENS } from './_shared/game/rules/india.js';
+import { GAME_MAPS } from './_shared/game/maps.js';
 export function validId(value) {
   if (
     typeof value !== 'string' ||
@@ -8,14 +10,15 @@ export function validId(value) {
   return value;
 }
 export function cleanProfile(value = {}) {
-  const character = CHARACTERS.find((c) => c.id === value.character) || CHARACTERS[0];
+  const character =
+    [...CHARACTERS, ...CLASSIC_TOKENS].find((c) => c.id === value.character) || CHARACTERS[0];
   return {
     name:
       String(value.name || 'Commander')
         .trim()
         .slice(0, 24) || 'Commander',
     character: character.id,
-    faction: FACTIONS.includes(value.faction) ? value.faction : character.faction,
+    faction: [...FACTIONS, 'Classic'].includes(value.faction) ? value.faction : character.faction,
   };
 }
 export function publicState(state) {
@@ -88,6 +91,14 @@ export function validateAction(value, userId, version) {
 }
 export function safeRules(value = {}) {
   const r = { ...DEFAULT_RULES };
+  if (value.mapId !== undefined) {
+    if (!GAME_MAPS.some((map) => map.id === value.mapId)) throw new Error('Unknown map.');
+    r.mapId = value.mapId;
+  }
+  if (value.taxBasis !== undefined) {
+    if (!['cash', 'wealth'].includes(value.taxBasis)) throw new Error('Invalid tax basis.');
+    r.taxBasis = value.taxBasis;
+  }
   for (const [k, min, max] of [
     ['startingCredits', 100, 10000],
     ['startBonus', 0, 1000],

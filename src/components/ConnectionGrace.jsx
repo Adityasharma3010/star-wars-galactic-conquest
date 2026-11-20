@@ -17,19 +17,19 @@ export default function ConnectionGrace({ player }) {
   const left = status.status === 'left';
   return (
     <span
-      className={'connection-grace ' + (!seconds ? 'autopilot' : '')}
+      className={'connection-grace ' + (!seconds ? 'expired' : '')}
       title={
         seconds
           ? player.name +
             (left
               ? ' left the match. Their seat is reserved for two minutes.'
               : ' lost their connection. Their seat is reserved for five minutes.')
-          : 'Temporary AI is keeping this seat in play. Reconnecting returns control.'
+          : 'The rejoin window expired. This player will be removed from the match.'
       }
     >
       {seconds ? left ? <LogOut size={14} /> : <WifiOff size={14} /> : <Radio size={14} />}
       <span>
-        {seconds ? (left ? 'REJOIN WINDOW' : 'RECONNECT WINDOW') : 'AUTOPILOT'}
+        {seconds ? (left ? 'REJOIN WINDOW' : 'RECONNECT WINDOW') : 'REJOIN EXPIRED'}
         {seconds > 0 && (
           <strong role="timer" aria-label={left ? 'Rejoin countdown' : 'Reconnect countdown'}>
             {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}

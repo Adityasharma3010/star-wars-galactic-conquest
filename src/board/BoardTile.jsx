@@ -14,6 +14,7 @@ import DevelopmentArt from '../components/DevelopmentArt.jsx';
 import { PlanetArt, TokenArt } from '../components/Art.jsx';
 import { useGameStore } from '../stores/gameStore.js';
 import { CHARACTERS } from '../game/rules/data.js';
+import { tokensFor, isClassic } from '../game/maps.js';
 const icons = {
   force: Sparkles,
   galactic: Orbit,
@@ -47,10 +48,11 @@ export default function BoardTile({
   const pos = tilePosition(tile.id),
     Icon = tile.id === 28 ? Radio : icons[tile.type];
   const owner = players.find((p) => p.id === ownership?.owner);
+  const classic = isClassic(rules);
   return (
     <button
       data-tile={tile.id}
-      aria-label={`${tile.name}${tile.price ? `, ${tile.price} credits` : ''}${owner ? `, owned by ${owner.name}` : ''}`}
+      aria-label={`${tile.name}${tile.price ? `, ${tile.price} ${classic ? 'rupees' : 'credits'}` : ''}${owner ? `, owned by ${owner.name}` : ''}`}
       className={`board-tile ${isLocation ? 'player-location' : ''} ${tile.id % 10 === 0 ? 'corner' : ''} ${tile.type} ${selected ? 'selected' : ''} ${ownership?.mortgaged ? 'mortgaged' : ''} ${owner ? 'owned' : ''} ${filter ? (ownership?.owner === filter ? 'owner-emphasis' : 'owner-dim') : ''}`}
       style={{
         gridRow: pos.row,
@@ -68,17 +70,21 @@ export default function BoardTile({
       ) : (
         <Icon className="tile-symbol" size={tile.id % 10 === 0 ? 27 : 19} strokeWidth={1.3} />
       )}
-      <span className="tile-name">{tile.id === 25 ? 'Blockade Runner' : tile.name}</span>
+      <span className="tile-name">
+        {!classic && tile.id === 25 ? 'Blockade Runner' : tile.name}
+      </span>
       {isLocation && <span className="hover-location-label">{hovered.name}</span>}
       <span className="tile-price">
         {tile.price
-          ? `◈ ${tile.price}`
+          ? `${classic ? '₹' : '◈'} ${tile.price}`
           : tile.type === 'start'
             ? 'COLLECT ' + (rules.startBonus ?? 200)
             : tile.type === 'tax'
-              ? '◈ ' + (tile.id === 4 ? (rules.incomeTax ?? 200) : (rules.luxuryTax ?? 100))
+              ? tile.id === 4
+                ? '10% ' + (rules.taxBasis === 'wealth' ? 'WEALTH' : 'CASH')
+                : (classic ? '₹ ' : '◈ ') + (rules.luxuryTax ?? 100)
               : tile.type === 'parking' && rules.freeParking
-                ? 'POOL ◈ ' + pot
+                ? 'POOL ' + (classic ? '₹ ' : '◈ ') + pot
                 : tile.label ||
                   (tile.type === 'tax'
                     ? `◈ ${tile.tax}`
@@ -89,13 +95,23 @@ export default function BoardTile({
       {ownership?.level > 0 && (
         <span
           className="development"
-          aria-label={ownership.level === 5 ? 'Planetary base' : ownership.level + ' outposts'}
+          aria-label={
+            ownership.level === 5
+              ? classic
+                ? 'Hotel'
+                : 'Planetary base'
+              : ownership.level + (classic ? ' houses' : ' outposts')
+          }
         >
-          <DevelopmentArt base={ownership.level === 5} />
+          <DevelopmentArt base={ownership.level === 5} classic={classic} />
           <b>
             {ownership.level === 5
-              ? 'BASE'
-              : ownership.level + ' OUTPOST' + (ownership.level > 1 ? 'S' : '')}
+              ? classic
+                ? 'HOTEL'
+                : 'BASE'
+              : ownership.level +
+                (classic ? ' HOUSE' : ' OUTPOST') +
+                (ownership.level > 1 ? 'S' : '')}
           </b>
         </span>
       )}
@@ -106,7 +122,7 @@ export default function BoardTile({
           title={owner.name + ' owns this world'}
           aria-label={owner.name + ' owns this world'}
         >
-          <TokenArt character={CHARACTERS.find((c) => c.id === owner.character)} size={18} />
+          <TokenArt character={tokensFor(rules).find((c) => c.id === owner.character)} size={18} />
           {ownership?.mortgaged && <LockKeyhole size={9} />}
         </span>
       )}

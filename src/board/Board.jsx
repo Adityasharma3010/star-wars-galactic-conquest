@@ -1,9 +1,11 @@
+import { mapText } from '../services/mapText.js';
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { motion } from 'motion/react';
 import { Dices, ArrowRight, ChevronRight, LockKeyhole, Sparkles } from 'lucide-react';
 import { BOARD } from '../game/rules/data.js';
+import { boardFor, isClassic } from '../game/maps.js';
 import { BattleStation, Emblem } from '../components/Art.jsx';
 import BoardTile from './BoardTile.jsx';
 import PlayerToken, { tokenCoordinates } from './PlayerToken.jsx';
@@ -32,6 +34,9 @@ export default function Board() {
     [expanded, setExpanded] = useState(false);
   const reduced =
     settings.reducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const BOARD = boardFor(game),
+    classic = isClassic(game),
+    spectator = online && !onlinePlayer;
   useGSAP(
     () => {
       const m = game.movement;
@@ -43,29 +48,55 @@ export default function Board() {
         index = game.players.filter((p) => !p.bankrupt).findIndex((p) => p.id === m.player);
       if (!el) return;
       setMoving(true);
-      const tl = gsap.timeline({ onComplete: () => setMoving(false) });
+      const tl = gsap.timeline({
+        onComplete: () => setMoving(false),
+      });
       tl.set(el, tokenCoordinates(m.from, index));
-      tl.to(el, { scale: 1.15, duration: 0.15 });
+      tl.to(el, {
+        scale: 1.15,
+        duration: 0.15,
+      });
       const path =
         m.path ||
-        Array.from({ length: m.steps }, (_, i) => (m.from + (m.back ? -(i + 1) : i + 1) + 80) % 40);
+        Array.from(
+          {
+            length: m.steps,
+          },
+          (_, i) => (m.from + (m.back ? -(i + 1) : i + 1) + 80) % 40,
+        );
       for (const position of path)
-        tl.to(el, { ...tokenCoordinates(position, index), duration: 0.26, ease: 'power1.inOut' });
+        tl.to(el, {
+          ...tokenCoordinates(position, index),
+          duration: 0.26,
+          ease: 'power1.inOut',
+        });
       const destination = game.players.find((p) => p.id === m.player)?.position;
       if (path.at(-1) !== destination)
-        tl.to(el, { ...tokenCoordinates(destination, index), duration: 0.6, ease: 'power2.inOut' });
-      tl.to(el, { scale: 1, duration: 0.2 });
+        tl.to(el, {
+          ...tokenCoordinates(destination, index),
+          duration: 0.6,
+          ease: 'power2.inOut',
+        });
+      tl.to(el, {
+        scale: 1,
+        duration: 0.2,
+      });
       return () => {
         tl.kill();
         setMoving(false);
       };
     },
-    { scope: ref, dependencies: [game.version], revertOnUpdate: true },
+    {
+      scope: ref,
+      dependencies: [game.version],
+      revertOnUpdate: true,
+    },
   );
   useEffect(() => {
     if (game.phase === 'finished') open('victory');
   }, [game.phase, open]);
-  const canAct = !matchAway && !moving && !busy && (!online || p.id === onlinePlayer) && !p.ai;
+  const canAct =
+    !spectator && !matchAway && !moving && !busy && (!online || p.id === onlinePlayer) && !p.ai;
   const pending = BOARD[game.pendingProperty];
   const canSettle = Boolean(
     game.debt &&
@@ -139,15 +170,15 @@ export default function Board() {
           <div className="star-field" />
           <div className="orbit-line orbit-one" />
           <div className="orbit-line orbit-two" />
-          <BattleStation />
+          {!classic && <BattleStation />}
           <div className="center-title">
-            <span className="eyebrow gold">THE GALAXY IS YOURS</span>
+            <span className="eyebrow gold">{mapText('THE GALAXY IS YOURS')}</span>
             <h1>
-              GALACTIC
+              {classic ? 'INDIA' : 'GALACTIC'}
               <br />
-              <span>CONQUEST</span>
+              <span>{classic ? 'CITY CAPITALS' : 'CONQUEST'}</span>
             </h1>
-            <p>Build your empire. Rewrite your destiny.</p>
+            <p>{mapText('Build your empire. Rewrite your destiny.')}</p>
           </div>
           <div className="center-rule">
             <Emblem size={23} />
@@ -155,7 +186,12 @@ export default function Board() {
           </div>
           <div className="turn-console">
             <div className="turn-banner">
-              <span className="mini-avatar" style={{ color: p.color }}>
+              <span
+                className="mini-avatar"
+                style={{
+                  color: p.color,
+                }}
+              >
                 <Emblem size={22} />
               </span>
               <div>
@@ -197,12 +233,15 @@ export default function Board() {
                 reduced={reduced}
               />
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={{
+                  scale: 0.97,
+                }}
                 className="button gold-button roll-button"
                 disabled={
                   (!canAct && !['auction', 'debt', 'finished'].includes(game.phase)) ||
                   (game.phase === 'debt' && !canSettle) ||
                   matchAway ||
+                  spectator ||
                   moving ||
                   busy
                 }
@@ -212,9 +251,11 @@ export default function Board() {
                   ? 'Travelling…'
                   : busy
                     ? 'Syncing…'
-                    : p.ai && !['auction', 'debt', 'finished'].includes(game.phase)
-                      ? 'Commander is thinking…'
-                      : main}
+                    : spectator
+                      ? 'Spectating · ' + p.name + '’s turn'
+                      : p.ai && !['auction', 'debt', 'finished'].includes(game.phase)
+                        ? 'Commander is thinking…'
+                        : main}
                 {game.phase === 'roll' ? <Dices size={19} /> : <ArrowRight size={18} />}
               </motion.button>
             </div>
@@ -227,12 +268,16 @@ export default function Board() {
             {p.detained && game.phase === 'roll' && canAct && (
               <div className="detention-actions">
                 <button className="text-button" onClick={() => dispatch('RELEASE')}>
-                  Pay 50 credits to escape
+                  {mapText(' Pay 50 credits to escape ')}
                 </button>
                 {p.cards[0] && (
                   <button
                     className="text-button"
-                    onClick={() => dispatch('RELEASE', { card: p.cards[0] })}
+                    onClick={() =>
+                      dispatch('RELEASE', {
+                        card: p.cards[0],
+                      })
+                    }
                   >
                     Use escape card
                   </button>
@@ -242,10 +287,14 @@ export default function Board() {
           </div>
           <div className="center-bottom">
             <span>
-              <Sparkles size={11} /> AGE OF REBELLION
+              <Sparkles size={11} />
+              {mapText('AGE OF REBELLION')}
             </span>
             <span>
-              {game.inventory.outposts} OUTPOSTS · {game.inventory.bases} BASES
+              {game.inventory.outposts}
+              {mapText('OUTPOSTS \xB7')}
+              {game.inventory.bases}
+              {mapText('BASES')}
             </span>
           </div>
         </div>
@@ -264,7 +313,8 @@ export default function Board() {
             : 'Saved on this device · Solo & pass-and-play'}
         </span>
         <span>
-          Click any world to explore its deed <ArrowRight size={11} />
+          {mapText('Click any world to explore its deed')}
+          <ArrowRight size={11} />
         </span>
       </div>
     </div>

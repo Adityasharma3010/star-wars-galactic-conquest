@@ -121,7 +121,7 @@ const palettes = [
 const specials = {
   0: { type: 'start', name: 'Hyperspace', label: 'COLLECT 200' },
   2: { type: 'galactic', name: 'Galactic Event' },
-  4: { type: 'tax', name: 'Imperial Tax', tax: 200 },
+  4: { type: 'tax', name: 'Imperial Tax', taxRate: 0.1 },
   5: { type: 'transport', name: 'Millennium Falcon', price: 200 },
   7: { type: 'force', name: 'Force Event' },
   10: { type: 'detention', name: 'Detention', label: 'JUST VISITING' },
@@ -212,6 +212,8 @@ export const DEFAULT_RULES = {
   auctions: true,
   freeParking: false,
   incomeTax: 200,
+  taxBasis: 'cash',
+  mapId: 'galactic-conquest',
   luxuryTax: 100,
   outposts: 32,
   bases: 12,

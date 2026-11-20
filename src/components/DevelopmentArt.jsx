@@ -1,4 +1,29 @@
-export default function DevelopmentArt({ base = false }) {
+export default function DevelopmentArt({ base = false, classic = false }) {
+  if (classic)
+    return (
+      <svg
+        className="development-art"
+        viewBox="0 0 64 45"
+        role="img"
+        aria-label={base ? 'Hotel' : 'House'}
+      >
+        <path
+          d="M8 20 32 3 56 20v22H8z"
+          fill={base ? '#b9544d' : '#41956c'}
+          stroke="#143e2b"
+          strokeWidth="2"
+        />
+        <path d="M25 42V25h14v17" fill="#f3e6bf" />
+        {base && (
+          <>
+            <path d="M13 20h9v9h-9m29-9h9v9h-9" fill="#f3e6bf" />
+            <text x="32" y="16" textAnchor="middle" fill="#fff" fontSize="8">
+              H
+            </text>
+          </>
+        )}
+      </svg>
+    );
   return (
     <svg
       className="development-art"

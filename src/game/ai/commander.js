@@ -1,5 +1,5 @@
-import { BOARD } from '../rules/data.js';
-import { groupTiles, ownsGroup } from '../engine/game.js';
+import { boardFor } from '../maps.js';
+import { groupTiles, ownsGroup, transition } from '../engine/game.js';
 const profiles = {
   easy: { reserve: 80, ratio: 0.75 },
   medium: { reserve: 180, ratio: 1 },
@@ -7,6 +7,7 @@ const profiles = {
   expert: { reserve: 300, ratio: 1.5 },
 };
 export function chooseAction(s, p) {
+  const BOARD = boardFor(s);
   const policy = profiles[p.difficulty || s.rules.difficulty] || profiles.medium,
     owned = BOARD.filter((t) => s.ownership[t.id]?.owner === p.id);
   const pack = (type, payload = {}) => ({ type, player: p.id, payload });
@@ -48,12 +49,24 @@ export function chooseAction(s, p) {
   const offer = s.trades.find((t) => t.to === p.id && t.status === 'pending');
   if (offer) {
     const value = (ids) => ids.reduce((v, id) => v + BOARD[id].price, 0);
-    return pack(
-      value(offer.give) + offer.cash >= value(offer.take) + offer.requestCash
-        ? 'TRADE_ACCEPT'
-        : 'TRADE_DECLINE',
-      { trade: offer.id },
-    );
+    if (value(offer.give) + offer.cash < value(offer.take) + offer.requestCash)
+      return pack('TRADE_DECLINE', { trade: offer.id });
+    try {
+      transition(
+        s,
+        {
+          id: 'ai-offer-check:' + offer.id + ':' + s.version,
+          type: 'TRADE_ACCEPT',
+          player: p.id,
+          payload: { trade: offer.id },
+          version: s.version,
+        },
+        () => 0.5,
+      );
+    } catch {
+      return pack('TRADE_DECLINE', { trade: offer.id });
+    }
+    return pack('TRADE_ACCEPT', { trade: offer.id });
   }
   if (s.players[s.turn].id !== p.id) return null;
   if (s.phase === 'roll') {

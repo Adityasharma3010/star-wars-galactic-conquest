@@ -103,12 +103,18 @@ export async function roomList() {
     .from('game_rooms')
     .select('id,code,name,status,max_players,created_at')
     .eq('is_private', false)
-    .eq('status', 'waiting')
+    .in('status', ['waiting', 'playing'])
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
 }
-export async function subscribeGame(gameId, onState, onPresence, onConnections) {
+export async function subscribeGame(
+  gameId,
+  onState,
+  onPresence,
+  onConnections,
+  spectating = false,
+) {
   const client = requireBackend();
   await client.realtime.setAuth();
   const channel = client.channel(`game:${gameId}`, {
@@ -122,7 +128,7 @@ export async function subscribeGame(gameId, onState, onPresence, onConnections) 
   channel.on('presence', { event: 'sync' }, () => onPresence?.(channel.presenceState()));
   channel.subscribe(async (status) => {
     if (status === 'SUBSCRIBED') {
-      await channel.track({ online_at: new Date().toISOString() });
+      if (!spectating) await channel.track({ online_at: new Date().toISOString() });
       const data = await serverCall('snapshot', { gameId });
       onState(data.state);
       onConnections?.(data.connections);
@@ -176,7 +182,7 @@ export async function cloudProfile() {
       .eq('user_id', session.user.id),
     supabase
       .from('match_history')
-      .select('game_id,won,final_wealth,created_at')
+      .select('game_id,won,final_wealth,created_at,games(rules)')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
       .limit(50),

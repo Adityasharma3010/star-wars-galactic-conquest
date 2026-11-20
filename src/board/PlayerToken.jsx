@@ -1,4 +1,6 @@
 import { CHARACTERS } from '../game/rules/data.js';
+import { tokensFor } from '../game/maps.js';
+import { useGameStore } from '../stores/gameStore.js';
 import { TokenArt } from '../components/Art.jsx';
 import { tilePosition } from './BoardTile.jsx';
 export function tokenCoordinates(position, index = 0) {
@@ -20,7 +22,15 @@ export default function PlayerToken({ player, index, position }) {
       aria-label={`${player.name} at space ${player.position}`}
       style={{ ...tokenCoordinates(position ?? player.position, index), color: player.color }}
     >
-      <TokenArt character={CHARACTERS.find((c) => c.id === player.character)} size={24} />
+      <TokenArt
+        character={
+          tokensFor(useGameStore.getState().game).find((c) => c.id === player.character) || {
+            ...tokensFor(useGameStore.getState().game)[0],
+            color: player.color,
+          }
+        }
+        size={24}
+      />
     </div>
   );
 }

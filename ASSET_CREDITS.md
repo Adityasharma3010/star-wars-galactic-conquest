@@ -38,4 +38,8 @@ Menu galaxy: actual Death Star and world imagery from the official Star Wars Dat
 
 ## Match background music
 
+Default maps use **City Evening**, an original synthesized plucked instrumental made for this project. It contains no sampled recording or film-theme melody. Source: `scripts/generate-classic-music.js`; output: `public/audio/music/city-evening.wav`. Default sound effects are original Web Audio taps, dice noise, card shuffles and coin tones.
+
+India uses 22 openly licensed real city photographs from Wikimedia Commons, stored locally in `public/images/india/`. Each author, source URL and exact license is retained in [India photo credits](public/images/india/CREDITS.md) and `public/images/india/manifest.json`.
+
 Galactic radio uses three licensed ambient tracks with volume adjustment and crossfades, separate from the original intro recording. **Space Ambience** by Alexander Nakarada (https://creatorchords.com/music/space-ambience/); **Decoherence** (https://www.scottbuckley.com.au/library/decoherence/) and **Ephemera** (https://www.scottbuckley.com.au/library/ephemera/) by Scott Buckley (https://www.scottbuckley.com.au). All three are CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. Full attribution and original download URLs are in public/audio/music/CREDITS.md and manifest.json. Personal songs remain in local browser IndexedDB and are not uploaded or distributed by the game.

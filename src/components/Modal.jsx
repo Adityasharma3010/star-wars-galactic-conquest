@@ -1,3 +1,4 @@
+import { mapText } from '../services/mapText.js';
 import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
@@ -50,9 +51,15 @@ export default function Modal({
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          exit={{
+            opacity: 0,
+          }}
           className="modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
@@ -78,8 +85,14 @@ export default function Modal({
               filter: 'blur(0px)',
               clipPath: 'inset(0% 0 round 6px)',
             }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: reduced ? 0 : 0.32 }}
+            exit={{
+              opacity: 0,
+              y: 8,
+              scale: 0.98,
+            }}
+            transition={{
+              duration: reduced ? 0 : 0.32,
+            }}
             className={`modal holo-panel modal-${variant} ${wide ? 'wide' : ''}`}
             role="dialog"
             aria-modal="true"
@@ -88,9 +101,10 @@ export default function Modal({
             <div className="modal-heading">
               <div>
                 <span className="eyebrow gold">
-                  <i className="holo-status-light" /> GALACTIC COMMAND / SECURE CHANNEL
+                  <i className="holo-status-light" />
+                  {mapText('GALACTIC COMMAND / SECURE CHANNEL')}
                 </span>
-                <h2 id="modal-title">{title}</h2>
+                <h2 id="modal-title">{mapText(title)}</h2>
                 {subtitle && <p>{subtitle}</p>}
               </div>
               <button

@@ -1,3 +1,5 @@
+import { mapText } from '../services/mapText.js';
+import { boardFor, groupsFor, tokensFor, isClassic } from '../game/maps.js';
 import HoloSelect from './HoloSelect.jsx';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
@@ -28,6 +30,9 @@ import { blockPlayer } from '../services/social.js';
 import { PlanetArt, TokenArt, Emblem } from './Art.jsx';
 import ConnectionGrace from './ConnectionGrace.jsx';
 export function PlayersPanel() {
+  const BOARD = boardFor(useGameStore.getState().game),
+    GROUPS = groupsFor(useGameStore.getState().game),
+    CHARACTERS = tokensFor(useGameStore.getState().game);
   const { game, open, selected, select, online, onlinePlayer, presence } = useGameStore();
   const current = game.players[game.turn];
   const [focus, setFocus] = useState(null);
@@ -39,100 +44,132 @@ export function PlayersPanel() {
   return (
     <aside className="players-panel">
       <div className="panel-heading">
-        <span>COMMANDERS</span>
+        <span>{mapText('COMMANDERS')}</span>
         <span className="count-pill">
           {game.players.filter((p) => !p.bankrupt).length} / {game.players.length}
         </span>
       </div>
       <div className="player-list">
-        {game.players.map((p, i) => (
-          <motion.button
-            key={p.id}
-            className={`commander-card ${p.id === current.id ? 'active' : ''} ${p.bankrupt ? 'eliminated' : ''}`}
-            whileHover={{ x: 2 }}
-            onClick={() => {
-              setFocus(p.id);
-              useGameStore.setState({ boardOwnerFilter: p.id });
-            }}
-            onMouseEnter={() => useGameStore.setState({ hoveredPlayer: p.id })}
-            onMouseLeave={() => useGameStore.setState({ hoveredPlayer: null })}
-            onFocus={() => useGameStore.setState({ hoveredPlayer: p.id })}
-            onBlur={() => useGameStore.setState({ hoveredPlayer: null })}
-            title={`Current location: ${BOARD[p.position].name}`}
-            style={{ '--player': p.color }}
-          >
-            <div className="commander-top">
-              <span className="avatar" style={{ color: p.color }}>
-                <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={42} />
-              </span>
-              <span className="commander-name">
-                {p.name}
-                <small>
-                  {p.ai ? (
-                    <>
-                      <Bot size={10} /> {p.difficulty} AI
-                    </>
-                  ) : (
-                    <>
-                      <i className="status-dot" />{' '}
-                      {online
-                        ? p.id === onlinePlayer
-                          ? 'You'
-                          : presence?.[p.id]
-                            ? 'Online'
-                            : 'Reconnecting'
-                        : game.players.filter((x) => !x.ai).length > 1
-                          ? 'Local commander'
-                          : 'You'}
-                      {i === 0 && <Crown size={10} />}
-                    </>
-                  )}
-                </small>
-              </span>
-              {p.id === current.id && (
-                <span className="active-arrow">
-                  <ChevronRight size={16} />
+        {game.players
+          .filter((p) => !p.forfeited)
+          .map((p, i) => (
+            <motion.button
+              key={p.id}
+              className={`commander-card ${p.id === current.id ? 'active' : ''} ${p.bankrupt ? 'eliminated' : ''}`}
+              whileHover={{
+                x: 2,
+              }}
+              onClick={() => {
+                setFocus(p.id);
+                useGameStore.setState({
+                  boardOwnerFilter: p.id,
+                });
+              }}
+              onMouseEnter={() =>
+                useGameStore.setState({
+                  hoveredPlayer: p.id,
+                })
+              }
+              onMouseLeave={() =>
+                useGameStore.setState({
+                  hoveredPlayer: null,
+                })
+              }
+              onFocus={() =>
+                useGameStore.setState({
+                  hoveredPlayer: p.id,
+                })
+              }
+              onBlur={() =>
+                useGameStore.setState({
+                  hoveredPlayer: null,
+                })
+              }
+              title={`Current location: ${BOARD[p.position].name}`}
+              style={{
+                '--player': p.color,
+              }}
+            >
+              <div className="commander-top">
+                <span
+                  className="avatar"
+                  style={{
+                    color: p.color,
+                  }}
+                >
+                  <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={42} />
                 </span>
-              )}
-            </div>
-            <div className="commander-stats">
-              <span>
-                <Coins size={12} />
-                <strong>{p.credits.toLocaleString()}</strong>
-                <small>CR</small>
-              </span>
-              <span>
-                <Globe2 size={12} />
-                {Object.values(game.ownership).filter((o) => o.owner === p.id).length}
-                <small>WORLDS</small>
-              </span>
-            </div>
-            <ConnectionGrace player={p} />
-            {p.id === current.id && (
-              <div className="current-turn-line">
-                <span>
-                  {p.bankrupt ? 'ELIMINATED' : p.detained ? 'IN DETENTION' : 'CURRENT TURN'}
+                <span className="commander-name">
+                  {p.name}
+                  <small>
+                    {p.ai ? (
+                      <>
+                        <Bot size={10} /> {p.difficulty} AI
+                      </>
+                    ) : (
+                      <>
+                        <i className="status-dot" />{' '}
+                        {online
+                          ? p.id === onlinePlayer
+                            ? 'You'
+                            : presence?.[p.id]
+                              ? 'Online'
+                              : 'Reconnecting'
+                          : game.players.filter((x) => !x.ai).length > 1
+                            ? 'Local commander'
+                            : 'You'}
+                        {i === 0 && <Crown size={10} />}
+                      </>
+                    )}
+                  </small>
                 </span>
-                <i />
+                {p.id === current.id && (
+                  <span className="active-arrow">
+                    <ChevronRight size={16} />
+                  </span>
+                )}
               </div>
-            )}
-          </motion.button>
-        ))}
+              <div className="commander-stats">
+                <span>
+                  <Coins size={12} />
+                  <strong>{p.credits.toLocaleString()}</strong>
+                  <small>{mapText('CR')}</small>
+                </span>
+                <span>
+                  <Globe2 size={12} />
+                  {Object.values(game.ownership).filter((o) => o.owner === p.id).length}
+                  <small>{mapText('WORLDS')}</small>
+                </span>
+              </div>
+              <ConnectionGrace player={p} />
+              {p.id === current.id && (
+                <div className="current-turn-line">
+                  <span>
+                    {p.bankrupt ? 'ELIMINATED' : p.detained ? 'IN DETENTION' : 'CURRENT TURN'}
+                  </span>
+                  <i />
+                </div>
+              )}
+            </motion.button>
+          ))}
       </div>
       <div className="portfolio">
         <div className="panel-heading">
           <span>
-            {selectedPlayer.id === (onlinePlayer || game.players[0].id)
-              ? 'YOUR EMPIRE'
-              : `${selectedPlayer.name.split(' ')[0].toUpperCase()}’S EMPIRE`}
+            {mapText(
+              selectedPlayer.id === (onlinePlayer || game.players[0].id)
+                ? 'YOUR EMPIRE'
+                : `${selectedPlayer.name.split(' ')[0].toUpperCase()}’S EMPIRE`,
+            )}
           </span>
           <Layers size={14} />
         </div>
         <div className="empire-value">
           <small>TOTAL NET WORTH</small>
           <strong>
-            ◈ {wealth(game, selectedPlayer).toLocaleString()}
-            <span> CR</span>
+            {mapText(' \u25C8 ')}
+            {wealth(game, selectedPlayer).toLocaleString()}
+            {!isClassic(game) && <span> CR</span>}
           </strong>
         </div>
         <div className="group-progress">
@@ -140,7 +177,9 @@ export function PlayersPanel() {
             <span
               key={g.id}
               title={`${g.name}: ${properties.filter((t) => t.group === g.id).length} owned`}
-              style={{ '--group': g.color }}
+              style={{
+                '--group': g.color,
+              }}
             >
               {BOARD.filter((t) => t.group === g.id).map((t) => (
                 <i
@@ -159,7 +198,11 @@ export function PlayersPanel() {
                 onClick={() => select(t.id)}
                 className={selected === t.id ? 'selected' : ''}
               >
-                <i style={{ background: t.color || '#788b9d' }} />
+                <i
+                  style={{
+                    background: t.color || '#788b9d',
+                  }}
+                />
                 {t.name}
                 <span>
                   {game.ownership[t.id].mortgaged ? (
@@ -175,12 +218,16 @@ export function PlayersPanel() {
           </div>
         ) : (
           <p className="empty-portfolio">
-            Every empire begins with a single world.
+            {mapText('Every empire begins with a single world.')}
             <br />
             Roll the dice to discover yours.
           </p>
         )}
-        <button className="button subtle-button full" onClick={() => open('trade')}>
+        <button
+          className="button subtle-button full"
+          disabled={online && !onlinePlayer}
+          onClick={() => open('trade')}
+        >
           <ArrowRightLeft size={14} /> Propose a trade
         </button>
       </div>
@@ -196,13 +243,16 @@ export function PlayersPanel() {
   );
 }
 export function PropertyPanel() {
+  const BOARD = boardFor(useGameStore.getState().game),
+    GROUPS = groupsFor(useGameStore.getState().game),
+    CHARACTERS = tokensFor(useGameStore.getState().game);
   const { game, selected, dispatch, open, online, onlinePlayer } = useGameStore();
   const tile = {
       ...BOARD[selected],
       tax:
         BOARD[selected].type === 'tax'
           ? selected === 4
-            ? game.rules.incomeTax
+            ? '10% of ' + (game.rules.taxBasis === 'wealth' ? 'total wealth' : 'cash')
             : game.rules.luxuryTax
           : BOARD[selected].tax,
     },
@@ -227,12 +277,22 @@ export function PropertyPanel() {
           <ArrowUpRight size={15} />
         </button>
       </div>
-      <div className="property-hero" style={{ '--planet': tile.planetColor || '#77a9b5' }}>
+      <div
+        className="property-hero"
+        style={{
+          '--planet': tile.planetColor || '#77a9b5',
+        }}
+      >
         {tile.type === 'property' ? <PlanetArt tile={tile} large /> : <Emblem size={110} />}
         <span className="sector-tag">SECTOR {String(tile.id).padStart(2, '0')}</span>
         <span className="property-owner-tag">{owner ? owner.name : 'UNCLAIMED'}</span>
         <div className="property-hero-title">
-          <span className="eyebrow" style={{ color: tile.color || '#85b5be' }}>
+          <span
+            className="eyebrow"
+            style={{
+              color: tile.color || '#85b5be',
+            }}
+          >
             {group?.name || tile.type.toUpperCase()}
           </span>
           <h2>{tile.name}</h2>
@@ -245,12 +305,15 @@ export function PropertyPanel() {
             <div className="deed-stats">
               <div>
                 <small>ACQUISITION</small>
-                <strong>◈ {tile.price}</strong>
+                <strong>
+                  {mapText('\u25C8 ')}
+                  {tile.price}
+                </strong>
               </div>
               <div>
                 <small>{o ? 'CURRENT RENT' : 'BASE RENT'}</small>
                 <strong>
-                  ◈{' '}
+                  {mapText(' \u25C8')}{' '}
                   {o
                     ? rent(game, tile, game.dice[0] + game.dice[1])
                     : tile.rents?.[0] || (tile.type === 'utility' ? '4× dice' : 25)}
@@ -261,14 +324,21 @@ export function PropertyPanel() {
               <span>
                 <LockKeyhole size={12} /> Mortgage value
               </span>
-              <strong>◈ {tile.mortgage}</strong>
+              <strong>
+                {mapText('\u25C8 ')}
+                {tile.mortgage}
+              </strong>
             </div>
             {tile.buildCost && (
               <div className="deed-detail">
                 <span>
-                  <Building2 size={12} /> Outpost / base cost
+                  <Building2 size={12} />
+                  {mapText('Outpost / base cost')}
                 </span>
-                <strong>◈ {tile.buildCost}</strong>
+                <strong>
+                  {mapText('\u25C8 ')}
+                  {tile.buildCost}
+                </strong>
               </div>
             )}
             <button className="button subtle-button full" onClick={() => open('deed')}>
@@ -281,16 +351,24 @@ export function PropertyPanel() {
                     <button
                       className="button"
                       disabled={game.phase === 'debt'}
-                      onClick={() => dispatch('BUILD', { property: tile.id })}
+                      onClick={() =>
+                        dispatch('BUILD', {
+                          property: tile.id,
+                        })
+                      }
                     >
                       <Plus size={13} /> Develop
                     </button>
                     {o.level > 0 && (
                       <button
                         className="button"
-                        onClick={() => dispatch('SELL', { property: tile.id })}
+                        onClick={() =>
+                          dispatch('SELL', {
+                            property: tile.id,
+                          })
+                        }
                       >
-                        Sell outpost
+                        {mapText('Sell outpost')}
                       </button>
                     )}
                   </>
@@ -299,7 +377,9 @@ export function PropertyPanel() {
                   className="button"
                   disabled={game.phase === 'debt' && o.mortgaged}
                   onClick={() =>
-                    dispatch(o.mortgaged ? 'UNMORTGAGE' : 'MORTGAGE', { property: tile.id })
+                    dispatch(o.mortgaged ? 'UNMORTGAGE' : 'MORTGAGE', {
+                      property: tile.id,
+                    })
                   }
                 >
                   {o.mortgaged ? 'Redeem' : 'Mortgage'}
@@ -312,9 +392,11 @@ export function PropertyPanel() {
             <span>Space effect</span>
             <strong>
               {tile.type === 'tax'
-                ? `Pay ◈ ${tile.tax}`
+                ? selected === 4
+                  ? `Pay ${tile.tax}`
+                  : mapText(`Pay ◈ ${tile.tax}`)
                 : tile.type === 'start'
-                  ? `Collect ◈ ${game.rules.startBonus}`
+                  ? mapText(`Collect ◈ ${game.rules.startBonus}`)
                   : 'See game rules'}
             </strong>
           </div>
@@ -324,6 +406,26 @@ export function PropertyPanel() {
   );
 }
 export function specialDescription(t) {
+  if (t.id === 4)
+    return (
+      'Pay 10% of ' +
+      (useGameStore.getState().game?.rules?.taxBasis === 'wealth'
+        ? 'total wealth (cash, property value and buildings)'
+        : 'your current cash') +
+      '. Rounded up to a whole game currency unit.'
+    );
+  if (t.mapId === 'india')
+    return {
+      force: 'Draw a Chance card and follow its instructions.',
+      galactic: 'Draw a Community Chest card and follow its instructions.',
+      transport: 'Railway rent increases with the number of railways owned.',
+      utility: 'Pay 4× the dice total, or 10× if the owner has both utilities.',
+      detention: 'Visiting is free. Leave Jail with doubles, a release card, or a 50 payment.',
+      goDetention: 'Go directly to Jail without collecting the GO bonus.',
+      parking: 'Rest here. Collect the tax pot only if the custom rule is enabled.',
+      start: 'Collect the configured bonus when passing GO.',
+      tax: 'Pay the configured Luxury Tax to the bank.',
+    }[t.type];
   return {
     force: 'An unexpected turn in the Force. Draw an event card and follow its instructions.',
     galactic: 'Dispatches from across the galaxy bring opportunities and challenges.',
@@ -350,14 +452,26 @@ export function ActivityPanel() {
     if (!online) return;
     const refresh = () =>
       loadChat(game.id, scope)
-        .then((messages) => useGameStore.setState({ messages }))
-        .catch((e) => useGameStore.setState({ error: e.message }));
+        .then((messages) =>
+          useGameStore.setState({
+            messages,
+          }),
+        )
+        .catch((e) =>
+          useGameStore.setState({
+            error: e.message,
+          }),
+        );
     refresh();
     const ch = supabase
       .channel('comms:' + game.id + ':' + scope)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+        },
         refresh,
       )
       .subscribe();
@@ -400,8 +514,14 @@ export function ActivityPanel() {
             .slice(0, 18)
             .map((e, i) => (
               <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{
+                  opacity: 0,
+                  y: 5,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
                 className={`log-entry ${e.type}`}
                 key={e.id}
               >
@@ -451,7 +571,9 @@ export function ActivityPanel() {
                             ],
                           });
                         } catch (e) {
-                          useGameStore.setState({ error: e.message });
+                          useGameStore.setState({
+                            error: e.message,
+                          });
                         }
                       }}
                     >
@@ -485,12 +607,17 @@ export function ActivityPanel() {
         >
           <input
             aria-label="Chat message"
+            disabled={online && !onlinePlayer}
             value={text}
             maxLength={300}
             onChange={(e) => setText(e.target.value)}
             placeholder="Send a transmission…"
           />
-          <button className="icon-button" aria-label="Send message" disabled={!text.trim()}>
+          <button
+            className="icon-button"
+            aria-label="Send message"
+            disabled={!text.trim() || (online && !onlinePlayer)}
+          >
             <Send size={15} />
           </button>
         </form>
@@ -509,7 +636,9 @@ export function ActivityPanel() {
               setReport(null);
               setReason('');
             } catch (error) {
-              useGameStore.setState({ error: error.message });
+              useGameStore.setState({
+                error: error.message,
+              });
             }
           }}
         >

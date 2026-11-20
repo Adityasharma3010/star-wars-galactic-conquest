@@ -1,3 +1,4 @@
+import { mapText } from '../services/mapText.js';
 import HoloSelect from '../components/HoloSelect.jsx';
 import { copyText } from '../utils/clipboard.js';
 import { useEffect, useRef, useState } from 'react';
@@ -12,16 +13,18 @@ import {
   inviteUrl,
 } from '../services/supabase.js';
 import { CHARACTERS, DEFAULT_RULES, FACTIONS } from '../game/rules/data.js';
+import { tokensFor, isClassic } from '../game/maps.js';
 import HoloLoader from '../components/HoloLoader.jsx';
 const Field = ({ label, children }) => (
   <label className="field">
-    <span>{label}</span>
+    <span>{mapText(label)}</span>
     {children}
   </label>
 );
 export { default as RuleFields } from '../components/RuleFields.jsx';
 import RuleFields from '../components/RuleFields.jsx';
 export default function MultiplayerLobby() {
+  const selectedMap = useGameStore((state) => state.selectedMap);
   const { profile, updateProfile, attachOnline, open, lobbyRoom } = useGameStore();
   const [rooms, setRooms] = useState([]),
     [room, setRoom] = useState(null),
@@ -30,27 +33,56 @@ export default function MultiplayerLobby() {
     [callsign, setCallsign] = useState(profile.name),
     [nameEdited, setNameEdited] = useState(false),
     [code, setCode] = useState(new URLSearchParams(location.search).get('room') || ''),
-    [name, setName] = useState('My galactic conquest'),
+    [name, setName] = useState(selectedMap === 'india' ? 'India match' : 'My galactic conquest'),
     [privateRoom, setPrivate] = useState(false),
-    [savedRules, setSavedRules] = useState({ ...DEFAULT_RULES }),
+    [savedRules, setSavedRules] = useState({
+      ...DEFAULT_RULES,
+      mapId: selectedMap,
+    }),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [copied, setCopied] = useState(false),
     [friends, setFriends] = useState([]),
     [invite, setInvite] = useState('');
   const nameDirty = useRef(false);
+  const acceptedRoom = useRef(null);
+  const authenticatedUser = useRef(null);
   const drafts = useGameStore((state) => state.ruleDrafts);
   const updateDraft = useGameStore((state) => state.updateRuleDraft);
-  const draftKey = room?.id || lobbyRoom || 'room-template';
-  const draft = drafts[draftKey] || { rules: savedRules, max: room?.max_players || 8, aiCount: 2 };
+  const draftKey = room?.id || lobbyRoom || 'room-template:' + selectedMap;
+  const draft = drafts[draftKey] || {
+    rules: savedRules,
+    max: room?.max_players || 8,
+    aiCount: 2,
+  };
   const rules = draft.rules || savedRules,
     max = draft.max || 8,
     aiCount = draft.aiCount ?? 2;
-  const setRules = (rules) => updateDraft(draftKey, { ...draft, rules });
-  const setMax = (max) => updateDraft(draftKey, { ...draft, max });
-  const setAI = (aiCount) => updateDraft(draftKey, { ...draft, aiCount });
+  const CHARACTERS = tokensFor(rules);
+  const setRules = (rules) =>
+    updateDraft(draftKey, {
+      ...draft,
+      rules,
+    });
+  const setMax = (max) =>
+    updateDraft(draftKey, {
+      ...draft,
+      max,
+    });
+  const setAI = (aiCount) =>
+    updateDraft(draftKey, {
+      ...draft,
+      aiCount,
+    });
   const resetRules = () =>
-    updateDraft(draftKey, { rules: { ...DEFAULT_RULES }, max: 8, aiCount: 2 });
+    updateDraft(draftKey, {
+      rules: {
+        ...DEFAULT_RULES,
+        mapId: savedRules.mapId || selectedMap,
+      },
+      max: 8,
+      aiCount: 2,
+    });
   const unsavedRules = Boolean(
     room &&
     (max !== room.max_players ||
@@ -68,16 +100,38 @@ export default function MultiplayerLobby() {
     }
   };
   const accept = (d) => {
+    const seat = d.players.find((player) => player.user_id === authenticatedUser.current);
+    const firstVisit = acceptedRoom.current !== d.room.id;
+    acceptedRoom.current = d.room.id;
     setRoom(d.room);
     setPlayers(d.players);
-    if (d.rules) setSavedRules({ ...DEFAULT_RULES, ...d.rules });
+    if (d.rules)
+      setSavedRules({
+        ...DEFAULT_RULES,
+        ...d.rules,
+      });
     if (!useGameStore.getState().ruleDrafts[d.room.id])
       updateDraft(d.room.id, {
-        rules: { ...DEFAULT_RULES, ...d.rules },
+        rules: {
+          ...DEFAULT_RULES,
+          ...d.rules,
+        },
         max: d.room.max_players,
         aiCount: 2,
       });
-    useGameStore.setState({ lobbyRoom: d.room.id });
+    useGameStore.setState({
+      lobbyRoom: d.room.id,
+      selectedMap: d.rules?.mapId || 'galactic-conquest',
+      ...(firstVisit && seat
+        ? {
+            profile: {
+              ...useGameStore.getState().profile,
+              character: seat.character,
+              faction: seat.faction,
+            },
+          }
+        : {}),
+    });
   };
   const refresh = async () => {
     const u = (await supabase.auth.getSession()).data.session?.user;
@@ -86,9 +140,19 @@ export default function MultiplayerLobby() {
   const ensure = async () => {
     const name = callsign.trim();
     if (!name) throw new Error('Choose a callsign of 1–24 characters.');
-    const chosen = { ...useGameStore.getState().profile, name };
+    const chosen = {
+      ...useGameStore.getState().profile,
+      name,
+      character: CHARACTERS.some((token) => token.id === useGameStore.getState().profile.character)
+        ? useGameStore.getState().profile.character
+        : CHARACTERS[0].id,
+      faction: isClassic(rules) ? 'Classic' : useGameStore.getState().profile.faction,
+    };
     const u = await ensureOnlineSession(chosen);
-    useGameStore.setState({ profile: chosen });
+    authenticatedUser.current = u.id;
+    useGameStore.setState({
+      profile: chosen,
+    });
     setUser(u);
     return u;
   };
@@ -98,20 +162,28 @@ export default function MultiplayerLobby() {
       code: value,
       profile: useGameStore.getState().profile,
     });
-    if (d.room.status === 'waiting') accept(d);
-    else await inspect(d.room.id);
+    await inspect(d.room.id);
   };
   const inspect = async (id) => {
-    const d = await serverCall('room', { roomId: id });
+    const d = await serverCall('room', {
+      roomId: id,
+    });
     if (d.game) {
-      const s = await serverCall('snapshot', { gameId: d.game });
-      attachOnline(s.state, (await supabase.auth.getUser()).data.user.id, s.connections);
+      const s = await serverCall('snapshot', {
+        gameId: d.game,
+      });
+      attachOnline(
+        s.state,
+        s.role === 'spectator' ? null : (await supabase.auth.getUser()).data.user.id,
+        s.connections,
+      );
     } else accept(d);
   };
   useEffect(() => {
     if (!backendConfigured) return;
     run(async () => {
       const u = (await supabase.auth.getUser()).data.user;
+      authenticatedUser.current = u?.id;
       setUser(u);
       if (!u) return;
       const { data: commander } = await supabase
@@ -122,7 +194,10 @@ export default function MultiplayerLobby() {
       if (commander && !nameDirty.current) {
         setCallsign(commander.display_name);
         useGameStore.setState({
-          profile: { ...useGameStore.getState().profile, name: commander.display_name },
+          profile: {
+            ...useGameStore.getState().profile,
+            name: commander.display_name,
+          },
         });
       }
       await refresh();
@@ -146,7 +221,9 @@ export default function MultiplayerLobby() {
         setError(e.message);
         if (e.message.includes('membership')) {
           setRoom(null);
-          useGameStore.setState({ lobbyRoom: null });
+          useGameStore.setState({
+            lobbyRoom: null,
+          });
         }
       });
     };
@@ -154,12 +231,22 @@ export default function MultiplayerLobby() {
       .channel(`lobby:${room.id}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${room.id}` },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'room_players',
+          filter: `room_id=eq.${room.id}`,
+        },
         update,
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'game_rooms', filter: `id=eq.${room.id}` },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_rooms',
+          filter: `id=eq.${room.id}`,
+        },
         update,
       )
       .subscribe();
@@ -173,7 +260,7 @@ export default function MultiplayerLobby() {
   if (!backendConfigured)
     return (
       <p className="notice">
-        No Supabase project is connected yet. Solo and pass & play are available.
+        {mapText('No Supabase project is connected yet. Solo and pass & play are available.')}
       </p>
     );
   const host = room?.host_id === user?.id;
@@ -216,9 +303,17 @@ export default function MultiplayerLobby() {
             disabled={busy || !callsign.trim() || !unsavedName}
             onClick={() =>
               run(async () => {
-                const chosen = { ...useGameStore.getState().profile, name: callsign.trim() };
-                const data = await serverCall('setCallsign', { roomId: room.id, profile: chosen });
-                useGameStore.setState({ profile: chosen });
+                const chosen = {
+                  ...useGameStore.getState().profile,
+                  name: callsign.trim(),
+                };
+                const data = await serverCall('setCallsign', {
+                  roomId: room.id,
+                  profile: chosen,
+                });
+                useGameStore.setState({
+                  profile: chosen,
+                });
                 setNameEdited(false);
                 nameDirty.current = false;
                 accept(data);
@@ -251,8 +346,12 @@ export default function MultiplayerLobby() {
             {players.map((p, i) => (
               <div key={p.id}>
                 <span>
-                  {p.character}
-                  {rules.teams ? ` · ${i % 2 ? 'Imperial' : 'Rebel'} Squadron` : ''}
+                  {CHARACTERS.find((token) => token.id === p.character)?.name || p.character}
+                  {rules.teams
+                    ? isClassic(rules)
+                      ? ` · Team ${(i % 2) + 1}`
+                      : ` · ${i % 2 ? 'Imperial' : 'Rebel'} Squadron`
+                    : ''}
                 </span>
                 <strong>{p.display_name}</strong>
                 <small>
@@ -264,7 +363,10 @@ export default function MultiplayerLobby() {
                     disabled={busy}
                     onClick={() =>
                       run(async () => {
-                        await serverCall('kick', { roomId: room.id, playerId: p.user_id });
+                        await serverCall('kick', {
+                          roomId: room.id,
+                          playerId: p.user_id,
+                        });
                         await inspect(room.id);
                       })
                     }
@@ -275,11 +377,15 @@ export default function MultiplayerLobby() {
               </div>
             ))}
           </div>
-          <Field label="YOUR ONLINE CHARACTER">
+          <Field label={isClassic(rules) ? 'YOUR TOKEN COLOR' : 'YOUR ONLINE CHARACTER'}>
             <HoloSelect
               disabled={busy || you?.is_ready}
               value={profile.character}
-              onChange={(e) => updateProfile({ character: e.target.value })}
+              onChange={(e) =>
+                updateProfile({
+                  character: e.target.value,
+                })
+              }
             >
               {CHARACTERS.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -288,20 +394,27 @@ export default function MultiplayerLobby() {
               ))}
             </HoloSelect>
           </Field>
-          <Field label="YOUR ONLINE ALLEGIANCE">
-            <HoloSelect
-              disabled={busy || you?.is_ready}
-              value={profile.faction}
-              onChange={(e) => updateProfile({ faction: e.target.value })}
-            >
-              {FACTIONS.map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </HoloSelect>
-          </Field>
+          {!isClassic(rules) && (
+            <Field label="YOUR ONLINE ALLEGIANCE">
+              <HoloSelect
+                disabled={busy || you?.is_ready}
+                value={profile.faction}
+                onChange={(e) =>
+                  updateProfile({
+                    faction: e.target.value,
+                  })
+                }
+              >
+                {FACTIONS.map((f) => (
+                  <option key={f}>{f}</option>
+                ))}
+              </HoloSelect>
+            </Field>
+          )}
           <p className="muted">
-            {players.length} / {room.max_players} seats · {savedRules.startingCredits} starting
-            credits · Untimed turns · {savedRules.teams ? 'Teams' : 'Individual'}
+            {players.length} / {room.max_players} seats · {savedRules.startingCredits}
+            {mapText(' starting credits \xB7 Untimed turns \xB7 ')}
+            {savedRules.teams ? 'Teams' : 'Individual'}
           </p>
           {host && (
             <>
@@ -310,11 +423,16 @@ export default function MultiplayerLobby() {
                   value={Math.min(aiCount, max - players.length)}
                   onChange={(e) => setAI(+e.target.value)}
                 >
-                  {Array.from({ length: max - players.length + 1 }, (_, i) => (
-                    <option key={i} value={i}>
-                      {i} AI
-                    </option>
-                  ))}
+                  {Array.from(
+                    {
+                      length: max - players.length + 1,
+                    },
+                    (_, i) => (
+                      <option key={i} value={i}>
+                        {i} AI
+                      </option>
+                    ),
+                  )}
                 </HoloSelect>
               </Field>
               <details className="lobby-rules">
@@ -343,7 +461,7 @@ export default function MultiplayerLobby() {
                   {unsavedRules
                     ? 'Draft retained on this device. Save to apply it to the room.'
                     : 'These rules are applied to the room.'}{' '}
-                  Saving resets every commander’s readiness.
+                  {mapText('Saving resets every commander\u2019s readiness.')}
                 </p>
                 <button
                   className="button"
@@ -411,7 +529,7 @@ export default function MultiplayerLobby() {
             <div className="field-row">
               <Field label="INVITE A FRIEND">
                 <HoloSelect value={invite} onChange={(e) => setInvite(e.target.value)}>
-                  <option value="">Choose commander</option>
+                  <option value="">{mapText('Choose commander')}</option>
                   {friends.map((f) => (
                     <option key={f.friend_id} value={f.friend_id}>
                       {f.profiles?.display_name}
@@ -424,7 +542,10 @@ export default function MultiplayerLobby() {
                 disabled={!invite || busy}
                 onClick={() =>
                   run(async () => {
-                    await serverCall('invite', { roomId: room.id, recipient: invite });
+                    await serverCall('invite', {
+                      roomId: room.id,
+                      recipient: invite,
+                    });
                     setError('Invitation sent.');
                   })
                 }
@@ -438,9 +559,13 @@ export default function MultiplayerLobby() {
             disabled={busy}
             onClick={() =>
               run(async () => {
-                await serverCall('leaveRoom', { roomId: room.id });
+                await serverCall('leaveRoom', {
+                  roomId: room.id,
+                });
                 setRoom(null);
-                useGameStore.setState({ lobbyRoom: null });
+                useGameStore.setState({
+                  lobbyRoom: null,
+                });
                 await refresh();
               })
             }
@@ -451,7 +576,7 @@ export default function MultiplayerLobby() {
       ) : (
         <>
           <div className="rooms-header">
-            <p>Find your next conquest.</p>
+            <p>{mapText('Find your next conquest.')}</p>
             <button
               className="icon-button"
               aria-label="Refresh room list"
@@ -468,7 +593,8 @@ export default function MultiplayerLobby() {
                   <span>
                     {r.name}
                     <small>
-                      {r.code} · UP TO {r.max_players} COMMANDERS
+                      {r.code} · UP TO {r.max_players}
+                      {mapText('COMMANDERS')}
                     </small>
                   </span>
                   <ArrowRight size={17} />
@@ -521,6 +647,11 @@ export default function MultiplayerLobby() {
                       name,
                       isPrivate: privateRoom,
                       profile: useGameStore.getState().profile,
+                      rules: {
+                        ...rules,
+                        mapId: selectedMap,
+                      },
+                      maxPlayers: max,
                     }),
                   );
                 })

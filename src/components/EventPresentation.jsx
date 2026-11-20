@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore.js';
 import { BOARD } from '../game/rules/data.js';
+import { isClassic } from '../game/maps.js';
 import { PlanetArt, Emblem } from './Art.jsx';
 import Modal from './Modal.jsx';
 import { playSound } from '../services/audio.js';
@@ -169,6 +170,26 @@ export default function EventPresentation() {
     return null;
   const { card, player } = event,
     force = card.deck === 'force';
+  if (isClassic(useGameStore.getState().game))
+    return (
+      <Modal
+        open
+        title={card.displayDeck || (force ? 'Chance' : 'Community Chest')}
+        subtitle={player.name}
+        onClose={dismissEvent}
+        variant="classic-event"
+      >
+        <div className="classic-event-card">
+          <Coins size={46} />
+          <span>{card.displayDeck}</span>
+          <h3>{card.title}</h3>
+          <p>{card.description}</p>
+          <button className="button gold-button full" onClick={dismissEvent}>
+            Continue <ArrowRight size={18} />
+          </button>
+        </div>
+      </Modal>
+    );
   const Icon =
     card.effect === 'detention'
       ? ShieldAlert

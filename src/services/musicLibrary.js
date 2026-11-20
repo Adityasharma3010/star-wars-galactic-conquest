@@ -1,3 +1,13 @@
+import { isClassic } from '../game/maps.js';
+export const CLASSIC_TRACKS = [
+  {
+    id: 'city-evening',
+    title: 'City Evening',
+    artist: 'Galactic Conquest project',
+    src: '/audio/music/city-evening.wav',
+  },
+];
+export const tracksFor = (context) => (isClassic(context) ? CLASSIC_TRACKS : MATCH_TRACKS);
 export const MATCH_TRACKS = [
   {
     id: 'space-ambience',

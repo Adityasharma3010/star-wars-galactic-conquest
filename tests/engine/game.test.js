@@ -161,8 +161,8 @@ describe('economy', () => {
     s.rules.freeParking = true;
     s.players[0].position = 1;
     const n = roll(s, 1, 2);
-    expect(n.players[0].credits).toBe(1300);
-    expect(n.pot).toBe(200);
+    expect(n.players[0].credits).toBe(1350);
+    expect(n.pot).toBe(150);
     n.phase = 'roll';
     n.players[0].position = 17;
     const after = roll(n, 1, 2);

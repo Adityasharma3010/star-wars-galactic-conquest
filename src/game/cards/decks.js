@@ -205,4 +205,40 @@ export const CARDS = [
     20,
   ),
 ];
-export const getCard = (id) => CARDS.find((c) => c.id === id);
+const CLASSIC_TEXT = [
+  ['Bank pays a dividend', 'Collect 100.'],
+  ['Advance to GO', 'Advance to GO and collect your passing bonus.'],
+  ['Go to Jail', 'Go directly to Jail. Do not collect the GO bonus.'],
+  ['Get Out of Jail Free', 'Keep this card until needed, or trade it.'],
+  ['Visit Panaji', 'Advance to Panaji. Collect the GO bonus if you pass GO.'],
+  ['Take a railway journey', 'Advance to the nearest railway. Pay twice the rent if rent is owed.'],
+  ['Vehicle repairs', 'Pay 50.'],
+  ['Go back three spaces', 'Move back three spaces and resolve that space.'],
+  ['Visit Bhubaneswar', 'Advance to Bhubaneswar. Collect the GO bonus if you pass GO.'],
+  ['Property repairs', 'Pay 25 per house and 100 per hotel.'],
+  ['Birthday gifts', 'Collect 50 from every other active player.'],
+  ['Dinner for friends', 'Pay every other active player 50.'],
+  ['Bank error in your favour', 'Collect 200.'],
+  ['Income assessment', 'Pay 100.'],
+  ['Sale of stock', 'Collect 50.'],
+  ['Get Out of Jail Free', 'Keep this card until needed, or trade it.'],
+  ['Go to Jail', 'Go directly to Jail. Do not collect the GO bonus.'],
+  ['Advance to GO', 'Advance to GO and collect your passing bonus.'],
+  ['Holiday fund matures', 'Collect 100.'],
+  ['Street repairs', 'Pay 40 per house and 115 per hotel.'],
+  ['Hospital fees', 'Pay 50.'],
+  ['Consultancy fee', 'Collect 25.'],
+  ['Birthday collection', 'Collect 10 from every other active player.'],
+  ['Tax refund', 'Collect 20.'],
+];
+export const CLASSIC_CARDS = CARDS.map((card, index) => ({
+  ...card,
+  title: CLASSIC_TEXT[index][0],
+  description: CLASSIC_TEXT[index][1],
+  displayDeck: card.deck === 'force' ? 'Chance' : 'Community Chest',
+}));
+export const cardsFor = (value) =>
+  (typeof value === 'string' ? value : value?.rules?.mapId || value?.mapId) === 'india'
+    ? CLASSIC_CARDS
+    : CARDS;
+export const getCard = (id, value) => cardsFor(value).find((c) => c.id === id);

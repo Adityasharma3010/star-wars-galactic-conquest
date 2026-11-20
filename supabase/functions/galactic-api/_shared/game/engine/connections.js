@@ -22,7 +22,7 @@ export function graceExpired(connection, now = Date.now()) {
 }
 export function automationPlayer(state, connections = {}, now = Date.now()) {
   if (state.phase === 'finished') return null;
-  const eligible = (p) => p && !p.bankrupt && (p.ai || graceExpired(connections[p.id], now));
+  const eligible = (p) => p && !p.bankrupt && p.ai;
   if (state.debt)
     return state.players.find((p) => p.id === state.debt.payer && eligible(p)) || null;
   if (state.auction)
@@ -36,4 +36,12 @@ export function automationPlayer(state, connections = {}, now = Date.now()) {
   );
   if (pending) return state.players.find((p) => p.id === pending.to);
   return eligible(state.players[state.turn]) ? state.players[state.turn] : null;
+}
+export function expiredPlayer(state, connections = {}, now = Date.now()) {
+  if (state.phase === 'finished') return null;
+  return (
+    state.players.find(
+      (player) => !player.ai && !player.bankrupt && graceExpired(connections[player.id], now),
+    ) || null
+  );
 }

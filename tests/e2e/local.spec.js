@@ -215,7 +215,8 @@ test('cosmetic accent persists and Star Wars sound pack is already installed', a
   await page.getByLabel('Open settings').click();
   await expect(page.getByRole('heading', { name: 'Star Wars sound pack' })).toBeVisible();
   await expect(page.getByText('Dice · lightsaber ignition')).toBeVisible();
-  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await expect(page.locator('.sound-pack input[type="file"]')).toHaveCount(0);
+  await expect(page.getByLabel('Personal background songs')).toHaveCount(1);
   await page.getByRole('button', { name: 'Preview', exact: true }).first().click();
   const durations = await page.evaluate(async () => {
     const ctx = new AudioContext();

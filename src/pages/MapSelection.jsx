@@ -4,16 +4,24 @@ import GalaxyBackdrop from '../components/GalaxyBackdrop.jsx';
 import { MAP_CATEGORIES, GAME_MAPS } from '../game/maps.js';
 import { useGameStore } from '../stores/gameStore.js';
 import { REFERENCE_IMAGES } from '../assets/referenceImages.js';
+import INDIA_IMAGES from '../assets/indiaImages.json';
 
 export default function MapSelection() {
   const { category } = useParams();
   const open = useGameStore((state) => state.open);
+  const chooseMap = useGameStore((state) => state.chooseMap);
+  const choose = (id, modal) => {
+    chooseMap(id);
+    open(modal);
+  };
   const selected = MAP_CATEGORIES.find((item) => item.id === category);
   if (!selected) return <Navigate to="/maps/star-wars" replace />;
   const maps = GAME_MAPS.filter((map) => map.category === category);
   return (
     <section className="map-selection" aria-labelledby="map-title">
-      <GalaxyBackdrop />
+      <GalaxyBackdrop
+        image={category === 'default' ? INDIA_IMAGES['New Delhi'].image : undefined}
+      />
       <div className="map-content">
         <Link to="/" className="galaxy-back-link">
           <ArrowLeft size={15} /> Main menu
@@ -36,7 +44,9 @@ export default function MapSelection() {
               <Map size={17} />
               <span>
                 {item.name}
-                <small>{item.id === 'star-wars' ? '1 map available' : 'Coming soon'}</small>
+                <small>
+                  {GAME_MAPS.filter((map) => map.category === item.id).length} map available
+                </small>
               </span>
             </Link>
           ))}
@@ -51,18 +61,26 @@ export default function MapSelection() {
               <article className="galaxy-map-card" key={map.id}>
                 <div className="galaxy-map-poster">
                   <img
-                    src={REFERENCE_IMAGES['death-star'].image}
-                    alt="Death Star above the worlds of Galactic Conquest"
+                    src={
+                      map.theme === 'default'
+                        ? INDIA_IMAGES['New Delhi'].image
+                        : REFERENCE_IMAGES['death-star'].image
+                    }
+                    alt={
+                      map.theme === 'default'
+                        ? 'Rashtrapati Bhavan, New Delhi'
+                        : 'Death Star above the worlds of Galactic Conquest'
+                    }
                   />
                   <span className="map-availability">
                     <i /> READY FOR CONQUEST
                   </span>
                   <div className="map-poster-title">
-                    <small>STAR WARS</small>
+                    <small>{map.theme === 'default' ? 'DEFAULT / CLASSIC' : 'STAR WARS'}</small>
                     <strong>
-                      GALACTIC
+                      {map.theme === 'default' ? 'INDIA' : 'GALACTIC'}
                       <br />
-                      CONQUEST
+                      {map.theme === 'default' ? 'CITY CAPITALS' : 'CONQUEST'}
                     </strong>
                   </div>
                 </div>
@@ -80,14 +98,18 @@ export default function MapSelection() {
                   </div>
                   <h3>{map.name}</h3>
                   <p>
-                    Claim Tatooine, forge alliances and build planetary bases. Your selected
-                    factions become part of the opening story.
+                    {map.theme === 'default'
+                      ? 'Explore 22 Indian capital cities. Collect color groups, build houses and hotels, and travel by rail. Classic events and sounds, with no movie intro.'
+                      : 'Claim Tatooine, forge alliances and build planetary bases. Your selected factions become part of the opening story.'}
                   </p>
                   <div className="map-launch-actions">
-                    <button className="button gold-button" onClick={() => open('newGame')}>
+                    <button
+                      className="button gold-button"
+                      onClick={() => choose(map.id, 'newGame')}
+                    >
                       Play locally <ArrowRight size={15} />
                     </button>
-                    <button className="button" onClick={() => open('rooms')}>
+                    <button className="button" onClick={() => choose(map.id, 'rooms')}>
                       Online multiplayer <ArrowRight size={15} />
                     </button>
                   </div>

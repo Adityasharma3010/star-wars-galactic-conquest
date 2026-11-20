@@ -1,6 +1,7 @@
+import { mapText } from '../services/mapText.js';
 import HoloSelect from './HoloSelect.jsx';
 import { Coins, Navigation, Shield, Building2, RotateCcw, SlidersHorizontal } from 'lucide-react';
-
+import { isClassic } from '../game/maps.js';
 const numbers = {
   startingCredits: ['STARTING CREDITS', 100, 10000, 'Each commander’s initial reserve.'],
   startBonus: ['HYPERSPACE BONUS', 0, 1000, 'Collect when passing Hyperspace.'],
@@ -27,32 +28,43 @@ const switches = {
   ],
 };
 export default function RuleFields({ rules, setRules, onReset }) {
+  const classic = isClassic(rules);
   const number = (key) => {
     const [label, min, max, help] = numbers[key];
     return (
       <label className="field rule-number" key={key}>
-        <span>{label}</span>
+        <span>{mapText(label)}</span>
         <input
           type="number"
           min={min}
           max={max}
           value={rules[key]}
-          onChange={(e) => setRules({ ...rules, [key]: +e.target.value })}
+          onChange={(e) =>
+            setRules({
+              ...rules,
+              [key]: +e.target.value,
+            })
+          }
         />
-        <small>{help}</small>
+        <small>{mapText(help)}</small>
       </label>
     );
   };
   const toggle = (key) => (
     <label className="rule-switch" key={key}>
       <span>
-        <strong>{switches[key][0]}</strong>
-        <small>{switches[key][1]}</small>
+        <strong>{mapText(switches[key][0])}</strong>
+        <small>{mapText(switches[key][1])}</small>
       </span>
       <input
         type="checkbox"
         checked={rules[key]}
-        onChange={(e) => setRules({ ...rules, [key]: e.target.checked })}
+        onChange={(e) =>
+          setRules({
+            ...rules,
+            [key]: e.target.checked,
+          })
+        }
       />
     </label>
   );
@@ -61,7 +73,7 @@ export default function RuleFields({ rules, setRules, onReset }) {
       <div className="rule-editor-heading">
         <SlidersHorizontal size={18} />
         <div>
-          <strong>Your galaxy. Your rules.</strong>
+          <strong>{mapText('Your galaxy. Your rules.')}</strong>
           <small>Custom settings stay on this device until you reset them.</small>
         </div>
         {onReset && (
@@ -74,17 +86,33 @@ export default function RuleFields({ rules, setRules, onReset }) {
       <section className="rule-section">
         <h4>
           <Coins size={15} />
-          Galactic economy
+          {mapText('Galactic economy')}
         </h4>
         <div className="rule-number-grid">
-          {['startingCredits', 'startBonus', 'incomeTax', 'luxuryTax'].map(number)}
+          {['startingCredits', 'startBonus', 'luxuryTax'].map(number)}
+          <label className="field rule-number">
+            <span>{classic ? 'INCOME TAX BASIS' : 'IMPERIAL TAX BASIS'}</span>
+            <HoloSelect
+              value={rules.taxBasis || 'cash'}
+              onChange={(event) =>
+                setRules({
+                  ...rules,
+                  taxBasis: event.target.value,
+                })
+              }
+            >
+              <option value="cash">10% of cash</option>
+              <option value="wealth">10% of total wealth</option>
+            </HoloSelect>
+            <small>The rate is always 10%. Fractional payments round up.</small>
+          </label>
         </div>
         {toggle('freeParking')}
       </section>
       <section className="rule-section">
         <h4>
           <Navigation size={15} />
-          Conquest & negotiation
+          {mapText('Conquest & negotiation')}
         </h4>
         {number('roundLimit')}
         {['auctions', 'trading', 'mortgages'].map(toggle)}
@@ -95,14 +123,19 @@ export default function RuleFields({ rules, setRules, onReset }) {
       <section className="rule-section">
         <h4>
           <Shield size={15} />
-          Teams & commanders
+          {mapText('Teams & commanders')}
         </h4>
         {['teams', 'noTeamRent', 'sharedProperties', 'duplicateCharacters'].map(toggle)}
         <label className="field rule-number">
           <span>AI DIFFICULTY</span>
           <HoloSelect
             value={rules.difficulty}
-            onChange={(e) => setRules({ ...rules, difficulty: e.target.value })}
+            onChange={(e) =>
+              setRules({
+                ...rules,
+                difficulty: e.target.value,
+              })
+            }
           >
             {['easy', 'medium', 'hard', 'expert'].map((d) => (
               <option key={d} value={d}>

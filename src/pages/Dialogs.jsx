@@ -1,3 +1,5 @@
+import { mapText } from '../services/mapText.js';
+import { boardFor, groupsFor, tokensFor, isClassic, mapFor } from '../game/maps.js';
 import { MusicSettings } from '../components/MatchMusic.jsx';
 import HoloSelect from '../components/HoloSelect.jsx';
 import { useEffect, useState } from 'react';
@@ -48,7 +50,6 @@ import {
   syncProfile,
   cloudProfile,
 } from '../services/supabase.js';
-
 function Notice({ children }) {
   return (
     <div className="notice">
@@ -60,30 +61,43 @@ function Notice({ children }) {
 function Field({ label, children }) {
   return (
     <label className="field">
-      <span>{label}</span>
+      <span>{mapText(label)}</span>
       {children}
     </label>
   );
 }
 export function NewGame() {
+  const selectedMap = useGameStore((state) => state.selectedMap),
+    classic = isClassic(selectedMap),
+    CHARACTERS = tokensFor(selectedMap);
+  const draftKey = selectedMap === 'india' ? 'local:india' : 'local';
   const { profile, start, game, online, open } = useGameStore(),
-    [mode, setMode] = useState(() => useGameStore.getState().ruleDrafts.local?.mode || 'solo'),
-    [character, setCharacter] = useState(profile.character),
-    [faction, setFaction] = useState(profile.faction),
+    [mode, setMode] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.mode || 'solo'),
+    [character, setCharacter] = useState(() =>
+      CHARACTERS.some((c) => c.id === profile.character) ? profile.character : CHARACTERS[0].id,
+    ),
+    [faction, setFaction] = useState(classic ? 'Classic' : profile.faction),
     [name, setName] = useState(profile.name),
-    [count, setCount] = useState(() => useGameStore.getState().ruleDrafts.local?.count || 4),
+    [count, setCount] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.count || 4),
     [difficulty, setDifficulty] = useState(
-      () => useGameStore.getState().ruleDrafts.local?.difficulty || 'medium',
+      () => useGameStore.getState().ruleDrafts[draftKey]?.difficulty || 'medium',
     ),
     [rules, setRules] = useState(() => ({
       ...DEFAULT_RULES,
-      ...useGameStore.getState().ruleDrafts.local?.rules,
+      ...useGameStore.getState().ruleDrafts[draftKey]?.rules,
+      mapId: selectedMap,
     })),
-    [humans, setHumans] = useState(() => useGameStore.getState().ruleDrafts.local?.humans || 1);
+    [humans, setHumans] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.humans || 1);
   const [customTab, setCustomTab] = useState('rules');
   useEffect(
     () =>
-      useGameStore.getState().updateRuleDraft('local', { rules, mode, count, humans, difficulty }),
+      useGameStore.getState().updateRuleDraft(draftKey, {
+        rules,
+        mode,
+        count,
+        humans,
+        difficulty,
+      }),
     [rules, mode, count, humans, difficulty],
   );
   const selected = CHARACTERS.find((c) => c.id === character);
@@ -101,13 +115,23 @@ export function NewGame() {
         team:
           mode === 'teams' || (mode === 'custom' && rules.teams)
             ? i % 2 === 0
-              ? 'Rebel Squadron'
-              : 'Imperial Squadron'
+              ? classic
+                ? 'Team 1'
+                : 'Rebel Squadron'
+              : classic
+                ? 'Team 2'
+                : 'Imperial Squadron'
             : null,
       }));
-    useGameStore.getState().updateProfile({ name: name.trim() || 'Commander', character, faction });
+    useGameStore.getState().updateProfile({
+      name: name.trim() || 'Commander',
+      character,
+      faction,
+    });
     start(ps, {
       ...rules,
+      mapId: selectedMap,
+      taxBasis: mode === 'custom' ? rules.taxBasis || 'cash' : 'cash',
       teams: mode === 'teams' || (mode === 'custom' && rules.teams),
       difficulty: selectedDifficulty,
       startingCredits: mode === 'quick' ? 1000 : rules.startingCredits,
@@ -144,7 +168,7 @@ export function NewGame() {
             onClick={() => setCustomTab('commander')}
           >
             <Users size={14} />
-            Commander & roster
+            {mapText('Commander & roster')}
           </button>
           <button
             className={customTab === 'rules' ? 'selected' : ''}
@@ -157,21 +181,32 @@ export function NewGame() {
       )}
       <div
         className="setup-grid"
-        style={{ display: mode === 'custom' && customTab === 'rules' ? 'none' : undefined }}
+        style={{
+          display: mode === 'custom' && customTab === 'rules' ? 'none' : undefined,
+        }}
       >
         <div>
-          <div className="character-preview" style={{ color: selected.color }}>
+          <div
+            className="character-preview"
+            style={{
+              color: selected.color,
+            }}
+          >
             <TokenArt character={selected} size={140} />
-            <span className="eyebrow">YOUR CHARACTER</span>
+            <span className="eyebrow">{classic ? 'YOUR COLOR' : 'YOUR CHARACTER'}</span>
             <h3>{selected.name}</h3>
-            <small>{selected.faction} · Abstract token</small>
+            <small>
+              {classic ? 'Choose a color for your token' : selected.faction + ' · Abstract token'}
+            </small>
           </div>
           <div className="character-grid">
             {CHARACTERS.map((c) => (
               <button
                 key={c.id}
                 className={character === c.id ? 'selected' : ''}
-                style={{ color: c.color }}
+                style={{
+                  color: c.color,
+                }}
                 onClick={() => setCharacter(c.id)}
                 aria-label={`Select ${c.name}`}
               >
@@ -191,13 +226,15 @@ export function NewGame() {
               placeholder="Your callsign"
             />
           </Field>
-          <Field label="ALLEGIANCE">
-            <HoloSelect value={faction} onChange={(e) => setFaction(e.target.value)}>
-              {FACTIONS.map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </HoloSelect>
-          </Field>
+          {!classic && (
+            <Field label="ALLEGIANCE">
+              <HoloSelect value={faction} onChange={(e) => setFaction(e.target.value)}>
+                {FACTIONS.map((f) => (
+                  <option key={f}>{f}</option>
+                ))}
+              </HoloSelect>
+            </Field>
+          )}
           <div className="field-row">
             <Field label="COMMANDERS">
               <HoloSelect
@@ -227,23 +264,31 @@ export function NewGame() {
           {mode !== 'solo' && (
             <Field label="HUMAN PLAYERS ON THIS DEVICE">
               <HoloSelect value={humans} onChange={(e) => setHumans(+e.target.value)}>
-                {Array.from({ length: count }, (_, i) => (
-                  <option key={i} value={i + 1}>
-                    {i + 1} human{i ? 's' : ''} · {count - i - 1} AI
-                  </option>
-                ))}
+                {Array.from(
+                  {
+                    length: count,
+                  },
+                  (_, i) => (
+                    <option key={i} value={i + 1}>
+                      {i + 1} human{i ? 's' : ''} · {count - i - 1} AI
+                    </option>
+                  ),
+                )}
               </HoloSelect>
             </Field>
           )}
           <div className="setup-summary">
             <div>
               <Coins size={14} />
-              <span>Starting credits</span>
-              <strong>◈ {mode === 'quick' ? 1000 : rules.startingCredits}</strong>
+              <span>{mapText('Starting credits')}</span>
+              <strong>
+                {mapText('\u25C8 ')}
+                {mode === 'quick' ? 1000 : rules.startingCredits}
+              </strong>
             </div>
             <div>
               <Globe2 size={14} />
-              <span>Worlds to acquire</span>
+              <span>{mapText('Worlds to acquire')}</span>
               <strong>22</strong>
             </div>
             <div>
@@ -259,7 +304,8 @@ export function NewGame() {
               : 'Progress saves automatically on this device.'}
           </p>
           <button className="button gold-button full" onClick={launch}>
-            Launch conquest <ArrowRight size={17} />
+            {mapText('Launch conquest')}
+            <ArrowRight size={17} />
           </button>
           <button className="text-button full online-link" onClick={() => open('rooms')}>
             Looking for online play? Find a room <ArrowRight size={12} />
@@ -271,15 +317,25 @@ export function NewGame() {
           <RuleFields
             rules={rules}
             setRules={setRules}
-            onReset={() => setRules({ ...DEFAULT_RULES })}
+            onReset={() =>
+              setRules({
+                ...DEFAULT_RULES,
+                mapId: selectedMap,
+              })
+            }
           />
           <div className="custom-rule-launch">
             <span>
-              ◈ {rules.startingCredits} CR · {count} commanders ·{' '}
-              {rules.teams ? 'Teams' : 'Individual'} conquest
+              {mapText(' \u25C8 ')}
+              {rules.startingCredits}
+              {mapText(' CR \xB7 ')}
+              {count}
+              {mapText('commanders \xB7')} {rules.teams ? 'Teams' : 'Individual'}
+              {mapText('conquest')}
             </span>
             <button className="button gold-button" onClick={launch}>
-              Launch conquest <ArrowRight size={17} />
+              {mapText('Launch conquest')}
+              <ArrowRight size={17} />
             </button>
           </div>
         </div>
@@ -288,6 +344,9 @@ export function NewGame() {
   );
 }
 export function Deed() {
+  const BOARD = boardFor(useGameStore.getState().game),
+    GROUPS = groupsFor(useGameStore.getState().game),
+    CHARACTERS = tokensFor(useGameStore.getState().game);
   const { game, selected, dispatch, close, online, onlinePlayer } = useGameStore(),
     t = BOARD[selected],
     o = game.ownership[selected],
@@ -297,7 +356,12 @@ export function Deed() {
     <div className="deed-modal">
       <div className="deed-art">
         <PlanetArt tile={t} large />
-        <span className="eyebrow" style={{ color: t.color }}>
+        <span
+          className="eyebrow"
+          style={{
+            color: t.color,
+          }}
+        >
           {group?.name || t.type}
         </span>
         <h3>{t.name}</h3>
@@ -308,13 +372,16 @@ export function Deed() {
           <div className="rent-table">
             <div>
               <span>Purchase price</span>
-              <strong>◈ {t.price}</strong>
+              <strong>
+                {mapText('\u25C8 ')}
+                {t.price}
+              </strong>
             </div>
             {t.rents ? (
               t.rents.map((v, i) => (
                 <div key={i} className={o?.level === i ? 'current' : ''}>
                   <span>
-                    {
+                    {mapText(
                       [
                         'Base rent',
                         'With 1 outpost',
@@ -322,10 +389,13 @@ export function Deed() {
                         'With 3 outposts',
                         'With 4 outposts',
                         'With planetary base',
-                      ][i]
-                    }
+                      ][i],
+                    )}
                   </span>
-                  <strong>◈ {v}</strong>
+                  <strong>
+                    {mapText('\u25C8 ')}
+                    {v}
+                  </strong>
                 </div>
               ))
             ) : t.type === 'transport' ? (
@@ -334,7 +404,10 @@ export function Deed() {
                   <span>
                     {i + 1} transport{i ? 's' : ''}
                   </span>
-                  <strong>◈ {v}</strong>
+                  <strong>
+                    {mapText('\u25C8 ')}
+                    {v}
+                  </strong>
                 </div>
               ))
             ) : (
@@ -351,19 +424,26 @@ export function Deed() {
             )}
             <div>
               <span>Mortgage value</span>
-              <strong>◈ {t.mortgage}</strong>
+              <strong>
+                {mapText('\u25C8 ')}
+                {t.mortgage}
+              </strong>
             </div>
             {t.buildCost && (
               <div>
                 <span>Development cost</span>
-                <strong>◈ {t.buildCost}</strong>
+                <strong>
+                  {mapText('\u25C8 ')}
+                  {t.buildCost}
+                </strong>
               </div>
             )}
           </div>
           {t.type === 'property' && (
             <p className="muted">
-              Undeveloped rent doubles when the full color group is owned. Develop evenly. Mortgaged
-              worlds collect no rent.
+              {mapText(
+                'Undeveloped rent doubles when the full color group is owned. Develop evenly. Mortgaged worlds collect no rent.',
+              )}
             </p>
           )}
           {game.phase === 'purchase' &&
@@ -377,7 +457,8 @@ export function Deed() {
                   if (!useGameStore.getState().error) close();
                 }}
               >
-                Acquire for ◈ {t.price}
+                {mapText(' Acquire for \u25C8 ')}
+                {t.price}
                 <ArrowRight size={16} />
               </button>
             )}
@@ -393,6 +474,9 @@ export function Deed() {
   );
 }
 export function Trade() {
+  const BOARD = boardFor(useGameStore.getState().game),
+    GROUPS = groupsFor(useGameStore.getState().game),
+    CHARACTERS = tokensFor(useGameStore.getState().game);
   const { game, dispatch, online, onlinePlayer } = useGameStore(),
     [draftActor, setDraftActor] = useState(online ? onlinePlayer : game.players[game.turn].id),
     [counter, setCounter] = useState(null),
@@ -412,10 +496,18 @@ export function Trade() {
       <span className="trade-manifest-label">
         {p.id === me.id ? 'YOUR OFFER' : 'REQUESTED FROM ' + p.name.toUpperCase()}
       </span>
-      <div className="trade-person" style={{ color: p.color }}>
+      <div
+        className="trade-person"
+        style={{
+          color: p.color,
+        }}
+      >
         <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={35} />
         <strong>{p.name}</strong>
-        <span>◈ {p.credits}</span>
+        <span>
+          {mapText('\u25C8 ')}
+          {p.credits}
+        </span>
       </div>
       <div className="trade-properties">
         {BOARD.filter((t) => game.ownership[t.id]?.owner === p.id).map((t) => (
@@ -428,7 +520,11 @@ export function Trade() {
             <span className="trade-world-image">
               <PlanetArt tile={t} />
             </span>
-            <i style={{ background: t.color || '#8b9dac' }} />
+            <i
+              style={{
+                background: t.color || '#8b9dac',
+              }}
+            />
             <span className="trade-world-name">
               {t.name}
               <small>
@@ -437,11 +533,14 @@ export function Trade() {
                   : GROUPS.find((g) => g.id === t.group)?.name || 'TRANSPORT & INFRASTRUCTURE'}
               </small>
             </span>
-            <span>◈ {t.price}</span>
+            <span>
+              {mapText('\u25C8 ')}
+              {t.price}
+            </span>
           </label>
         ))}
         {!Object.values(game.ownership).some((o) => o.owner === p.id) && (
-          <p className="muted">No worlds owned yet.</p>
+          <p className="muted">{mapText('No worlds owned yet.')}</p>
         )}
         {p.cards.map((id) => (
           <label key={id}>
@@ -450,7 +549,7 @@ export function Trade() {
               checked={cardList.includes(id)}
               onChange={() => toggle(cardList, setCards, id)}
             />
-            Detention escape card
+            {mapText('Detention escape card')}
           </label>
         ))}
       </div>
@@ -473,7 +572,7 @@ export function Trade() {
         <Emblem size={34} />
         <div>
           <span className="eyebrow gold">OUTER RIM EXCHANGE</span>
-          <p>Worlds. Credits. An alliance worth making.</p>
+          <p>{mapText('Worlds. Credits. An alliance worth making.')}</p>
         </div>
         <span className="hololink-status">
           <i /> SECURE HOLOLINK
@@ -515,7 +614,16 @@ export function Trade() {
         onClick={async () => {
           await dispatch(
             counter ? 'TRADE_COUNTER' : 'TRADE_OFFER',
-            { trade: counter, to, give, take, cash, requestCash, giveCards, takeCards },
+            {
+              trade: counter,
+              to,
+              give,
+              take,
+              cash,
+              requestCash,
+              giveCards,
+              takeCards,
+            },
             me.id,
           );
           if (!useGameStore.getState().error) {
@@ -549,23 +657,41 @@ export function Trade() {
                 {t.status.toUpperCase()} · EXPIRES ROUND {t.expires}
               </small>
               <p>
-                {t.give.map((id) => BOARD[id].name).join(', ') || 'No worlds'} + ◈ {t.cash}
+                {t.give.map((id) => BOARD[id].name).join(', ') || 'No worlds'}
+                {mapText(' + \u25C8 ')}
+                {t.cash}
                 <br />
-                for {t.take.map((id) => BOARD[id].name).join(', ') || 'No worlds'} + ◈{' '}
-                {t.requestCash}
+                for {t.take.map((id) => BOARD[id].name).join(', ') || 'No worlds'}
+                {mapText(' + \u25C8')} {t.requestCash}
               </p>
               {t.status === 'pending' &&
                 (online ? t.to === onlinePlayer : !game.players.find((p) => p.id === t.to).ai) && (
                   <div className="button-row">
                     <button
                       className="button"
-                      onClick={() => dispatch('TRADE_ACCEPT', { trade: t.id }, t.to)}
+                      onClick={() =>
+                        dispatch(
+                          'TRADE_ACCEPT',
+                          {
+                            trade: t.id,
+                          },
+                          t.to,
+                        )
+                      }
                     >
                       Accept
                     </button>
                     <button
                       className="button"
-                      onClick={() => dispatch('TRADE_DECLINE', { trade: t.id }, t.to)}
+                      onClick={() =>
+                        dispatch(
+                          'TRADE_DECLINE',
+                          {
+                            trade: t.id,
+                          },
+                          t.to,
+                        )
+                      }
                     >
                       Decline
                     </button>
@@ -590,7 +716,15 @@ export function Trade() {
               {t.status === 'pending' && t.from === me.id && (
                 <button
                   className="text-button"
-                  onClick={() => dispatch('TRADE_CANCEL', { trade: t.id }, t.from)}
+                  onClick={() =>
+                    dispatch(
+                      'TRADE_CANCEL',
+                      {
+                        trade: t.id,
+                      },
+                      t.from,
+                    )
+                  }
                 >
                   Cancel offer
                 </button>
@@ -605,6 +739,9 @@ export function Trade() {
   );
 }
 export function Auction() {
+  const BOARD = boardFor(useGameStore.getState().game),
+    GROUPS = groupsFor(useGameStore.getState().game),
+    CHARACTERS = tokensFor(useGameStore.getState().game);
   const { game, dispatch, online, onlinePlayer } = useGameStore(),
     a = game.auction,
     [amount, setAmount] = useState((a?.bid || 0) + 10),
@@ -623,13 +760,19 @@ export function Auction() {
         <div>
           <span className="eyebrow gold">LIVE AUCTION</span>
           <h3>{t.name}</h3>
-          <p>Listed value ◈ {t.price}</p>
+          <p>
+            {mapText('Listed value \u25C8 ')}
+            {t.price}
+          </p>
         </div>
       </div>
       <div className="auction-bid">
         <Countdown deadline={a.deadline} auction />
         <small>CURRENT BID</small>
-        <strong>◈ {a.bid}</strong>
+        <strong>
+          {mapText('\u25C8 ')}
+          {a.bid}
+        </strong>
         <span>{game.players.find((p) => p.id === a.bidder)?.name || 'Awaiting the first bid'}</span>
       </div>
       {!online && (
@@ -645,7 +788,7 @@ export function Auction() {
           </HoloSelect>
         </Field>
       )}
-      <Field label={`YOUR BID · AVAILABLE ◈ ${p?.credits || 0}`}>
+      <Field label={mapText(`YOUR BID · AVAILABLE ◈ ${p?.credits || 0}`)}>
         <input
           type="number"
           min={a.bid + 10}
@@ -658,7 +801,15 @@ export function Auction() {
         <button
           className="button gold-button"
           disabled={a.passed.includes(bidder)}
-          onClick={() => dispatch('BID', { amount }, bidder)}
+          onClick={() =>
+            dispatch(
+              'BID',
+              {
+                amount,
+              },
+              bidder,
+            )
+          }
         >
           Place bid <Coins size={16} />
         </button>
@@ -671,14 +822,20 @@ export function Auction() {
         </button>
       </div>
       <p className="muted">
-        Minimum increment: 10 credits. Each bid resets the closing countdown to 10 seconds. The last
-        bidder wins when everyone else passes.
+        {mapText(
+          ' Minimum increment: 10 credits. Each bid resets the closing countdown to 10 seconds. The last bidder wins when everyone else passes. ',
+        )}
       </p>
       <div className="auction-status">
         {game.players
           .filter((p) => !p.bankrupt)
           .map((p) => (
-            <span key={p.id} style={{ color: p.color }}>
+            <span
+              key={p.id}
+              style={{
+                color: p.color,
+              }}
+            >
               {p.name}
               <small>
                 {a.passed.includes(p.id) ? 'PASSED' : a.bidder === p.id ? 'LEADING' : 'BIDDING'}
@@ -693,7 +850,10 @@ export function Auction() {
           .map((b, i) => (
             <div key={i}>
               <span>{game.players.find((p) => p.id === b.player).name}</span>
-              <strong>◈ {b.amount}</strong>
+              <strong>
+                {mapText('\u25C8 ')}
+                {b.amount}
+              </strong>
             </div>
           ))}
       </div>
@@ -701,35 +861,64 @@ export function Auction() {
   );
 }
 export function Debt() {
+  const BOARD = boardFor(useGameStore.getState().game),
+    GROUPS = groupsFor(useGameStore.getState().game),
+    CHARACTERS = tokensFor(useGameStore.getState().game);
   const { game, dispatch } = useGameStore(),
     d = game.debt;
-  if (!d) return <Notice>Your debt is settled. Continue the conquest.</Notice>;
+  if (!d) return <Notice>{mapText('Your debt is settled. Continue the conquest.')}</Notice>;
   const p = game.players.find((p) => p.id === d.payer);
   return (
     <div>
       <Notice>
-        {p.name} owes ◈ {d.amount} to{' '}
-        {game.players.find((p) => p.id === d.creditor)?.name || 'the bank'}. Sell developments or
-        mortgage undeveloped worlds to raise credits.
+        {p.name}
+        {mapText(' owes \u25C8 ')}
+        {d.amount} to {game.players.find((p) => p.id === d.creditor)?.name || 'the bank'}
+        {mapText('. Sell developments or mortgage undeveloped worlds to raise credits.')}
       </Notice>
       <div className="debt-balance">
         <Coins size={24} />
-        <strong>◈ {p.credits}</strong>
-        <span>AVAILABLE / ◈ {d.amount} REQUIRED</span>
+        <strong>
+          {mapText('\u25C8 ')}
+          {p.credits}
+        </strong>
+        <span>
+          {mapText('AVAILABLE / \u25C8 ')}
+          {d.amount} REQUIRED
+        </span>
       </div>
       <div className="debt-properties">
         {BOARD.filter((t) => game.ownership[t.id]?.owner === p.id).map((t) => (
           <div key={t.id}>
             <span>{t.name}</span>
             {game.ownership[t.id].level > 0 ? (
-              <button className="button" onClick={() => dispatch('SELL', { property: t.id }, p.id)}>
+              <button
+                className="button"
+                onClick={() =>
+                  dispatch(
+                    'SELL',
+                    {
+                      property: t.id,
+                    },
+                    p.id,
+                  )
+                }
+              >
                 Sell development +{t.buildCost / 2}
               </button>
             ) : (
               <button
                 className="button"
                 disabled={game.ownership[t.id].mortgaged}
-                onClick={() => dispatch('MORTGAGE', { property: t.id }, p.id)}
+                onClick={() =>
+                  dispatch(
+                    'MORTGAGE',
+                    {
+                      property: t.id,
+                    },
+                    p.id,
+                  )
+                }
               >
                 {game.ownership[t.id].mortgaged ? 'Mortgaged' : `Mortgage +${t.mortgage}`}
               </button>
@@ -761,7 +950,11 @@ export function Settings() {
         <input
           type="checkbox"
           checked={settings.introMusic !== false}
-          onChange={(e) => updateSettings({ introMusic: e.target.checked })}
+          onChange={(e) =>
+            updateSettings({
+              introMusic: e.target.checked,
+            })
+          }
         />
       </label>
       <p className="muted">
@@ -773,7 +966,11 @@ export function Settings() {
         <input
           type="checkbox"
           checked={settings.mute}
-          onChange={(e) => updateSettings({ mute: e.target.checked })}
+          onChange={(e) =>
+            updateSettings({
+              mute: e.target.checked,
+            })
+          }
         />
       </label>
       <Field label={`MASTER VOLUME · ${Math.round(settings.volume * 100)}%`}>
@@ -783,7 +980,11 @@ export function Settings() {
           max="1"
           step=".05"
           value={settings.volume}
-          onChange={(e) => updateSettings({ volume: +e.target.value })}
+          onChange={(e) =>
+            updateSettings({
+              volume: +e.target.value,
+            })
+          }
         />
       </Field>
       <Field label={`EFFECTS VOLUME · ${Math.round(settings.effectsVolume * 100)}%`}>
@@ -793,7 +994,11 @@ export function Settings() {
           max="1"
           step=".05"
           value={settings.effectsVolume}
-          onChange={(e) => updateSettings({ effectsVolume: +e.target.value })}
+          onChange={(e) =>
+            updateSettings({
+              effectsVolume: +e.target.value,
+            })
+          }
         />
       </Field>
       <label className="toggle-row">
@@ -801,7 +1006,11 @@ export function Settings() {
         <input
           type="checkbox"
           checked={Boolean(settings.ambience)}
-          onChange={(e) => updateSettings({ ambience: e.target.checked })}
+          onChange={(e) =>
+            updateSettings({
+              ambience: e.target.checked,
+            })
+          }
         />
       </label>
       <Field label="AMBIENT VOLUME">
@@ -811,7 +1020,11 @@ export function Settings() {
           max="1"
           step=".05"
           value={settings.ambientVolume ?? 0.25}
-          onChange={(e) => updateSettings({ ambientVolume: +e.target.value })}
+          onChange={(e) =>
+            updateSettings({
+              ambientVolume: +e.target.value,
+            })
+          }
         />
       </Field>
       <Field label="INTRO MUSIC VOLUME">
@@ -821,7 +1034,11 @@ export function Settings() {
           max="1"
           step=".05"
           value={settings.musicVolume ?? 0.2}
-          onChange={(e) => updateSettings({ musicVolume: +e.target.value })}
+          onChange={(e) =>
+            updateSettings({
+              musicVolume: +e.target.value,
+            })
+          }
         />
       </Field>
       <SoundPack />
@@ -831,7 +1048,11 @@ export function Settings() {
         <input
           type="checkbox"
           checked={settings.reducedMotion}
-          onChange={(e) => updateSettings({ reducedMotion: e.target.checked })}
+          onChange={(e) =>
+            updateSettings({
+              reducedMotion: e.target.checked,
+            })
+          }
         />
       </label>
       <p className="muted">
@@ -853,9 +1074,9 @@ export function Rules() {
       <div className="rules-intro">
         <Emblem size={54} />
         <p>
-          A galaxy. A thousand worlds. One ruler.
+          {mapText('A galaxy. A thousand worlds. One ruler.')}
           <br />
-          <span>Outlast your rivals by building the greatest galactic empire.</span>
+          <span>{mapText('Outlast your rivals by building the greatest galactic empire.')}</span>
         </p>
       </div>
       {[
@@ -899,12 +1120,17 @@ export function Rules() {
           'Survive to rule',
           'Sell developments and mortgage worlds to settle debts. If you declare bankruptcy, remaining assets pass to the creditor or bank. The last commander—or team—standing wins.',
         ],
+        [
+          '09',
+          'Tax & online seats',
+          'Imperial Tax always charges 10% of cash. Custom Rules may choose 10% of total wealth instead. Disconnecting gives five minutes to rejoin; leaving gives two minutes. Expired players are eliminated without a replacement bot. Late visitors watch and can join the next waiting room after the match.',
+        ],
       ].map(([n, title, text]) => (
         <article key={n}>
           <span>{n}</span>
           <div>
-            <h3>{title}</h3>
-            <p>{text}</p>
+            <h3>{mapText(title)}</h3>
+            <p>{mapText(text)}</p>
           </div>
         </article>
       ))}
@@ -940,7 +1166,10 @@ export function Account() {
                 character: saved.profile.character,
                 faction: saved.profile.faction,
               },
-              settings: { ...useGameStore.getState().settings, ...saved.settings },
+              settings: {
+                ...useGameStore.getState().settings,
+                ...saved.settings,
+              },
             });
         }
       }
@@ -960,8 +1189,9 @@ export function Account() {
       {working && <HoloLoader compact label="Establishing a secure command link…" />}
       {!backendConfigured && (
         <Notice>
-          Online accounts require a configured Supabase project. Local play and your device profile
-          are available now.
+          {mapText(
+            'Online accounts require a configured Supabase project. Local play and your device profile are available now.',
+          )}
         </Notice>
       )}
       {user ? (
@@ -975,11 +1205,14 @@ export function Account() {
             onClick={async () => {
               const state = useGameStore.getState();
               if (state.online && state.game.phase !== 'finished')
-                await serverCall('connection', { gameId: state.game.id, status: 'left' }).catch(
-                  () => {},
-                );
+                await serverCall('connection', {
+                  gameId: state.game.id,
+                  status: 'left',
+                }).catch(() => {});
               await supabase.auth.signOut();
-              useGameStore.setState({ matchAway: state.online });
+              useGameStore.setState({
+                matchAway: state.online,
+              });
               setUser(null);
             }}
           >
@@ -1040,9 +1273,14 @@ export function Account() {
               setWorking(true);
               try {
                 const d = await guestAuth();
-                const next = { ...useGameStore.getState().profile, name: guestName.trim() };
+                const next = {
+                  ...useGameStore.getState().profile,
+                  name: guestName.trim(),
+                };
                 await syncProfile(next);
-                useGameStore.setState({ profile: next });
+                useGameStore.setState({
+                  profile: next,
+                });
                 setUser(d.user);
                 setStatus('Guest session started.');
               } catch (e) {

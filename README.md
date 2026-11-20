@@ -35,8 +35,8 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 ## Play and customize
 
 - Opening screen: cinematic official Star Wars Databank imagery with a starfield, subtle scene motion and reduced-motion support. Choose local or online play; saved local games resume explicitly.
-- Map picker: React Router pages at `/maps/star-wars` and `/maps/default`. Galactic Conquest is the playable Star Wars map; Default is a coming-soon category for classic boards and separate classic effects, with no Star Wars intro. No additional map is included yet.
-- New matches use `/match/:gameId` and have a skippable crawl featuring commander names and chosen factions. The original Main Title streams through its YouTube player, whose panel is hidden at the owner's request. The match starts automatically when the final story line clears the horizon, and intro playback is destroyed. Browser autoplay restrictions can show a Play theme control.
+- Map picker: React Router pages at `/maps/star-wars` and `/maps/default`. Galactic Conquest is the Star Wars map. India is playable under Default with 22 real capital-city photos, rupees, eight colored pill tokens, houses/hotels, Chance/Community Chest and classic audio. Default maps have no factions or Star Wars opening. See [India map details](INDIA_MAP.md).
+- New matches use `/match/:gameId`. Star Wars matches have a skippable crawl featuring commander names and chosen factions. The original Main Title streams through its YouTube player, whose panel is hidden at the owner's request. The match starts automatically when the final story line clears the horizon, and intro playback is destroyed. Browser autoplay restrictions can show a Play theme control. India starts directly on the board.
 - Dropdowns: holographic lists with mouse/touch selection, arrow/Home/End/Enter keys, type-ahead, and Escape dismissal.
 - Custom settings: grouped controls, retained local/room drafts and an explicit Reset rules action. Room rules apply only on Save; background updates preserve edits.
 - New game: character, allegiance, 2–8 commanders, human/AI slots, difficulty and classic/quick/teams/custom rules.
@@ -47,6 +47,8 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 - Settings: included saber/blaster/droid effects, separate intro/ambient/background volumes, and reduced motion. Galactic radio plays a quiet three-track ambient playlist with smooth transitions; choose ordered/shuffled playlists or loop a song. Add up to five personal songs (50 MB each), saved only on this browser, for match background music.
 - Force/Galactic Events: animated holocron/saber and starfighter transmission briefings, with readable effects and a Continue mission action for the recipient. Other commanders receive a noninteractive transmission. See [the complete 24-event guide](FORCE_AND_GALACTIC_EVENTS.md).
 - Online timing: ordinary turns are untimed; network loss grants five minutes after heartbeat detection, leaving grants two minutes. Rejoin returns control. Auction bids reset their closing countdown to ten seconds.
+- Expired human seats are eliminated and return their assets to the bank; no replacement bot is added. A sole survivor wins, while simultaneous expiry of every player ends without a winner. Late visitors can watch, and join a linked waiting room for the next match after this one finishes.
+- Imperial/Income Tax always charges 10% of cash by default. Custom Rules may choose 10% of total wealth instead. Fractional tax payments round up; old flat-tax values are ignored.
 
 ## Validate
 

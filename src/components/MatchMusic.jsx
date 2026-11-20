@@ -1,9 +1,10 @@
+import { mapText } from '../services/mapText.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Music2, Pause, Play, SkipForward, Upload, Trash2 } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore.js';
 import { createMusicMixer } from '../services/matchMusic.js';
 import {
-  MATCH_TRACKS,
+  tracksFor,
   listPersonalMusic,
   addPersonalMusic,
   removePersonalMusic,
@@ -12,18 +13,23 @@ import {
 } from '../services/musicLibrary.js';
 import HoloSelect from './HoloSelect.jsx';
 import HoloLoader from './HoloLoader.jsx';
-
 export default function MatchMusic({ active }) {
+  const context = useGameStore((state) =>
+    state.playing ? state.game?.rules.mapId : state.selectedMap,
+  );
   const { settings, musicPreferences, personalMusic, setPersonalMusic, updateSettings, open } =
     useGameStore();
-  const [state, setState] = useState({ status: 'idle' });
+  const [state, setState] = useState({
+    status: 'idle',
+  });
   const mixer = useRef();
   const tracks = useMemo(() => {
-    const source = musicPreferences.source === 'personal' ? personalMusic : MATCH_TRACKS;
-    return musicPreferences.selection === 'playlist'
+    const source = musicPreferences.source === 'personal' ? personalMusic : tracksFor(context);
+    return musicPreferences.selection === 'playlist' ||
+      !source.some((track) => track.id === musicPreferences.selection)
       ? source
       : source.filter((track) => track.id === musicPreferences.selection);
-  }, [musicPreferences.source, musicPreferences.selection, personalMusic]);
+  }, [musicPreferences.source, musicPreferences.selection, personalMusic, context]);
   useEffect(() => {
     let disposed = false;
     listPersonalMusic()
@@ -72,8 +78,15 @@ export default function MatchMusic({ active }) {
         disabled={!active || !tracks.length}
         data-audio-preview
         onClick={() => {
-          if (canPause) updateSettings({ matchMusic: false });
-          else updateSettings({ matchMusic: true, mute: false });
+          if (canPause)
+            updateSettings({
+              matchMusic: false,
+            });
+          else
+            updateSettings({
+              matchMusic: true,
+              mute: false,
+            });
           if (!canPause) setTimeout(() => mixer.current?.play(), 0);
         }}
       >
@@ -86,7 +99,7 @@ export default function MatchMusic({ active }) {
       >
         <Music2 size={15} />
         <span>
-          <small>GALACTIC RADIO</small>
+          <small>{mapText('GALACTIC RADIO')}</small>
           <strong>
             {state.track?.title ||
               (musicPreferences.source === 'personal' && !personalMusic.length
@@ -111,7 +124,6 @@ export default function MatchMusic({ active }) {
     </div>
   );
 }
-
 export function MusicSettings() {
   const {
     settings,
@@ -135,13 +147,16 @@ export function MusicSettings() {
       disposed = true;
     };
   }, []);
-  const list = musicPreferences.source === 'personal' ? personalMusic : MATCH_TRACKS;
+  const context = useGameStore((state) =>
+    state.playing ? state.game?.rules.mapId : state.selectedMap,
+  );
+  const list = musicPreferences.source === 'personal' ? personalMusic : tracksFor(context);
   return (
     <section className="music-settings">
       <div className="music-section-heading">
         <Music2 size={21} />
         <div>
-          <h4>Galactic radio</h4>
+          <h4>{mapText('Galactic radio')}</h4>
           <p>Quiet music for your match. Separate from the opening and sound effects.</p>
         </div>
       </div>
@@ -150,7 +165,11 @@ export function MusicSettings() {
         <input
           type="checkbox"
           checked={settings.matchMusic !== false}
-          onChange={(event) => updateSettings({ matchMusic: event.target.checked })}
+          onChange={(event) =>
+            updateSettings({
+              matchMusic: event.target.checked,
+            })
+          }
         />
       </label>
       <label className="field">
@@ -161,7 +180,11 @@ export function MusicSettings() {
           max="1"
           step=".02"
           value={settings.matchMusicVolume ?? 0.14}
-          onChange={(event) => updateSettings({ matchMusicVolume: +event.target.value })}
+          onChange={(event) =>
+            updateSettings({
+              matchMusicVolume: +event.target.value,
+            })
+          }
         />
       </label>
       <div className="field-row">
@@ -170,10 +193,13 @@ export function MusicSettings() {
           <HoloSelect
             value={musicPreferences.source}
             onChange={(event) =>
-              updateMusicPreferences({ source: event.target.value, selection: 'playlist' })
+              updateMusicPreferences({
+                source: event.target.value,
+                selection: 'playlist',
+              })
             }
           >
-            <option value="builtin">Galactic playlist</option>
+            <option value="builtin">{mapText('Galactic playlist')}</option>
             <option value="personal">My personal songs</option>
           </HoloSelect>
         </label>
@@ -182,7 +208,9 @@ export function MusicSettings() {
           <HoloSelect
             value={musicPreferences.shuffle ? 'shuffle' : 'order'}
             onChange={(event) =>
-              updateMusicPreferences({ shuffle: event.target.value === 'shuffle' })
+              updateMusicPreferences({
+                shuffle: event.target.value === 'shuffle',
+              })
             }
           >
             <option value="order">Play in order</option>
@@ -194,7 +222,11 @@ export function MusicSettings() {
         <span>BACKGROUND TRACK</span>
         <HoloSelect
           value={musicPreferences.selection}
-          onChange={(event) => updateMusicPreferences({ selection: event.target.value })}
+          onChange={(event) =>
+            updateMusicPreferences({
+              selection: event.target.value,
+            })
+          }
         >
           <option value="playlist">Loop the playlist</option>
           {list.map((track) => (
@@ -229,8 +261,13 @@ export function MusicSettings() {
             try {
               for (const file of files) await addPersonalMusic(file);
               setPersonalMusic(await listPersonalMusic());
-              updateMusicPreferences({ source: 'personal', selection: 'playlist' });
-              updateSettings({ matchMusic: true });
+              updateMusicPreferences({
+                source: 'personal',
+                selection: 'playlist',
+              });
+              updateSettings({
+                matchMusic: true,
+              });
               setMessage('Your songs are ready for this match and future visits on this browser.');
             } catch (error) {
               setPersonalMusic(await listPersonalMusic().catch(() => personalMusic));
@@ -265,7 +302,9 @@ export function MusicSettings() {
                   await removePersonalMusic(track.id);
                   setPersonalMusic(await listPersonalMusic());
                   if (musicPreferences.selection === track.id)
-                    updateMusicPreferences({ selection: 'playlist' });
+                    updateMusicPreferences({
+                      selection: 'playlist',
+                    });
                 } catch (error) {
                   setMessage(error.message);
                 }
@@ -277,7 +316,7 @@ export function MusicSettings() {
         ))}
       </div>
       <p className="music-credits">
-        Galactic playlist:{' '}
+        {mapText('Galactic playlist:')}{' '}
         <a href="https://creatorchords.com/music/space-ambience/" target="_blank" rel="noreferrer">
           Space Ambience — Alexander Nakarada
         </a>

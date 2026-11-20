@@ -41,6 +41,7 @@ import { timeoutAction } from '../game/engine/timeouts.js';
 import { automationPlayer, HEARTBEAT_INTERVAL } from '../game/engine/connections.js';
 import { setAtmosphere, playSound, restoreSounds } from '../services/audio.js';
 import { CHARACTERS, THEME } from '../game/rules/data.js';
+import { isClassic, tokensFor } from '../game/maps.js';
 import { subscribeGame, serverCall, supabase, cloudProfile } from '../services/supabase.js';
 import { prepareLeaveSignal, leaveMatch } from '../services/matchConnection.js';
 
@@ -88,6 +89,16 @@ function GameApp() {
     intro,
   } = useGameStore();
   const [connected, setConnected] = useState(true);
+  const classic =
+    isClassic(
+      modal === 'newGame' || modal === 'rooms'
+        ? useGameStore.getState().selectedMap
+        : playing
+          ? game
+          : useGameStore.getState().selectedMap,
+    ) &&
+    (playing || modal === 'newGame' || modal === 'rooms');
+  const spectator = online && !onlinePlayer;
   useEffect(() => {
     const gameId = playing && game ? game.id : null;
     const previous = previousRoute.current;
@@ -152,7 +163,7 @@ function GameApp() {
     return () => clearTimeout(timer);
   }, [game?.version, online, dispatch, game?.phase, eventQueue.length, playing, intro]);
   useEffect(() => {
-    if (!playing || !game || intro || eventQueue.length) return;
+    if (!playing || !game || intro || eventQueue.length || spectator) return;
     if (game.phase === 'auction' && !modal) open('auction');
     if (
       game.debt &&
@@ -208,6 +219,7 @@ function GameApp() {
         if (!disposed) useGameStore.setState({ presence });
       },
       acceptConnections,
+      spectator,
     )
       .then((fn) => {
         if (disposed) fn();
@@ -216,9 +228,11 @@ function GameApp() {
       .catch((e) => {
         if (!disposed) useGameStore.setState({ error: e.message });
       });
-    heartbeat();
-    prepare();
-    const heartbeatTimer = setInterval(heartbeat, HEARTBEAT_INTERVAL);
+    if (!spectator) {
+      heartbeat();
+      prepare();
+    }
+    const heartbeatTimer = spectator ? null : setInterval(heartbeat, HEARTBEAT_INTERVAL);
     const pollTimer = setInterval(async () => {
       const current = useGameStore.getState();
       if (!current.game || !current.playing || current.game.phase === 'finished') return;
@@ -245,8 +259,10 @@ function GameApp() {
     }, 2000);
     const onHide = () => leaveSignal();
     const onOnline = () => {
-      heartbeat();
-      prepare();
+      if (!spectator) {
+        heartbeat();
+        prepare();
+      }
     };
     const onOffline = () => setConnected(false);
     window.addEventListener('pagehide', onHide);
@@ -267,7 +283,7 @@ function GameApp() {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
-  }, [online, game?.id, commit, matchAway, game?.phase === 'finished', playing]);
+  }, [online, game?.id, commit, matchAway, game?.phase === 'finished', playing, spectator]);
   useEffect(() => {
     if (new URLSearchParams(route.search).has('room')) open('rooms');
   }, [open, route.search]);
@@ -317,6 +333,7 @@ function GameApp() {
       useGameStore.setState({
         matchAway: false,
         playing: true,
+        ...(d.role === 'spectator' ? { onlinePlayer: null, onlineRole: 'spectator' } : {}),
         connections: d.connections,
         error: null,
       });
@@ -326,13 +343,14 @@ function GameApp() {
       useGameStore.setState({ busy: false });
     }
   };
-  const character = CHARACTERS.find((c) => c.id === profile.character);
+  const character = [...CHARACTERS, ...tokensFor('india')].find((c) => c.id === profile.character);
   return (
     <div
       className={
         'app-shell ' +
         (settings.reducedMotion ? 'reduce-motion' : '') +
-        (!playing ? ' welcome-screen' : '')
+        (!playing ? ' welcome-screen' : '') +
+        (classic ? ' classic-theme' : '')
       }
       style={{ '--gold': settings.accent || '#e5bd73' }}
       onClick={(e) => {
@@ -355,8 +373,8 @@ function GameApp() {
         >
           <Emblem size={39} />
           <span>
-            <b>STAR WARS</b>
-            <strong>GALACTIC CONQUEST</strong>
+            <b>{classic ? 'MONOPOLY' : 'STAR WARS'}</b>
+            <strong>{classic ? 'INDIA / CITY CAPITALS' : 'GALACTIC CONQUEST'}</strong>
           </span>
           <small>FAN EDITION</small>
         </button>
@@ -429,9 +447,14 @@ function GameApp() {
                             {online ? 'MULTIPLAYER' : 'SOLO & LOCAL PLAY'}
                           </div>
                           <h2>
-                            Your conquest begins here<span>.</span>
+                            {classic ? 'Your India match begins here' : 'Your conquest begins here'}
+                            <span>.</span>
                           </h2>
-                          <p>Explore iconic worlds. Build your empire. Rule the galaxy.</p>
+                          <p>
+                            {classic
+                              ? 'Explore capital cities. Build houses and hotels. Outlast your rivals.'
+                              : 'Explore iconic worlds. Build your empire. Rule the galaxy.'}
+                          </p>
                         </div>
                         <div className="mission-actions">
                           <MatchMusic active={!matchAway && game.phase !== 'finished'} />
@@ -456,7 +479,7 @@ function GameApp() {
                               </>
                             )}
                           </span>
-                          {online && !matchAway && game.phase !== 'finished' && (
+                          {online && !spectator && !matchAway && game.phase !== 'finished' && (
                             <button className="button leave-match-button" onClick={exit}>
                               <LogOut size={14} /> Leave match
                             </button>
@@ -468,6 +491,19 @@ function GameApp() {
                             <Plus size={15} /> New game
                           </button>
                         </div>
+                        {spectator && (
+                          <div className="spectator-banner" role="status">
+                            <Radio size={20} />
+                            <div>
+                              <strong>You are spectating</strong>
+                              <p>
+                                {game.phase === 'finished'
+                                  ? 'This match has ended. Join the next waiting room to play.'
+                                  : 'Watch this match. You can join as a player when the next match opens.'}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       {online && matchAway && (
                         <div className="match-away-banner">
@@ -494,7 +530,7 @@ function GameApp() {
                         </aside>
                       </div>
                       <div className="bottom-toolbar">
-                        <button onClick={() => open('trade')}>
+                        <button disabled={spectator} onClick={() => open('trade')}>
                           <ArrowRightLeft size={15} /> Trade
                         </button>
                         <button onClick={() => open('deed')}>
@@ -520,10 +556,14 @@ function GameApp() {
       </main>
       <footer>
         <span>
-          <Emblem size={15} /> {THEME.title}
+          <Emblem size={15} /> {classic ? 'INDIA / CITY CAPITALS' : THEME.title}
           <i />A NON-COMMERCIAL FAN PROJECT
         </span>
-        <span>Star Wars worlds · Original game interface</span>
+        <span>
+          {classic
+            ? 'Indian capitals · Classic rules'
+            : 'Star Wars worlds · Original game interface'}
+        </span>
         <button onClick={() => open('settings')}>
           About & credits <ArrowRight size={11} />
         </button>

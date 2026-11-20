@@ -1,0 +1,222 @@
+{
+  "Shimla": {
+    "name": "Shimla",
+    "image": "/images/india/shimla.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Landscape_of_Shimla_,_Himachal_Pradesh.jpg",
+    "author": "Navneet Sharma",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "The image contains A view of Shimla City as well as the empty natural scenery(hills) adjoining it  on a cloudy day.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Landscape_of_Shimla_%2C_Himachal_Pradesh.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Gangtok": {
+    "name": "Gangtok",
+    "image": "/images/india/gangtok.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:M.G._Marg,_Gangtok_01.jpg",
+    "author": "Bernard Gagnon",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "M.G. Marg, Gangtok, Sikkim",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/97/M.G._Marg%2C_Gangtok_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Shillong": {
+    "name": "Shillong",
+    "image": "/images/india/shillong.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Elephant_Falls_II,_Shillong.jpg",
+    "author": "Prasanta Kr Dutta",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "A view of the Elephant falls in Shillong. The three waterfalls, Bishop, Beadon and Elephant waterfalls is one of the major attractions of the \"Scotland of the East\"",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Elephant_Falls_II%2C_Shillong.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Kohima": {
+    "name": "Kohima",
+    "image": "/images/india/kohima.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Capital_Cultural_Hall.jpg",
+    "author": "The Anonymous Earthling",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Kohima Capital Cultural Centre located in P. R. Hill Ward, Kohima.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Capital_Cultural_Hall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Itanagar": {
+    "name": "Itanagar",
+    "image": "/images/india/itanagar.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Donyi_Polo_Airport,_Itanagar.jpg",
+    "author": "SlowPhoton",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Terminal building of Donyi Polo Airport, Itanagar",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/71/Donyi_Polo_Airport%2C_Itanagar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Patna": {
+    "name": "Patna",
+    "image": "/images/india/patna.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Patna_high_court1.jpg",
+    "author": "Patel95",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Patna High Court",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/99/Patna_high_court1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Ranchi": {
+    "name": "Ranchi",
+    "image": "/images/india/ranchi.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Ranchi_Cityscape.jpg",
+    "author": "Sankara Subramanian",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "description": "Lovely view of Ranchi city and a lake from the top of Pahadi Temple",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Ranchi_Cityscape.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Bhubaneswar": {
+    "name": "Bhubaneswar",
+    "image": "/images/india/bhubaneswar.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bhubaneswar_skyline_121224.jpg",
+    "author": "Ashok3932",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Bhubaneswar skyline",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Bhubaneswar_skyline_121224.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Bhopal": {
+    "name": "Bhopal",
+    "image": "/images/india/bhopal.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Deewali_New_market.jpg",
+    "author": "Deepak sankat",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "A colorful view of New Market Bhopal on the eve of Deewali.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/32/Deewali_New_market.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Raipur": {
+    "name": "Raipur",
+    "image": "/images/india/raipur.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Sri_Ram_Mandir_raipur_.jpg",
+    "author": "Indulal Patel",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "description": "Sri Ram Mandir, VIP Road Raipur Chhattisgarh, INDIA.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/19/Sri_Ram_Mandir_raipur_.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Lucknow": {
+    "name": "Lucknow",
+    "image": "/images/india/lucknow.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Harzratganj_Market,_Lucknow.jpg",
+    "author": "Mohit",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Harzratganj Market",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/51/Harzratganj_Market%2C_Lucknow.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Panaji": {
+    "name": "Panaji",
+    "image": "/images/india/panaji.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Panaji_City.JPG",
+    "author": "Макс Вальтер",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "description": "Панаджи",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Panaji_City.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Gandhinagar": {
+    "name": "Gandhinagar",
+    "image": "/images/india/gandhinagar.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Akshardham_Gandhinagar_Gujarat.jpg",
+    "author": "Harsh4101991",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "description": "This is Image of Akshardham (Gandhinagar)",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/77/Akshardham_Gandhinagar_Gujarat.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Jaipur": {
+    "name": "Jaipur",
+    "image": "/images/india/jaipur.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:East_facade_Hawa_Mahal_Jaipur_from_ground_level_(July_2022)_-_img_01.jpg",
+    "author": "Chainwit.",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "East facade of Hawa Mahal, Jaipur, Rajasthan",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/41/East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Thiruvananthapuram": {
+    "name": "Thiruvananthapuram",
+    "image": "/images/india/thiruvananthapuram.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Padmanabhaswamy_Temple_Thiruvananthapuram.jpg",
+    "author": "Shishirdasika",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Sri Ananta Padmanābhasvāmi Temple in Thiruvananthapuram, Kerala, India",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Padmanabhaswamy_Temple_Thiruvananthapuram.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Bengaluru": {
+    "name": "Bengaluru",
+    "image": "/images/india/bengaluru.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:UB_City,_Bangalore.JPG",
+    "author": "Prateek Karandikar",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "UB City, Bangalore.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/20/UB_City%2C_Bangalore.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Chennai": {
+    "name": "Chennai",
+    "image": "/images/india/chennai.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Chennai_Central.jpg",
+    "author": "jamal haider from india",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "description": "Chennai Central in Chennai, India.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/32/Chennai_Central.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Hyderabad": {
+    "name": "Hyderabad",
+    "image": "/images/india/hyderabad.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_Durgam_cheruvu_and_Hitech_CIty.jpg",
+    "author": "iMahesh",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Aerial view of Durgam cheruvu and Hitech CIty",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/57/Aerial_view_of_Durgam_cheruvu_and_Hitech_CIty.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Kolkata": {
+    "name": "Kolkata",
+    "image": "/images/india/kolkata.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Kolkata_maidan.jpg",
+    "author": "NalGup20",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "Kolkata maidan",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Kolkata_maidan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Mumbai": {
+    "name": "Mumbai",
+    "image": "/images/india/mumbai.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Mumbai_Bandra-Worli_Sea_Link.jpg",
+    "author": "Rutiknatekar",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "The Bandra Worli Sea Link is an ubiquitous symbol of 21st century Mumbai. The 5.6-kilometre cable-stayed bridge is a remarkable technical feat, the first of its kind built over open seas in India. To Mumbai’s elite, the Sea Link epitomises connectivity and a jet-setting lifestyle. To the city’s aspiring classes, it is bound up with dreams of dignity and escaping the crushing commute of overcrowded local trains and buses.\nVisuals of its towering pylons have become staples for photographers, Bollywood films and even some of the city’s design iconography.\nBut while the Sea Link has become a prominent architectural landmark, it caters almost exclusively to Mumbai’s privileged car-owners. It was not designed for travelling by foot, two-wheelers, three-wheelers or public transport – modes of transit that encompass the majority of trips in the city every day.\nIt is worth examining how the Sea Link has become such a defining feature of the city, its spatial and social impact, and whether similar infrastructure projects should be prioritised in the future.\nThe Sea Link is the first major operational part of the planned 36-km Western Freeway from Nariman Point to Mumbai’s Western suburbs. Its eight lanes of well-paved tarmac offer a temporary reprieve from Mumbai’s potholes and crawling traffic. Many Mumbaikars have grown used to speeding along the Sea Link, only to spend anywhere between 15 and 45 minutes stuck in traffic at Haji Ali while heading south, or idling at interchanges near Lilavati Hospital and Swami Vivekananda Road in Bandra while heading north.\nAs of 2017, data from the toll-collecting entity, MEP Infrastructure Developers, reflects that in contrast to the expected daily traffic of 1.2 lakh vehicles, 37,336 use the Sea Link each day. The Mumbai Mobility Forum notes that traffic growth on the Bandra Worli Sea Link is only 1% per year. Increases in the toll, the lack of complementary infrastructure and poorly-planned approaches at both ends could explain why the Sea Link caters to less than one-third of the original estimate of the daily average users.\nThis has important financial implications. After initially being estimated at Rs 400 crore, the project cost escalated to more than four times that amount. The Maharashtra State Road Development Corporation is yet to recover the Rs 1,634-crore cost for building the Sea Link and will need to continue charging toll for the next 40 years.\nPerhaps this planning and accounting failure has prompted the Municipal Corporation of Greater Mumbai to make the Mumbai Coastal Road, for which the southern section alone will cost Rs 12,700 crores, toll-free. Instead of following a users-pay principle, the cost of the coastal freeway will be incumbent on all of Mumbai’s taxpayers while catering to one out of 50 citizens – those who own a car and commute along the city’s western coast.\nOver the past year, the Municipal Corporation of Greater Mumbai and its contractors, Larsen & Toubro and Hindustan Construction Company, have been irrevocably transforming the city’s western waterfront to build the 9.8-kilometre Coastal Road from the Princess Street Flyover on Marine Drive to Worli Sea Face, where it will connect with the Sea Link.\nThis plan has been contingent on controversial recommendations from a 2006 transportation study. The report’s suggestion to invest in more roads was questioned by several transportation experts and urban planners. In the time that has elapsed since, the nature of mobility in Mumbai has also changed dramatically. In spite of investments in a series of flyovers and freeways, the city’s roads have grown even more congested.\nAccording to a 2018 study by TomTom, drivers in Mumbai expected to spend an average of 65% extra time stuck in traffic, making it the most congested city in the world. The pattern of land use has also altered considerably as commercial zones are no longer concentrated in the southern business district.\nThis has presented the opportunity to combat the housing and spatial inequalities along Mumbai’s North-South axis and invest in East-West connectivity. Most significantly, the city has commissioned 12 Metro lines to reduce traffic congestion and supplement the network of local trains. Metro Line 3, connecting Colaba–Bandra-SEEPZ, in particular, has an expected daily ridership of nearly 14 lakh passengers.\nThe Sea Link quite literally dwarfs what is being left behind and looms large over considerations about what constitutes progress. The bridge is the pride of the city, and to visitors, reflects the idea of Mumbai being modern and developed.\nSome view its neighbouring fishing village and Grade-I heritage listed Worli Fort as a hindrance to “development”. With the sea on three sides, a medieval bastion, and residents who continue to practice artisanal fishing, the Worli Koliwada has much to say about the city’s past.\nThe Sea Link has transformed the Kolis’ relationship with the sea. Unlike large-scale, commercial trawling, the Kolis’ limited resources and sustainable, small-scale practices make them entirely dependent on the tide to harvest catch from the shallow seas.\nAccording to urban researchers Shweta Wagh and Hussain Indorewala, in addition to siltation from the project’s construction, the narrow width between pillars of the Sea Link’s southern viaduct have made it dangerous for fishermen to navigate their boats. This has considerably decreased the window in which they can make safe passage to their nets just beyond the Sea Link, as there is the danger of crashing into submerged rocks or the bridge’s supporting pillars.\nTo add to the fishermen’s woes, the dumping of debris for the Coastal Road could entirely decimate their livelihood by destroying the rocky intertidal shore that fish use as their breeding grounds.\nIn the last decade, marine biologists and enthusiasts have paid closer attention to Mumbai’s coastal ecology, which supports a range of aquatic species including corals. It would be a grave injustice to destroy these social practices and marine life to facilitate a car-centric model of urban development. No after-thoughts, such as compensation to the Kolis or transplanting of corals, would make up for the damage to Mumbai’s social and environmental fabric.\nThe Mahim Bay has also been collateral damage. According to some scientists, alteration in tidal patterns because of reclamation for the Sea Link has led to the erosion of beaches at Mahim and Dadar. Largely out of sight to the city’s elite and tourists, the beach lies strewn with trash. Recently, citizen groups such as Mahim Beach Clean Up have taken it upon themselves to sort, separate and clean the waste that washes up on the shores.\nPerhaps Mahim Fort will also need similar attention from citizens in order to battle the forces of tide and time. Built in the 16th century, the fort was established as a strategic stronghold to protect the city from pirates and invaders. But its foundations are crumbling and after years of willful neglect, the structure is imperiled by the misplaced priorities of the Municipal Corporation of Greater Mumbai.\n\nFor decades, concrete tetrapods have served as rudimentary barriers against coastal erosion, particularly in the monsoons. Coastal Road contractors have also employed tetrapods in an attempt to forestall the sea from washing away sections of the 90 hectares of “reclaimed” land.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Mumbai_Bandra-Worli_Sea_Link.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "Chandigarh": {
+    "name": "Chandigarh",
+    "image": "/images/india/chandigarh.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Open_Hand_monument,_Chandigarh.jpg",
+    "author": "Raakesh Blokhra",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "description": "The Open hand is the geographical representation of the city of Chandigarh located in North India. It is a Union Territory which is the capital of two states - Punjab and Haryana.\n\nThis Open Hand symbol is located behind the High Court in Chandigarh and it has the tendency to change its direction based on the flow of wind.Indian Football at the Open Hand.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/76/Open_Hand_monument%2C_Chandigarh.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  },
+  "New Delhi": {
+    "name": "New Delhi",
+    "image": "/images/india/new-delhi.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Forecourt,_Rashtrapati_Bhavan_-_1.jpg",
+    "author": "Ronakshah1990",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "description": "The Rashtrapati Bhavan, formerly called Viceroy's House, in Delhi.",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Forecourt%2C_Rashtrapati_Bhavan_-_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original"
+  }
+}

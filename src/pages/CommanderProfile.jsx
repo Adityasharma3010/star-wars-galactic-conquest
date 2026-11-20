@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Trophy, Mail, Check } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore.js';
 import { CHARACTERS } from '../game/rules/data.js';
+import { CLASSIC_TOKENS } from '../game/rules/india.js';
+import { isClassic } from '../game/maps.js';
 import { TokenArt } from '../components/Art.jsx';
 import { cloudProfile, syncProfile } from '../services/supabase.js';
 import HoloLoader from '../components/HoloLoader.jsx';
@@ -28,14 +30,15 @@ export default function CommanderProfile() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
-  const character = CHARACTERS.find((c) => c.id === profile.character),
+  const character =
+      [...CHARACTERS, ...CLASSIC_TOKENS].find((c) => c.id === profile.character) || CHARACTERS[0],
     localWins = history.filter((h) => h.players.find((p) => p.name === profile.name)?.won).length;
   return (
     <div>
       <div className="profile-preview" style={{ color: character.color }}>
         <TokenArt character={character} size={100} />
         <h3>{profile.name}</h3>
-        <span>{profile.faction}</span>
+        {character.symbol !== 'pill' && <span>{profile.faction}</span>}
         <small>{cloud ? 'ONLINE COMMANDER PROFILE' : 'LOCAL COMMANDER PROFILE'}</small>
       </div>
       {loading && <HoloLoader compact label="Scanning command archives…" />}
@@ -152,8 +155,8 @@ export function MatchHistory() {
                 <div>
                   <h3>{h.won ? 'Victory' : 'Defeat'}</h3>
                   <p>
-                    {new Date(h.created_at).toLocaleDateString()} · Final wealth ◈{' '}
-                    {h.final_wealth.toLocaleString()}
+                    {new Date(h.created_at).toLocaleDateString()} · Final wealth{' '}
+                    {isClassic(h.games) ? '₹' : '◈'} {h.final_wealth.toLocaleString()}
                   </p>
                   <small>Match {h.game_id.slice(0, 8)}</small>
                 </div>
@@ -170,14 +173,14 @@ export function MatchHistory() {
           <div className="history-match" key={h.id}>
             <Trophy size={24} />
             <div>
-              <h3>{h.winner} won</h3>
+              <h3>{h.winner ? `${h.winner} won` : 'No remaining players'}</h3>
               <p>
                 {new Date(h.date).toLocaleDateString()} · {h.rounds} rounds ·{' '}
                 {h.local ? 'Local match' : 'Online match'}
               </p>
               {h.players.map((p, i) => (
                 <small key={i}>
-                  {p.name}: ◈ {p.wealth.toLocaleString()}
+                  {p.name}: {isClassic(h) ? '₹' : '◈'} {p.wealth.toLocaleString()}
                   {p.won ? ' · WINNER' : ''}
                 </small>
               ))}
