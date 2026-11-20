@@ -571,11 +571,11 @@ export function Trade() {
       <div className="trade-banner">
         <Emblem size={34} />
         <div>
-          <span className="eyebrow gold">OUTER RIM EXCHANGE</span>
+          <span className="eyebrow gold">{mapText('OUTER RIM EXCHANGE')}</span>
           <p>{mapText('Worlds. Credits. An alliance worth making.')}</p>
         </div>
         <span className="hololink-status">
-          <i /> SECURE HOLOLINK
+          <i /> {mapText('SECURE HOLOLINK')}
         </span>
       </div>
       <Field label="TRADE PARTNER">

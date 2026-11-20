@@ -115,6 +115,10 @@
   border-color: #a5b79d;
 }
 .classic-theme .trade-world-name,
+.classic-theme .trade-world-price,
+.classic-theme .trade-person > span,
+.classic-theme .trade-banner p,
+.classic-theme .hololink-status,
 .classic-theme .trade-side .trade-manifest-label,
 .classic-theme .trade-side .trade-person small,
 .classic-theme .modal .muted,

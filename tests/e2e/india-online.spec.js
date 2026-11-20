@@ -12,17 +12,29 @@ test('India multiplayer retains reconnect grace, gives late visitors read-only a
   );
   const [host, guest, viewer] = await Promise.all(contexts.map((context) => context.newPage()));
   const errors = [];
+  const apiContexts = new Map();
   const call = (page, command, payload) =>
     page.evaluate(
-      async ({ command, payload }) => {
-        const { serverCall } = await import('/src/services/supabase.js');
+      async ({ command, payload, api }) => {
         try {
-          return { ok: true, data: await serverCall(command, payload) };
+          const response = await fetch(api.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: api.apikey,
+              Authorization: api.authorization,
+            },
+            body: JSON.stringify({ command, sessionId: api.sessionId, ...payload }),
+          });
+          const data = await response.json();
+          return response.ok && !data.error
+            ? { ok: true, data }
+            : { ok: false, error: data.error || 'Request failed' };
         } catch (error) {
           return { ok: false, error: error.message };
         }
       },
-      { command, payload },
+      { command, payload, api: apiContexts.get(page) },
     );
   const saved = (page) =>
     page.evaluate(() => JSON.parse(localStorage.getItem('galactic-conquest-v1')).state);
@@ -33,6 +45,18 @@ test('India multiplayer retains reconnect grace, gives late visitors read-only a
       [viewer, 'QA India Viewer'],
     ]) {
       page.on('pageerror', (error) => errors.push(error.message));
+      page.on('request', (request) => {
+        if (!request.url().endsWith('/functions/v1/galactic-api') || request.method() !== 'POST')
+          return;
+        const headers = request.headers(),
+          body = request.postDataJSON();
+        apiContexts.set(page, {
+          url: request.url(),
+          apikey: headers.apikey,
+          authorization: headers.authorization,
+          sessionId: body.sessionId,
+        });
+      });
       await page.goto('/maps/default');
       await page.getByRole('button', { name: /Online multiplayer/ }).click();
       await page.getByLabel('YOUR CALLSIGN').fill(name);
