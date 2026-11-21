@@ -5,11 +5,23 @@ import { boardFor, isClassic } from '../../game/maps.js';
 import { tilePlan, piecePosition, diceRotation } from './layout.js';
 import { canvasSurface, paintTile, paintCenter, tileImage } from './textures.js';
 import { createPiece, createBuildings, createDice } from './pieces.js';
+import { createPlanet, createIndiaAtlas, modelLabel } from './worlds.js';
 
 export function createTable(
   container,
   initialGame,
-  { reduced = false, onSelect, onHover, onMoving, onReady, onError, onProject, badgeFor },
+  {
+    reduced = false,
+    onSelect,
+    onRoll,
+    mayRoll,
+    onHover,
+    onMoving,
+    onReady,
+    onError,
+    onProject,
+    badgeFor,
+  },
 ) {
   let game = initialGame,
     disposed = false,
@@ -21,9 +33,40 @@ export function createTable(
     resources = new Set(),
     images = new Map(),
     loadingImages = new Map();
+  container.dataset.worldModels = '0';
+  container.dataset.loadedPhotos = '0';
+  container.dataset.presentation = classic ? 'travel-atlas' : 'planetarium';
   const register = (resource) => {
     resources.add(resource);
     return resource;
+  };
+  const surfaceCache = new Map();
+  container.dataset.surfaceTextures = '0';
+  const getSurface = (kind) => {
+    const name =
+      kind === 'clouds'
+        ? 'earth_clouds'
+        : ['mars', 'moon', 'earth_daymap', 'mars', 'jupiter', 'earth_daymap', 'earth_nightmap'][
+            kind
+          ];
+    if (surfaceCache.has(name)) return surfaceCache.get(name);
+    const entry = { texture: null, ready: { value: 0 } };
+    const texture = new THREE.TextureLoader().load(
+      '/images/space-surfaces/' + name + '.jpg',
+      () => {
+        if (disposed) return;
+        entry.ready.value = 1;
+        container.dataset.surfaceTextures = [...surfaceCache.values()].filter(
+          (item) => item.ready.value,
+        ).length;
+        dirty = true;
+      },
+    );
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    entry.texture = register(texture);
+    surfaceCache.set(name, entry);
+    return entry;
   };
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(39, 1, 0.1, 200);
@@ -36,7 +79,7 @@ export function createTable(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = classic ? 1.05 : 1.2;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = classic;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.setAttribute('aria-label', 'Interactive 3D game board');
   renderer.domElement.dataset.testid = 'three-canvas';
@@ -56,7 +99,13 @@ export function createTable(
   let cameraPreset = 'reset';
   const cameraDestination = (mode) => {
     const destination = new THREE.Vector3(
-      ...(mode === 'top' ? [0, 40, 0.01] : camera.aspect < 1.25 ? [2, 36, 26] : [4, 27, 27]),
+      ...(mode === 'projection'
+        ? [7, 11, 19]
+        : mode === 'top'
+          ? [0, 40, 0.01]
+          : camera.aspect < 1.25
+            ? [2, 36, 26]
+            : [4, 27, 27]),
     );
     destination.multiplyScalar(Math.max(1, 1.15 / camera.aspect));
     if (destination.length() > controls.maxDistance) destination.setLength(controls.maxDistance);
@@ -97,9 +146,19 @@ export function createTable(
     scene.add(mesh);
     return mesh;
   };
-  const rim = material(classic ? '#9c8352' : '#19415a', { metalness: 0.7, roughness: 0.32 });
-  box(24.75, 0.75, 24.75, rim, 0, -0.48);
-  box(24.1, 0.18, 24.1, material(classic ? '#dddbc5' : '#091d31'), 0, -0.02);
+  const rim = material(classic ? '#806647' : '#082039', { metalness: 0.7, roughness: 0.32 });
+  if (classic) {
+    box(24.75, 0.38, 24.75, rim, 0, -0.3);
+    box(24.1, 0.12, 24.1, material('#e5e0cc'), 0, -0.02);
+  } else {
+    const grid = new THREE.GridHelper(24.5, 28, '#49c9ff', '#22618d');
+    register(grid.geometry);
+    register(grid.material);
+    grid.material.transparent = true;
+    grid.material.opacity = 0.3;
+    grid.position.y = -0.1;
+    scene.add(grid);
+  }
   const glow = material(classic ? '#d0aa57' : '#a3dcea', {
     emissive: classic ? '#6b4715' : '#296b96',
     emissiveIntensity: 0.6,
@@ -113,15 +172,51 @@ export function createTable(
   const center = canvasSurface(1024, 1024);
   register(center.texture);
   paintCenter(center, classic);
-  box(17.95, 0.08, 17.95, material('#ffffff', { map: center.texture, roughness: 0.8 }), 0, 0.08);
+  box(
+    17.95,
+    0.02,
+    17.95,
+    register(
+      new THREE.MeshBasicMaterial({
+        map: center.texture,
+        transparent: !classic,
+        opacity: classic ? 1 : 0.82,
+        toneMapped: false,
+      }),
+    ),
+    0,
+    0.04,
+  );
+  if (!classic)
+    for (const radius of [5.8, 6.5, 7.5]) {
+      const ring = new THREE.Mesh(
+        register(new THREE.RingGeometry(radius, radius + 0.025, 96)),
+        register(
+          new THREE.MeshBasicMaterial({
+            color: '#56d9ff',
+            transparent: true,
+            opacity: 0.48,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          }),
+        ),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.12;
+      scene.add(ring);
+    }
   const tileMeshes = [],
     tiles = new Map(),
     pieces = new Map(),
-    tweens = new Set();
+    tweens = new Set(),
+    models = new Set();
+  let hero = null,
+    heroLabel = null,
+    heroTile = null;
   const disposeGroup = (group) => {
     const used = new Set();
     group.traverse((object) => {
-      if (object.geometry) used.add(object.geometry);
+      if (object.geometry && resources.has(object.geometry)) used.add(object.geometry);
       if (object.material)
         (Array.isArray(object.material) ? object.material : [object.material]).forEach((mat) => {
           used.add(mat);
@@ -162,6 +257,32 @@ export function createTable(
     };
     image.src = url;
   };
+  const showHero = (tile) => {
+    if (heroTile === tile.id) return;
+    if (hero && !classic) {
+      models.delete(hero);
+      disposeGroup(hero);
+    }
+    if (heroLabel) disposeGroup(heroLabel);
+    heroTile = tile.id;
+    if (!classic) {
+      hero = createPlanet(tile, register, true, getSurface);
+      hero.position.set(0, 3.85, -1.4);
+      scene.add(hero);
+      models.add(hero);
+    } else if (!hero) {
+      hero = createIndiaAtlas(board, register);
+      hero.position.y = 0.16;
+      scene.add(hero);
+      tileMeshes.push(...hero.userData.pickables);
+      container.dataset.cityMarkers = hero.userData.pickables.length;
+    }
+    hero.userData.update?.(game, tile.id, ownerFilter);
+    heroLabel = modelLabel(tile.name, classic, register);
+    scene.add(heroLabel);
+    container.dataset.focusedWorld = tile.name;
+    dirty = true;
+  };
   for (const tile of board) {
     const plan = tilePlan(tile.id),
       group = new THREE.Group();
@@ -169,17 +290,32 @@ export function createTable(
     scene.add(group);
     const surface = canvasSurface(256, Math.round((256 * plan.depth) / plan.width));
     register(surface.texture);
-    const side = material(classic ? '#e0dbc2' : '#153d51');
-    const top = material('#ffffff', { map: surface.texture, roughness: 0.7, metalness: 0.06 });
+    const side = classic
+      ? material('#e0dbc2')
+      : register(
+          new THREE.MeshBasicMaterial({ color: '#071a30', transparent: true, opacity: 0.6 }),
+        );
+    const top = classic
+      ? material('#ffffff', { map: surface.texture, roughness: 0.7, metalness: 0.06 })
+      : register(
+          new THREE.MeshBasicMaterial({
+            map: surface.texture,
+            transparent: true,
+            opacity: 0.9,
+            toneMapped: false,
+          }),
+        );
     const mesh = new THREE.Mesh(
-      register(new THREE.BoxGeometry(plan.width - 0.08, 0.24, plan.depth - 0.08)),
+      register(new THREE.BoxGeometry(plan.width - 0.08, classic ? 0.12 : 0.045, plan.depth - 0.08)),
       [side, side, top, side, side, side],
     );
     mesh.castShadow = mesh.receiveShadow = true;
     mesh.userData.tileId = tile.id;
     group.add(mesh);
     tileMeshes.push(mesh);
-    const ownerMaterial = material('#e7c785', { emissive: '#714416', emissiveIntensity: 0.5 });
+    const ownerMaterial = classic
+      ? material('#e7c785', { emissive: '#714416', emissiveIntensity: 0.5 })
+      : register(new THREE.MeshBasicMaterial({ color: '#7ae9ff' }));
     const ownerBar = new THREE.Mesh(
       register(new THREE.BoxGeometry(plan.width - 0.15, 0.065, 0.12)),
       ownerMaterial,
@@ -206,8 +342,18 @@ export function createTable(
       buildings: null,
       photo: null,
       level: 0,
+      worldModel: null,
     };
     tiles.set(tile.id, info);
+    if (!classic && tile.type === 'property') {
+      info.worldModel = createPlanet(tile, register, false, getSurface);
+      info.worldModel.position.set(0, 0.62, -plan.depth * 0.2);
+      info.worldModel.userData.pickable.userData.tileId = tile.id;
+      group.add(info.worldModel);
+      tileMeshes.push(info.worldModel.userData.pickable);
+      models.add(info.worldModel);
+      container.dataset.worldModels = Number(container.dataset.worldModels) + 1;
+    }
     requestImage(tileImage(tile), (image) => {
       info.photo = image;
       repaint(info);
@@ -225,22 +371,32 @@ export function createTable(
     info.border.material.color.set(location ? player.color : '#ffe09e');
     const dim = ownerFilter && game.ownership[info.tile.id]?.owner !== ownerFilter;
     info.mesh.material[2].color.set(dim ? '#647683' : '#ffffff');
+    if (info.worldModel) info.worldModel.userData.surface.uniforms.emphasis.value = dim ? 0.2 : 1;
   };
   const repaint = (info) => {
     const owned = game.ownership[info.tile.id],
       owner = game.players.find((player) => player.id === owned?.owner);
-    paintTile(info.surface, info.tile, classic, info.photo, owned, owner?.color, game.rules);
+    paintTile(
+      info.surface,
+      info.tile,
+      classic,
+      classic || info.tile.type === 'transport' ? info.photo : null,
+      owned,
+      owner?.color,
+      game.rules,
+      Boolean(info.worldModel),
+    );
     info.ownerBar.visible = Boolean(owner);
     if (owner) {
       info.ownerBar.material.color.set(owner.color);
-      info.ownerBar.material.emissive.set(owner.color);
+      info.ownerBar.material.emissive?.set(owner.color);
     }
     highlightTile(info);
   };
   tiles.forEach(repaint);
   const dice = [createDice(register), createDice(register)];
   dice.forEach((die, i) => {
-    die.position.set(i ? 1 : -1, 0.76, 3.5);
+    die.position.set(i ? 1 : -1, 0.76, classic ? 6.7 : 4.6);
     scene.add(die);
   });
   const setDice = (animated) => {
@@ -377,12 +533,11 @@ export function createTable(
     }
     setPieces(before, changed);
     setDice(changed && game.lastActionType === 'ROLL');
+    hero?.userData.update?.(game, selection, ownerFilter);
     dirty = true;
   }
   setGame(game);
-  requestImage(tileImage(board[1]), (image) => {
-    if (selection === 1) paintCenter(center, classic, image);
-  });
+  showHero(board[1]);
   const raycaster = new THREE.Raycaster(),
     pointer = new THREE.Vector2();
   const pick = (event) => {
@@ -392,7 +547,8 @@ export function createTable(
       -(((event.clientY - box.top) / box.height) * 2 - 1),
     );
     raycaster.setFromCamera(pointer, camera);
-    return raycaster.intersectObjects(tileMeshes, false)[0]?.object.userData.tileId ?? null;
+    const hit = raycaster.intersectObjects([...tileMeshes, ...dice], false)[0]?.object;
+    return dice.includes(hit) ? 'dice' : (hit?.userData.tileId ?? null);
   };
   let down;
   const pointerDown = (event) => {
@@ -403,7 +559,8 @@ export function createTable(
     down = null;
     if (!started || Math.hypot(event.clientX - started.x, event.clientY - started.y) > 6) return;
     const id = pick(event);
-    if (id !== null) onSelect(id);
+    if (id === 'dice') onRoll?.();
+    else if (id !== null) onSelect(id);
   };
   const pointerMove = (event) => {
     if (down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 6) {
@@ -415,6 +572,16 @@ export function createTable(
       return;
     }
     const id = pick(event);
+    if (id === 'dice') {
+      if (hover !== null) {
+        hover = null;
+        onHover(null);
+        tiles.forEach(highlightTile);
+        dirty = true;
+      }
+      renderer.domElement.style.cursor = mayRoll?.() ? 'pointer' : 'default';
+      return;
+    }
     if (id === hover) return;
     hover = id;
     tiles.forEach(highlightTile);
@@ -450,7 +617,7 @@ export function createTable(
   });
   resize.observe(container);
   renderer.setAnimationLoop((now) => {
-    if (disposed || document.hidden || now - lastFrame < (reduced ? 32 : 16)) return;
+    if (disposed || document.hidden || now - lastFrame < (tweens.size ? 16 : 32)) return;
     lastFrame = now;
     const changed = controls.update();
     if (!reduced)
@@ -458,6 +625,12 @@ export function createTable(
         if (piece.userData.ring.visible)
           piece.userData.ring.scale.setScalar(1 + Math.sin(now / 450) * 0.07);
       });
+    models.forEach((model) => {
+      if (!reduced) {
+        model.rotation.y = (now / 1000) * 0.045;
+        model.userData.surface.uniforms.time.value = now / 1000;
+      }
+    });
     if (reduced && !dirty && !changed && !tweens.size) return;
     renderer.render(scene, camera);
     if (dirty || changed || !ready) {
@@ -481,6 +654,7 @@ export function createTable(
       highlightedPlayer = playerId;
       ownerFilter = filter;
       tiles.forEach(highlightTile);
+      hero?.userData.update?.(game, selection, ownerFilter);
       dirty = true;
     },
     select(id) {
@@ -488,12 +662,7 @@ export function createTable(
       tiles.forEach(repaint);
       dirty = true;
       const focused = board[id]?.type === 'property' ? board[id] : board[1];
-      requestImage(tileImage(focused), (image) => {
-        if (selection === id) {
-          paintCenter(center, classic, image);
-          dirty = true;
-        }
-      });
+      showHero(focused);
     },
     reduced(value) {
       reduced = value;
@@ -517,9 +686,16 @@ export function createTable(
     camera(mode) {
       cameraPreset = mode;
       const destination = cameraDestination(mode);
-      controls.target.set(0, 0, 0);
-      if (reduced) camera.position.copy(destination);
-      else {
+      controls.minDistance = mode === 'projection' ? 18 : 26;
+      controls.target.set(
+        0,
+        mode === 'projection' ? (classic ? 0.5 : 3.85) : 0,
+        mode === 'projection' ? (classic ? 0 : -1.4) : 0,
+      );
+      if (reduced) {
+        camera.position.copy(destination);
+        controls.update();
+      } else {
         const tween = gsap.to(camera.position, {
           x: destination.x,
           y: destination.y,

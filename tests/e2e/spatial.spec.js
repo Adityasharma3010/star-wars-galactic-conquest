@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createGame } from '../../src/game/engine/game.js';
 import { tokensFor, boardFor } from '../../src/game/maps.js';
+import { PerspectiveCamera, Vector3 } from 'three';
 
 const saved = (page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('galactic-conquest-v1')).state);
@@ -59,6 +60,64 @@ async function spatial(page) {
 }
 
 for (const mapId of ['galactic-conquest', 'india'])
+  test(`${mapId}: clicking dice in 2D and the 3D scene commits one legal roll`, async ({
+    page,
+  }) => {
+    const initial = await load(page, mapId);
+    for (const view of ['2d', '3d']) {
+      if (view === '3d') {
+        await page.evaluate(
+          (game) =>
+            localStorage.setItem(
+              'galactic-conquest-v1',
+              JSON.stringify({
+                version: 1,
+                state: {
+                  game,
+                  playing: true,
+                  boardView: '3d',
+                  selected: 3,
+                  settings: { mute: true, reducedMotion: true },
+                },
+              }),
+            ),
+          initial,
+        );
+        await page.reload();
+        await expect(page.getByTestId('board-3d')).toHaveAttribute('data-ready', 'true');
+      }
+      await page.evaluate(() => {
+        const original = crypto.getRandomValues.bind(crypto);
+        crypto.getRandomValues = (array) =>
+          array instanceof Uint32Array && array.length === 1
+            ? array.fill(Math.floor(0.81 * 4294967296))
+            : original(array);
+      });
+      if (view === '2d') {
+        const dice = page.getByRole('button', { name: 'Roll by clicking dice' });
+        await dice.focus();
+        await page.keyboard.press('Enter');
+      } else {
+        await page.getByRole('button', { name: 'Top view of 3D board' }).click();
+        const box = await page.getByTestId('three-canvas').boundingBox();
+        const camera = new PerspectiveCamera(39, box.width / box.height, 0.1, 200);
+        camera.position.set(0, 40 * Math.cos(0.015), 40 * Math.sin(0.015));
+        camera.lookAt(0, 0, 0);
+        camera.updateMatrixWorld();
+        const point = new Vector3(-1, 0.76, mapId === 'india' ? 6.7 : 4.6).project(camera);
+        const x = box.x + ((point.x + 1) / 2) * box.width,
+          y = box.y + ((1 - point.y) / 2) * box.height;
+        await page.mouse.click(x, y);
+        await expect.poll(async () => (await saved(page)).game.version).toBe(initial.version + 1);
+        await page.mouse.click(x, y);
+      }
+      await expect.poll(async () => (await saved(page)).game.version).toBe(initial.version + 1);
+      expect((await saved(page)).game.dice).toEqual([5, 5]);
+      await expect(page.getByRole('button', { name: 'Roll by clicking dice' })).toBeDisabled();
+    }
+  });
+
+for (const mapId of ['galactic-conquest', 'india'])
   test(`${mapId}: real 3D images, orbit/picking, owner highlighting, independent view persistence`, async ({
     page,
   }) => {
@@ -68,6 +127,20 @@ for (const mapId of ['galactic-conquest', 'india'])
     await load(page, mapId);
     const before = (await saved(page)).game;
     await spatial(page);
+    await expect(page.getByTestId('board-3d')).toHaveAttribute(
+      'data-presentation',
+      mapId === 'india' ? 'travel-atlas' : 'planetarium',
+    );
+    if (mapId === 'india')
+      await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-city-markers', '22');
+    else {
+      await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-world-models', '22');
+      await expect(page.locator('.spatial-renderer')).toHaveAttribute(
+        'data-surface-textures',
+        '6',
+        { timeout: 20000 },
+      );
+    }
     await expect(page.locator('.spatial-renderer')).toHaveAttribute(
       'data-loaded-photos',
       mapId === 'india' ? '22' : '26',

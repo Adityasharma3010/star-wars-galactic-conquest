@@ -10,6 +10,26 @@
   background: linear-gradient(110deg, #152f46e8, #0a1c30ee);
   box-shadow: inset 0 1px #bddfff1a;
 }
+.dice-roll-control {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+.dice-roll-control:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.dice-roll-control:not(:disabled) {
+  cursor: pointer;
+}
+.dice-roll-control:focus-visible {
+  outline: 2px solid #eac68d;
+  outline-offset: 4px;
+}
+.dice-roll-control:not(:disabled):hover .die {
+  box-shadow: 0 0 12px #a4cde577;
+}
 .board-view-bar > span {
   font-size: 8px;
   letter-spacing: 1.6px;
@@ -75,6 +95,32 @@
     0 0 0 3px #0b1729,
     0 0 0 4px #728daa33,
     inset 0 1px #c0e7ff33;
+}
+.spatial-board[data-presentation='planetarium'] {
+  background: radial-gradient(ellipse at 50% 65%, #073454, #040d1a 70%);
+  border-color: #3092bb;
+  box-shadow:
+    0 0 0 3px #06111d,
+    0 0 35px #09b9f518,
+    inset 0 0 40px #089ddd0a;
+}
+.spatial-board[data-presentation='planetarium'] .spatial-stage {
+  background: radial-gradient(ellipse at 50% 75%, #10bff51a, transparent 65%);
+}
+.spatial-board[data-presentation='planetarium'] .spatial-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 45px #06101c33;
+}
+.spatial-board[data-presentation='planetarium'] .spatial-tools > span {
+  color: #8deaff;
+}
+.spatial-board[data-presentation='planetarium'] .spatial-location-badge {
+  background: #061b2bea;
+  border-color: #49c4dd99;
+  box-shadow: 0 0 16px #13b9e723;
 }
 .spatial-tools {
   display: flex;

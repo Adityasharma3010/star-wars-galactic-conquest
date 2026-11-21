@@ -1075,6 +1075,25 @@ export function Settings() {
         credited, creator-made Star Wars recordings. Location names are researched from the official
         Star Wars Databank.
       </p>
+      <p className="muted">
+        Planet surface textures:{' '}
+        <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noreferrer">
+          Solar System Scope / INOVE
+        </a>
+        , adapted under{' '}
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+          CC BY 4.0
+        </a>
+        . India map outline:{' '}
+        <a
+          href="https://www.naturalearthdata.com/about/terms-of-use/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Natural Earth, public domain
+        </a>
+        .
+      </p>
     </div>
   );
 }

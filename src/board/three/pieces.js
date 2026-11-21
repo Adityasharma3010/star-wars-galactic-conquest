@@ -4,30 +4,25 @@ import { diceSurface } from './textures.js';
 
 export function createPiece(color, classic, badgeSvg, register) {
   const piece = new THREE.Group();
-  const material = register(
-    new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.35 }),
-  );
-  const baseMaterial = register(
-    new THREE.MeshStandardMaterial({ color: '#173647', roughness: 0.4, metalness: 0.6 }),
-  );
-  const base = new THREE.Mesh(
-    register(new THREE.CylinderGeometry(0.22, 0.24, 0.1, 24)),
-    baseMaterial,
-  );
-  base.position.y = 0.16;
-  piece.add(base);
-  const body = new THREE.Mesh(
-    register(
-      classic
-        ? new THREE.CapsuleGeometry(0.12, 0.14, 6, 12)
-        : new THREE.CylinderGeometry(0.12, 0.19, 0.44, 20),
-    ),
-    material,
-  );
-  body.position.y = classic ? 0.3 : 0.43;
-  if (classic) body.rotation.z = Math.PI / 2;
-  body.castShadow = true;
-  piece.add(body);
+  if (classic) {
+    const material = register(
+      new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.35 }),
+    );
+    const baseMaterial = register(
+      new THREE.MeshStandardMaterial({ color: '#536451', roughness: 0.4, metalness: 0.3 }),
+    );
+    const base = new THREE.Mesh(
+      register(new THREE.CylinderGeometry(0.22, 0.24, 0.1, 24)),
+      baseMaterial,
+    );
+    base.position.y = 0.16;
+    piece.add(base);
+    const body = new THREE.Mesh(register(new THREE.CapsuleGeometry(0.12, 0.14, 6, 12)), material);
+    body.position.y = 0.3;
+    body.rotation.z = Math.PI / 2;
+    body.castShadow = true;
+    piece.add(body);
+  }
   const ringMaterial = register(
     new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 }),
   );
@@ -46,7 +41,7 @@ export function createPiece(color, classic, badgeSvg, register) {
       register(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false })),
     );
     sprite.scale.set(0.5, 0.5, 1);
-    sprite.position.y = 0.83;
+    sprite.position.y = 0.7;
     piece.add(sprite);
     const svg = new Image();
     svg.onload = () => {
@@ -64,6 +59,24 @@ export function createBuildings(level, classic, register) {
   const buildings = new THREE.Group();
   const hotel = level === 5,
     count = hotel ? 1 : level;
+  if (!classic) {
+    const light = register(
+      new THREE.LineBasicMaterial({
+        color: hotel ? '#bdacff' : '#77e8ff',
+        transparent: true,
+        opacity: 0.85,
+      }),
+    );
+    for (let index = 0; index < count; index++) {
+      const geometry = register(
+        new THREE.BoxGeometry(hotel ? 0.7 : 0.27, hotel ? 0.8 : 0.4, hotel ? 0.55 : 0.24),
+      );
+      const marker = new THREE.LineSegments(register(new THREE.EdgesGeometry(geometry)), light);
+      marker.position.set(hotel ? 0 : (index - (count - 1) / 2) * 0.38, hotel ? 0.43 : 0.23, 0);
+      buildings.add(marker);
+    }
+    return buildings;
+  }
   const wall = register(
     new THREE.MeshStandardMaterial({
       color: classic ? (hotel ? '#ba4e46' : '#4e9770') : '#c3b496',

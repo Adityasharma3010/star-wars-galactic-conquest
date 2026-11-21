@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { RotateCcw, Plus, Minus, Compass, ArrowUpRight } from 'lucide-react';
+import { RotateCcw, Plus, Minus, Compass, ArrowUpRight, Crosshair } from 'lucide-react';
 import { boardFor, isClassic, tokensFor } from '../game/maps.js';
 import { useGameStore } from '../stores/gameStore.js';
 import { TokenArt } from '../components/Art.jsx';
 import { createTable } from './three/table.js';
 import TurnConsole from './TurnConsole.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
+import { canRoll } from './rollPermission.js';
 
 export default function Board3D({ game, selected, onSelect, onMoving, moving, onUnavailable }) {
   const ref = useRef(),
     badges = useRef(),
     table = useRef();
+  const movingRef = useRef(moving);
+  movingRef.current = moving;
   const [ready, setReady] = useState(false),
     [hover, setHover] = useState(null),
     [anchor, setAnchor] = useState(null);
@@ -26,6 +29,11 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
       table.current = createTable(ref.current, game, {
         reduced,
         onSelect,
+        mayRoll: () => canRoll(useGameStore.getState(), movingRef.current),
+        onRoll: () => {
+          const state = useGameStore.getState();
+          if (canRoll(state, movingRef.current)) state.dispatch('ROLL');
+        },
         onHover: (id) => {
           if (mounted) setHover(id);
         },
@@ -76,14 +84,21 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
       data-selected-tile={selected}
       data-highlighted-player={hoveredPlayer || ''}
       data-owner-filter={ownerFilter || ''}
+      data-presentation={classic ? 'travel-atlas' : 'planetarium'}
     >
       <div className="spatial-tools">
         <span>
           <i />
-          {classic ? 'CITY TABLE' : 'HOLO TABLE'}
+          {classic ? 'INDIA CAPITAL ATLAS' : 'PLANETARY COMMAND TABLE'}
           <small>Drag to orbit · Scroll or pinch to zoom</small>
         </span>
         <div>
+          <button
+            aria-label="Focus selected world"
+            onClick={() => table.current?.camera('projection')}
+          >
+            <Crosshair size={15} />
+          </button>
           <button aria-label="Zoom in on 3D board" onClick={() => table.current?.zoom(0.88)}>
             <Plus size={15} />
           </button>
@@ -103,7 +118,7 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
         {!ready && (
           <div className="spatial-loading">
             <span className="spatial-loader-ring" />
-            <strong>Assembling your command table…</strong>
+            <strong>{classic ? 'Opening the city atlas…' : 'Projecting the galaxy…'}</strong>
           </div>
         )}
         {anchor?.visible && ready && (

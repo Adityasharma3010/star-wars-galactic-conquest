@@ -2,7 +2,14 @@ import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 gsap.registerPlugin(useGSAP);
-export default function Dice({ values, version, reduced, rolling = true }) {
+export default function Dice({
+  values,
+  version,
+  reduced,
+  rolling = true,
+  onRoll,
+  canRoll = false,
+}) {
   const ref = useRef();
   const previous = useRef(version);
   useGSAP(
@@ -26,8 +33,24 @@ export default function Dice({ values, version, reduced, rolling = true }) {
     5: [0, 2, 4, 6, 8],
     6: [0, 2, 3, 5, 6, 8],
   };
+  const Container = onRoll ? 'button' : 'div';
   return (
-    <div className="dice-pair" ref={ref} aria-label={`Dice: ${values.join(' and ')}`}>
+    <Container
+      className={'dice-pair ' + (onRoll ? 'dice-roll-control' : '')}
+      ref={ref}
+      type={onRoll ? 'button' : undefined}
+      disabled={onRoll ? !canRoll : undefined}
+      onClick={
+        onRoll
+          ? () => {
+              if (canRoll) onRoll();
+            }
+          : undefined
+      }
+      aria-label={onRoll ? 'Roll by clicking dice' : `Dice: ${values.join(' and ')}`}
+      aria-description={`Dice values: ${values.join(' and ')}`}
+      title={onRoll && canRoll ? 'Click the dice to roll' : undefined}
+    >
       {values.map((v, i) => (
         <div className="die" key={i}>
           {Array.from({ length: 9 }, (_, n) => (
@@ -35,6 +58,6 @@ export default function Dice({ values, version, reduced, rolling = true }) {
           ))}
         </div>
       ))}
-    </div>
+    </Container>
   );
 }

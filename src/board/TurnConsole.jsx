@@ -7,6 +7,7 @@ import { TokenArt } from '../components/Art.jsx';
 import ConnectionGrace from '../components/ConnectionGrace.jsx';
 import Dice from './Dice.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
+import { canRoll } from './rollPermission.js';
 
 export default function TurnConsole({ moving = false, spatial = false }) {
   const { game, dispatch, busy, online, onlinePlayer, open, matchAway } = useGameStore();
@@ -98,6 +99,10 @@ export default function TurnConsole({ moving = false, spatial = false }) {
           version={game.version}
           rolling={game.lastActionType === 'ROLL'}
           reduced={reduced}
+          canRoll={canRoll(useGameStore.getState(), moving)}
+          onRoll={() => {
+            if (canRoll(useGameStore.getState(), moving)) dispatch('ROLL');
+          }}
         />
         <motion.button
           whileTap={reduced ? undefined : { scale: 0.95 }}

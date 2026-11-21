@@ -55,7 +55,16 @@ function cover(context, image, width, height) {
     h = image.height * ratio;
   context.drawImage(image, (width - w) / 2, (height - h) / 2, w, h);
 }
-export function paintTile(surface, tile, classic, image, owned, ownerColor, rules) {
+export function paintTile(
+  surface,
+  tile,
+  classic,
+  image,
+  owned,
+  ownerColor,
+  rules,
+  projected = false,
+) {
   const { context: ctx, canvas } = surface,
     w = canvas.width,
     h = canvas.height;
@@ -74,7 +83,7 @@ export function paintTile(surface, tile, classic, image, owned, ownerColor, rule
     gradient.addColorStop(1, classic ? '#f9f1dc' : '#102638');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, h * 0.32, w, h * 0.4);
-  } else {
+  } else if (!projected) {
     const symbols = {
       force: '✦',
       galactic: '◉',
@@ -161,16 +170,20 @@ export function paintCenter(surface, classic, image) {
   ctx.fillText(
     classic ? 'INDIAN CITY CAPITALS' : 'A GALAXY. A THOUSAND WORLDS.',
     size / 2,
-    size * 0.29,
+    size * 0.86,
   );
-  ctx.font = `800 ${size * 0.087}px Segoe UI`;
+  ctx.font = `800 ${size * 0.043}px Segoe UI`;
   ctx.fillStyle = '#fff4d5';
-  ctx.fillText(classic ? 'INDIA' : 'GALACTIC', size / 2, size * 0.39);
+  ctx.fillText(classic ? 'INDIA' : 'GALACTIC', size / 2, size * 0.92);
   ctx.fillStyle = '#efc882';
-  ctx.fillText(classic ? 'CITY CAPITALS' : 'CONQUEST', size / 2, size * 0.49);
+  ctx.fillText(classic ? 'CITY CAPITALS' : 'CONQUEST', size / 2, size * 0.97);
   ctx.font = `500 ${size * 0.021}px Segoe UI`;
   ctx.fillStyle = '#b8dce6';
-  ctx.fillText('YOUR NEXT MOVE WRITES THE STORY', size / 2, size * 0.83);
+  ctx.fillText(
+    classic ? 'CITY COLLECTION / INDIA' : 'HOLOGRAPHIC TACTICAL ARRAY',
+    size / 2,
+    size * 0.09,
+  );
   surface.texture.needsUpdate = true;
 }
 export function diceSurface(value) {

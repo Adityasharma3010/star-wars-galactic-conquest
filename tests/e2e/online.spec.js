@@ -67,7 +67,8 @@ test('real Supabase room, independent guests, readiness, sync, turn enforcement,
   expect(await savedGame(host)).toEqual(beforeView);
   expect(await savedGame(guest)).toEqual(beforeView);
   await expect(guest.getByRole('button', { name: 'Roll dice', exact: true })).toBeDisabled();
-  await host.getByRole('button', { name: 'Roll dice', exact: true }).click();
+  await expect(guest.getByRole('button', { name: 'Roll by clicking dice' })).toBeDisabled();
+  await host.getByRole('button', { name: 'Roll by clicking dice' }).click();
   await expect(host.locator('.log-entry').first()).not.toContainText(
     'The galaxy is yours to conquer.',
   );
