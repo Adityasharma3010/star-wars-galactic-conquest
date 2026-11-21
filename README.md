@@ -34,7 +34,11 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 
 ## Play and customize
 
-The visual experience now has layered lighting, moving stars and orbital signals, animated menu entrances, richer image-backed map cards and a photographic command table. The board's sector controls browse each color group and open the selected deed. Token movement lights the route, property claims pulse, buildings appear with a short reveal, and cash changes count smoothly with a signed change indicator. India uses warmer materials and city imagery. The operating system and in-game reduced-motion setting stop ambient effects and shorten transitions.
+The cinematic command room includes a framed command header, animated navigation, a photographic hologram, orbital lighting and larger launch controls. The board's sector controls browse each color group and open the selected deed. Token movement lights the route, property claims pulse, buildings reveal, and balances count to their committed value. Money transfers leave short light trails; event briefings, auctions and victory screens have their own effects. India keeps warmer materials, city imagery and classic effects. The operating system and in-game reduced-motion setting stop ambient effects and shorten transitions.
+
+Choose **2D view** or **3D view** above the board during any match. The 3D view uses a real Three.js tabletop with raised photographic tiles, colored pieces, buildings and animated dice. Drag to orbit, scroll/pinch or use the zoom buttons, and choose Top view or Reset camera. Click a tile to inspect it, or use **Explore all 40 spaces** for keyboard-accessible selection. Player hover reveals their location, and ownership filters work in both views. Expand board opens a larger focus view.
+
+Your view is saved only on this browser. Changing it never changes room rules, the shared match or another player's view. Both views use the same action controls and server-authoritative results. Three.js loads only after selecting 3D; its additional chunk is approximately 147 kB compressed. If WebGL is unavailable or its context is lost, the match returns safely to 2D. Photos reuse the existing credited assets; the tabletop and pieces use original functional geometry rather than downloaded character models.
 
 - Opening screen: cinematic official Star Wars Databank imagery with a starfield, subtle scene motion and reduced-motion support. Choose local or online play; saved local games resume explicitly.
 - Map picker: React Router pages at `/maps/star-wars` and `/maps/default`. Galactic Conquest is the Star Wars map. India is playable under Default with 22 real capital-city photos, rupees, eight colored pill tokens, houses/hotels, Chance/Community Chest and classic audio. Default maps have no factions or Star Wars opening. See [India map details](INDIA_MAP.md).
@@ -43,7 +47,7 @@ The visual experience now has layered lighting, moving stars and orbital signals
 - Custom settings: grouped controls, retained local/room drafts and an explicit Reset rules action. Room rules apply only on Save; background updates preserve edits.
 - New game: character, allegiance, 2–8 commanders, human/AI slots, difficulty and classic/quick/teams/custom rules.
 - Find a game: authenticated public rooms, private codes, invite links, editable guest/registered callsigns, synchronized readiness, host settings, AI filling and refresh recovery.
-- Board: roll, acquire/auction, manage developments and mortgages, negotiate trades and counteroffers, resolve detention/debt and view results.
+- Board: switch independently between 2D and 3D; roll, acquire/auction, manage developments and mortgages, negotiate trades and counteroffers, resolve detention/debt and view results.
 - Profile: cloud statistics/history, friends, invitations, rankings and device cosmetics.
 - Comms: match/team/global messages, mute, block and report.
 - Settings: included saber/blaster/droid effects, separate intro/ambient/background volumes, and reduced motion. Galactic radio plays a quiet three-track ambient playlist with smooth transitions; choose ordered/shuffled playlists or loop a song. Add up to five personal songs (50 MB each), saved only on this browser, for match background music.

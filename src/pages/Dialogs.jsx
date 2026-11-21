@@ -769,10 +769,20 @@ export function Auction() {
       <div className="auction-bid">
         <Countdown deadline={a.deadline} auction />
         <small>CURRENT BID</small>
-        <strong>
+        <motion.strong
+          key={a.bid}
+          className="auction-amount"
+          initial={
+            useGameStore.getState().settings.reducedMotion
+              ? false
+              : { opacity: 0.4, y: 12, scale: 0.9 }
+          }
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.35 }}
+        >
           {mapText('\u25C8 ')}
           {a.bid}
-        </strong>
+        </motion.strong>
         <span>{game.players.find((p) => p.id === a.bidder)?.name || 'Awaiting the first bid'}</span>
       </div>
       {!online && (

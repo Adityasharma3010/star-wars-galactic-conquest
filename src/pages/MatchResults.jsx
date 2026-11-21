@@ -1,5 +1,6 @@
 import { mapText } from '../services/mapText.js';
-import { boardFor } from '../game/maps.js';
+import { boardFor, isClassic } from '../game/maps.js';
+import VictoryCelebration from '../components/VictoryCelebration.jsx';
 import { motion } from 'motion/react';
 import { Trophy, ArrowRight } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore.js';
@@ -22,6 +23,7 @@ export default function MatchResults() {
   const owned = BOARD.filter((t) => ids.has(game.ownership[t.id]?.owner));
   return (
     <div className="victory-screen">
+      {winner && <VictoryCelebration classic={isClassic(game)} />}
       {useGameStore.getState().online && (
         <button
           className="button gold-button"

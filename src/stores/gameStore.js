@@ -35,6 +35,10 @@ export const useGameStore = create(
       onlinePlayer: null,
       onlineRole: 'player',
       selectedMap: 'galactic-conquest',
+      boardView: '2d',
+      setBoardView: (boardView) => {
+        if (['2d', '3d'].includes(boardView)) set({ boardView });
+      },
       chooseMap: (selectedMap) => set({ selectedMap }),
       lobbyRoom: null,
       selected: 1,
@@ -296,6 +300,7 @@ export const useGameStore = create(
         onlinePlayer: s.onlinePlayer,
         lobbyRoom: s.lobbyRoom,
         selectedMap: s.selectedMap,
+        boardView: s.boardView,
         onlineRole: s.onlineRole,
         matchAway: s.matchAway,
         introducedGames: s.introducedGames,

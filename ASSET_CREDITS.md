@@ -24,7 +24,9 @@ Primary references: [Star Wars Databank](https://www.starwars.com/databank) and 
 
 ## Libraries, icons and fonts
 
-The refreshed interface adds original CSS lighting, orbit guides, particle points, route trails and property-claim effects with GSAP and Motion. The board's live sector scene and larger menu cards reuse the already attributed Databank and India photographs. No additional movie footage, 3D model or generated planet image is bundled.
+The refreshed interface adds original CSS lighting, orbit guides, particle points, route trails and property-claim effects with GSAP and Motion. The cinematic menu, live sector scene and 3D tile textures reuse the already attributed Databank and India photographs. No additional movie footage, downloaded 3D model or generated planet image is bundled.
+
+The Three.js tabletop uses original board, stand, pill, building and dice geometry. Star Wars stands display the existing abstract token glyphs; they are not official character sculptures. India uses dimensional colored pills and original houses/hotels. Tile and center textures are composed in canvas from the credited photographs and the game's own labels. Three.js, OrbitControls and RoundedBoxGeometry are distributed under the Three.js MIT license.
 
 The animated event scenes use original SVG starfighter, Jedi/Imperial crest interpretations, saber beams and CSS hologram/radar/star-trail effects. They are code compositions made for this fan interface, not movie clips or extracted footage. Galactic scene backgrounds reuse the Databank references listed above.
 

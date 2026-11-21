@@ -1,34 +1,38 @@
 import { mapText } from '../services/mapText.js';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { motion } from 'motion/react';
-import { Dices, ArrowRight, ChevronRight, LockKeyhole, Sparkles } from 'lucide-react';
-import { boardFor, isClassic, tokensFor } from '../game/maps.js';
-import { TokenArt, Emblem } from '../components/Art.jsx';
+import { ArrowRight, LockKeyhole, Sparkles, Box, LayoutGrid } from 'lucide-react';
+import { boardFor, isClassic } from '../game/maps.js';
+import { Emblem } from '../components/Art.jsx';
 import BoardTile from './BoardTile.jsx';
 import PlayerToken, { tokenCoordinates } from './PlayerToken.jsx';
-import Dice from './Dice.jsx';
+import TurnConsole from './TurnConsole.jsx';
 import OwnershipLegend from './OwnershipLegend.jsx';
-import ConnectionGrace from '../components/ConnectionGrace.jsx';
 import BoardScene from './BoardScene.jsx';
 import usePointerLight from '../hooks/usePointerLight.js';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 import { useGameStore } from '../stores/gameStore.js';
+const Board3D = lazy(() => import('./Board3D.jsx'));
 gsap.registerPlugin(useGSAP);
 export default function Board() {
-  const { game, selected, select, dispatch, busy, online, onlinePlayer, open, matchAway } =
-      useGameStore(),
+  const { game, selected, select, online, open } = useGameStore(),
     p = game.players[game.turn],
+    wrapperRef = useRef(),
     ref = useRef(),
     [moving, setMoving] = useState(false),
     [expanded, setExpanded] = useState(false);
   const reduced = useMotionPreference();
-  usePointerLight(ref, reduced);
+  const boardView = useGameStore((state) => state.boardView);
+  const setBoardView = useGameStore((state) => state.setBoardView);
+  const [viewNotice, setViewNotice] = useState('');
+  const seenMovement = useRef(game.version);
+  useEffect(() => setMoving(false), [boardView]);
+  usePointerLight(ref, reduced || boardView === '3d');
   const previous = useRef(game);
   useGSAP(
     () => {
-      if (reduced) return;
+      if (reduced || boardView !== '2d' || !ref.current) return;
       gsap.from('.board-tile', {
         opacity: 0,
         y: 9,
@@ -45,13 +49,20 @@ export default function Board() {
         ease: 'power3.out',
       });
     },
-    { scope: ref, dependencies: [game.id, reduced], revertOnUpdate: true },
+    { scope: wrapperRef, dependencies: [game.id, reduced, boardView], revertOnUpdate: true },
   );
   useGSAP(
     () => {
       const before = previous.current;
       previous.current = game;
-      if (reduced || before.id !== game.id || before.version === game.version) return;
+      if (
+        reduced ||
+        boardView !== '2d' ||
+        !ref.current ||
+        before.id !== game.id ||
+        before.version === game.version
+      )
+        return;
       for (const [id, owned] of Object.entries(game.ownership)) {
         const old = before.ownership[id];
         const tile = ref.current.querySelector(`[data-tile="${id}"]`);
@@ -81,15 +92,16 @@ export default function Board() {
       if (before.turn !== game.turn)
         gsap.from('.turn-banner', { opacity: 0, x: -12, duration: 0.45, ease: 'power2.out' });
     },
-    { scope: ref, dependencies: [game.version], revertOnUpdate: true },
+    { scope: wrapperRef, dependencies: [game.version], revertOnUpdate: true },
   );
   const BOARD = boardFor(game),
-    classic = isClassic(game),
-    spectator = online && !onlinePlayer;
+    classic = isClassic(game);
   useGSAP(
     () => {
       const m = game.movement;
-      if (!m || reduced) {
+      const fresh = seenMovement.current !== game.version;
+      seenMovement.current = game.version;
+      if (!m || reduced || boardView !== '2d' || !fresh || !ref.current) {
         setMoving(false);
         return;
       }
@@ -148,57 +160,49 @@ export default function Board() {
       };
     },
     {
-      scope: ref,
-      dependencies: [game.version, reduced],
+      scope: wrapperRef,
+      dependencies: [game.version, reduced, boardView],
       revertOnUpdate: true,
     },
   );
   useEffect(() => {
     if (game.phase === 'finished') open('victory');
   }, [game.phase, open]);
-  const canAct =
-    !spectator && !matchAway && !moving && !busy && (!online || p.id === onlinePlayer) && !p.ai;
-  const pending = BOARD[game.pendingProperty];
-  const canSettle = Boolean(
-    game.debt &&
-    (online
-      ? game.debt.payer === onlinePlayer
-      : !game.players.find((x) => x.id === game.debt.payer)?.ai),
-  );
-  const main =
-    game.phase === 'roll'
-      ? 'Roll dice'
-      : game.phase === 'purchase'
-        ? `Acquire ${pending?.name}`
-        : game.phase === 'end'
-          ? game.extraTurn
-            ? 'Continue · doubles'
-            : 'End turn'
-          : game.phase === 'auction'
-            ? 'Join auction'
-            : game.phase === 'debt'
-              ? canSettle
-                ? 'Settle debt'
-                : 'Waiting for ' + game.players.find((x) => x.id === game.debt.payer)?.name
-              : 'View results';
-  const act = () => {
-    if (game.phase === 'roll') dispatch('ROLL');
-    else if (game.phase === 'purchase') dispatch('BUY');
-    else if (game.phase === 'end') dispatch('END');
-    else if (game.phase === 'auction') open('auction');
-    else if (game.phase === 'debt' && canSettle) open('debt');
-    else open('victory');
-  };
   return (
-    <div className={'board-wrap ' + (expanded ? 'board-expanded' : '')}>
-      <div className="board-topline">
+    <div
+      className={'board-wrap ' + (expanded ? 'board-expanded' : '')}
+      ref={wrapperRef}
+      data-board-view={boardView}
+    >
+      <div className="board-view-bar board-topline">
         <span>
-          <i className="status-dot" /> {online ? 'LIVE MATCH' : 'LOCAL MATCH'} <b> / </b>{' '}
-          {game.rules.teams ? 'TEAMS' : 'CLASSIC RULES'}
+          <i />
+          ROUND {String(game.round).padStart(2, '0')}
+          <small>{online ? 'LIVE MATCH' : 'YOUR GAME TABLE'}</small>
         </span>
-        <span>
-          ROUND <strong>{String(game.round).padStart(2, '0')}</strong>
-          <span className="topline-divider" />
+        <div className="board-view-actions">
+          <div role="group" aria-label="Board view">
+            <button
+              aria-pressed={boardView === '2d'}
+              onClick={() => {
+                setViewNotice('');
+                setBoardView('2d');
+              }}
+            >
+              <LayoutGrid size={14} />
+              2D view
+            </button>
+            <button
+              aria-pressed={boardView === '3d'}
+              onClick={() => {
+                setViewNotice('');
+                setBoardView('3d');
+              }}
+            >
+              <Box size={14} />
+              3D view
+            </button>
+          </div>
           <button
             className="board-expand"
             aria-pressed={expanded}
@@ -206,173 +210,102 @@ export default function Board() {
           >
             {expanded ? 'Close focus view' : 'Expand board'}
           </button>
-        </span>
+        </div>
       </div>
-      <div
-        className="galactic-board"
-        ref={ref}
-        data-testid="game-board"
-        style={{ '--active-player': p.color }}
-      >
-        {BOARD.map((t) => (
-          <BoardTile
-            key={t.id}
-            tile={t}
-            ownership={game.ownership[t.id]}
-            players={game.players}
-            rules={game.rules}
-            pot={game.pot}
-            selected={selected === t.id}
-            onSelect={select}
-          />
-        ))}
-        <div className="board-center">
-          <BoardScene
+      {viewNotice && (
+        <p className="board-view-notice" role="status">
+          {viewNotice}
+        </p>
+      )}
+      {boardView === '3d' ? (
+        <Suspense
+          fallback={
+            <div className="spatial-loading-placeholder">
+              <span className="spatial-loader-ring" />
+              Preparing the 3D table…
+              <TurnConsole />
+            </div>
+          }
+        >
+          <Board3D
             game={game}
             selected={selected}
             onSelect={select}
-            onInspect={(id) => {
-              select(id);
-              open('deed');
+            moving={moving}
+            onMoving={setMoving}
+            onUnavailable={() => {
+              setMoving(false);
+              setBoardView('2d');
+              setViewNotice(
+                'The 3D view is unavailable in this browser. Your match continues in 2D.',
+              );
             }}
-            reduced={reduced}
           />
-          <div className="center-title">
-            <span className="eyebrow gold">{mapText('THE GALAXY IS YOURS')}</span>
-            <h1>
-              {classic ? 'INDIA' : 'GALACTIC'}
-              <br />
-              <span>{classic ? 'CITY CAPITALS' : 'CONQUEST'}</span>
-            </h1>
-            <p>{mapText('Build your empire. Rewrite your destiny.')}</p>
-          </div>
-          <div className="center-rule">
-            <Emblem size={23} />
-            <span>FORTUNE FAVORS THE BOLD</span>
-          </div>
-          <div className="turn-console">
-            <div className="turn-banner">
-              <span
-                className="mini-avatar"
-                style={{
-                  color: p.color,
-                }}
-              >
-                <TokenArt
-                  character={tokensFor(game).find((token) => token.id === p.character)}
-                  size={24}
-                />
-              </span>
-              <div>
-                <span className="eyebrow">
-                  {p.ai
-                    ? 'AI COMMANDER'
-                    : online && p.id !== onlinePlayer
-                      ? 'COMMANDER ON TURN'
-                      : 'YOUR TURN'}
-                </span>
-                <h3>
-                  {p.name}
-                  <small>
-                    {p.detained
-                      ? 'In detention'
-                      : game.phase === 'purchase'
-                        ? `Discover ${pending?.name}`
-                        : game.phase === 'auction'
-                          ? 'A new world is up for auction'
-                          : game.phase === 'debt'
-                            ? 'Resolve the outstanding payment'
-                            : 'Your next move changes everything.'}
-                  </small>
-                </h3>
-              </div>
-              <ConnectionGrace
-                player={game.debt ? game.players.find((p) => p.id === game.debt.payer) : p}
-              />
-              <span className="turn-marker">
-                {String(game.turn + 1).padStart(2, '0')} /{' '}
-                {String(game.players.length).padStart(2, '0')}
-              </span>
-            </div>
-            <div className="roll-row">
-              <Dice
-                values={game.dice}
-                version={game.version}
-                rolling={game.lastActionType === 'ROLL'}
-                reduced={reduced}
-              />
-              <motion.button
-                whileTap={{
-                  scale: 0.97,
-                }}
-                className="button gold-button roll-button"
-                disabled={
-                  (!canAct && !['auction', 'debt', 'finished'].includes(game.phase)) ||
-                  (game.phase === 'debt' && !canSettle) ||
-                  matchAway ||
-                  spectator ||
-                  moving ||
-                  busy
-                }
-                onClick={act}
-              >
-                {moving
-                  ? 'Travelling…'
-                  : busy
-                    ? 'Syncing…'
-                    : spectator
-                      ? 'Spectating · ' + p.name + '’s turn'
-                      : p.ai && !['auction', 'debt', 'finished'].includes(game.phase)
-                        ? 'Commander is thinking…'
-                        : main}
-                {game.phase === 'roll' ? <Dices size={19} /> : <ArrowRight size={18} />}
-              </motion.button>
-            </div>
-            {game.phase === 'purchase' && canAct && (
-              <button className="text-button decline" onClick={() => dispatch('DECLINE')}>
-                {game.rules.auctions ? 'Decline & open auction' : 'Leave with the bank'}{' '}
-                <ChevronRight size={13} />
-              </button>
-            )}
-            {p.detained && game.phase === 'roll' && canAct && (
-              <div className="detention-actions">
-                <button className="text-button" onClick={() => dispatch('RELEASE')}>
-                  {mapText(' Pay 50 credits to escape ')}
-                </button>
-                {p.cards[0] && (
-                  <button
-                    className="text-button"
-                    onClick={() =>
-                      dispatch('RELEASE', {
-                        card: p.cards[0],
-                      })
-                    }
-                  >
-                    Use escape card
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="center-bottom">
-            <span>
-              <Sparkles size={11} />
-              {mapText('AGE OF REBELLION')}
-            </span>
-            <span>
-              {game.inventory.outposts}
-              {mapText('OUTPOSTS \xB7')}
-              {game.inventory.bases}
-              {mapText('BASES')}
-            </span>
-          </div>
-        </div>
-        {game.players
-          .filter((p) => !p.bankrupt)
-          .map((p, i) => (
-            <PlayerToken key={p.id} player={p} index={i} />
+        </Suspense>
+      ) : (
+        <div
+          className="galactic-board"
+          ref={ref}
+          data-testid="game-board"
+          style={{ '--active-player': p.color }}
+        >
+          {BOARD.map((t) => (
+            <BoardTile
+              key={t.id}
+              tile={t}
+              ownership={game.ownership[t.id]}
+              players={game.players}
+              rules={game.rules}
+              pot={game.pot}
+              selected={selected === t.id}
+              onSelect={select}
+            />
           ))}
-      </div>
+          <div className="board-center">
+            <BoardScene
+              game={game}
+              selected={selected}
+              onSelect={select}
+              onInspect={(id) => {
+                select(id);
+                open('deed');
+              }}
+              reduced={reduced}
+            />
+            <div className="center-title">
+              <span className="eyebrow gold">{mapText('THE GALAXY IS YOURS')}</span>
+              <h1>
+                {classic ? 'INDIA' : 'GALACTIC'}
+                <br />
+                <span>{classic ? 'CITY CAPITALS' : 'CONQUEST'}</span>
+              </h1>
+              <p>{mapText('Build your empire. Rewrite your destiny.')}</p>
+            </div>
+            <div className="center-rule">
+              <Emblem size={23} />
+              <span>FORTUNE FAVORS THE BOLD</span>
+            </div>
+            <TurnConsole moving={moving} />
+            <div className="center-bottom">
+              <span>
+                <Sparkles size={11} />
+                {mapText('AGE OF REBELLION')}
+              </span>
+              <span>
+                {game.inventory.outposts}
+                {mapText('OUTPOSTS \xB7')}
+                {game.inventory.bases}
+                {mapText('BASES')}
+              </span>
+            </div>
+          </div>
+          {game.players
+            .filter((p) => !p.bankrupt)
+            .map((p, i) => (
+              <PlayerToken key={p.id} player={p} index={i} />
+            ))}
+        </div>
+      )}
       <OwnershipLegend />
       <div className="board-footnote">
         <span>

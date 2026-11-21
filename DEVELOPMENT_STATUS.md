@@ -1,6 +1,6 @@
 # Development and verification status
 
-Updated 20 November 2026.
+Updated 21 November 2026.
 
 ## Implemented milestones
 
@@ -17,11 +17,15 @@ Updated 20 November 2026.
 
 ## Current update
 
-The visual refresh replaces the empty board center with a real photographic sector scene, live group navigation and direct deed inspection. Raised tiles have brighter photos, stronger ownership framing and lighting. Committed moves leave a brief route trail; purchases pulse the acquired property, buildings reveal smoothly, player balances animate to their committed value, and the active token has a visible beacon. The welcome screen has staggered entrances, pointer-driven lighting, drifting stars, orbit signals and larger world cards. Map cards and dialog headings have restrained motion. India keeps its own warm palette and city photographs, with no Star Wars opening or faction controls.
+The chosen cinematic command room redesign adds a framed animated header, photographic hologram, larger launch controls, richer panels/dialogs, route transitions, purchase/building celebrations, money trails, auction feedback, event entrances and victory particles. Both maps have a real Three.js tabletop alongside 2D. Raised photographic tiles, dimensional pieces/buildings and animated dice use the same committed game state and action controls. Drag/orbit, zoom, top/reset camera, tile picking, accessible space selection, player-location highlighting and ownership filters work in 3D. The camera adapts to the viewport, the mobile roll controls fit above the bottom menu, and focus view enlarges the table.
 
-Visual-release checks passed: 100 Vitest tests, 23 browser scenarios across the main run and the targeted observer retest, and the production build. Coverage includes both maps at desktop/tablet/mobile sizes, real-image loading, live animation and reduced-motion controls, sector/deed interaction, claim/cash feedback with unchanged committed results, smooth movement, buying, auctions, trades, development, bankruptcy, routing, the original intro and real independent-session Supabase multiplayer. An obsolete token-position reference was removed. The observer test now freezes its clock so assertions cannot race the AI's automatic debt payment. Earlier parallel browser batches shared an output folder; the clean combined run and retest resolved their trace-file collisions.
+Board view is a browser-local persisted preference. It is absent from shared rules and action payloads; each multiplayer guest can use a different view. Switching during movement displays the committed position without replaying an old roll. WebGL unavailability/context loss returns safely to 2D. Three.js is lazy loaded (approximately 147 kB compressed); real photos reuse the existing asset credits, and tabletop pieces/buildings use original functional geometry. Reduced motion stops transitions and movement, settles final poses, and disables camera damping. India retains rupees, colored pills, houses/hotels and no faction or Star Wars intro.
 
-The following India and backend details remain in effect:
+Local release checks passed: 104 Vitest tests and 30 distinct browser scenarios across the main run and targeted retests. Coverage includes both maps and all credited 3D photos, camera orbit/zoom/top/reset and raycast picking, eight-piece spacing, correct dice faces, view/reload persistence, purchases/development, actual Roll-control switching without duplicate actions, repeated renderer disposal, both WebGL fallback paths, desktop/tablet/mobile/focus layouts, reduced motion, sector/deed controls, trade/auction/debt/victory, routing, the original personalized intro and actual independent-session Supabase multiplayer with one guest in 3D and another in 2D. Screenshots were inspected. The three initial layout failures (covered sector buttons and tablet overflow) were repaired and passed on retest. A simultaneous browser/unit run exhausted worker startup time; the clean unit suite passed with one worker and subsequent browser batches ran separately. The movement fixture now drives the actual Roll control with deterministic local dice instead of importing a separate Vite store instance.
+
+This is a frontend release. The seven approved Supabase migrations and deployed authoritative function remain the backend baseline.
+
+The following earlier release and backend details remain in effect:
 
 The visual runtime is commit `00b3ec8`, deployed Ready as `dpl_F3Vh7w5Wo1EMgJio4jrThxgWJvq1` with the `monopoly.adityasharma.site` alias. Three hosted animation scenarios passed across the initial run and purchase retest: live sector imagery/deed controls and reduced motion on both maps, plus property-claim and cash feedback with unchanged committed results. The transient claim glow is recorded across animation frames so a slow browser does not sample it only after it ends. The working tree's formatting and secret checks passed.
 

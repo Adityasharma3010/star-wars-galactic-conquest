@@ -1,21 +1,12 @@
+import CommandHeader from '../components/CommandHeader.jsx';
+import RouteTransmission from '../components/RouteTransmission.jsx';
+import GameMoment from '../components/GameMoment.jsx';
 import MatchMusic from '../components/MatchMusic.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 import { Component, useEffect, useState, useRef } from 'react';
-import {
-  Routes,
-  Route,
-  NavLink,
-  Navigate,
-  useLocation,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  Settings,
-  Volume2,
-  VolumeX,
-  ChevronDown,
   ArrowRight,
   Plus,
   CircleHelp,
@@ -29,7 +20,7 @@ import {
 } from 'lucide-react';
 import Board from '../board/Board.jsx';
 import { PlayersPanel, PropertyPanel, ActivityPanel } from '../components/Panels.jsx';
-import { Emblem, TokenArt } from '../components/Art.jsx';
+import { Emblem } from '../components/Art.jsx';
 import EventPresentation from '../components/EventPresentation.jsx';
 import Dialogs from '../pages/Dialogs.jsx';
 import WelcomeScreen from '../pages/WelcomeScreen.jsx';
@@ -41,8 +32,8 @@ import { chooseAction } from '../game/ai/commander.js';
 import { timeoutAction } from '../game/engine/timeouts.js';
 import { automationPlayer, HEARTBEAT_INTERVAL } from '../game/engine/connections.js';
 import { setAtmosphere, playSound, restoreSounds } from '../services/audio.js';
-import { CHARACTERS, THEME } from '../game/rules/data.js';
-import { isClassic, tokensFor } from '../game/maps.js';
+import { THEME } from '../game/rules/data.js';
+import { isClassic } from '../game/maps.js';
 import { subscribeGame, serverCall, supabase, cloudProfile } from '../services/supabase.js';
 import { prepareLeaveSignal, leaveMatch } from '../services/matchConnection.js';
 
@@ -76,9 +67,7 @@ function GameApp() {
     onlinePlayer,
     dispatch,
     open,
-    profile,
     settings,
-    updateSettings,
     error,
     clearError,
     modal,
@@ -344,12 +333,11 @@ function GameApp() {
       useGameStore.setState({ busy: false });
     }
   };
-  const character = [...CHARACTERS, ...tokensFor('india')].find((c) => c.id === profile.character);
   const motionReduced = useMotionPreference();
   return (
     <div
       className={
-        'app-shell ' +
+        'app-shell command-room ' +
         (motionReduced ? ' motion-reduced ' : ' motion-enabled ') +
         (settings.reducedMotion ? 'reduce-motion' : '') +
         (!playing ? ' welcome-screen' : '') +
@@ -365,70 +353,9 @@ function GameApp() {
           playSound('click', settings);
       }}
     >
-      <header className="app-header">
-        <button
-          className="brand"
-          onClick={() => {
-            returnHome();
-            navigate('/');
-          }}
-          aria-label="Galactic Conquest main menu"
-        >
-          <Emblem size={39} />
-          <span>
-            <b>{classic ? 'MONOPOLY' : 'STAR WARS'}</b>
-            <strong>{classic ? 'INDIA / CITY CAPITALS' : 'GALACTIC CONQUEST'}</strong>
-          </span>
-          <small>FAN EDITION</small>
-        </button>
-        <nav aria-label="Main navigation">
-          <NavLink to="/" end className={({ isActive }) => (isActive ? 'selected' : '')}>
-            Main menu
-          </NavLink>
-          <NavLink
-            to="/maps/star-wars"
-            className={route.pathname.startsWith('/maps') ? 'selected' : ''}
-          >
-            Choose maps
-          </NavLink>
-          {playing && game && (
-            <NavLink
-              to={'/match/' + encodeURIComponent(game.id)}
-              className={({ isActive }) => (isActive ? 'selected' : '')}
-            >
-              Command deck
-            </NavLink>
-          )}
-          <button onClick={() => open('rooms')}>Find a game</button>
-          <button onClick={() => open('rules')}>
-            How to play <CircleHelp size={13} />
-          </button>
-        </nav>
-        <div className="header-actions">
-          <button
-            className="icon-button"
-            aria-label={settings.mute ? 'Unmute sound' : 'Mute sound'}
-            onClick={() => updateSettings({ mute: !settings.mute })}
-          >
-            {settings.mute ? <VolumeX size={17} /> : <Volume2 size={17} />}
-          </button>
-          <button
-            className="icon-button"
-            aria-label="Open settings"
-            onClick={() => open('settings')}
-          >
-            <Settings size={17} />
-          </button>
-          <span className="header-separator" />
-          <button className="profile-button" onClick={() => open('profile')}>
-            <span style={{ color: character?.color }}>
-              <TokenArt character={character} size={33} />
-            </span>
-            {profile.name}
-            <ChevronDown size={12} />
-          </button>
-        </div>
-      </header>
+      <CommandHeader classic={classic} connected={connected} />
+      <RouteTransmission />
+      <GameMoment />
       <main>
         <Routes>
           <Route path="/" element={<WelcomeScreen onResumeOnline={resume} />} />

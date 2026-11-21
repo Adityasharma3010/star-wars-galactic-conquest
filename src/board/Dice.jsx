@@ -4,16 +4,19 @@ import { useGSAP } from '@gsap/react';
 gsap.registerPlugin(useGSAP);
 export default function Dice({ values, version, reduced, rolling = true }) {
   const ref = useRef();
+  const previous = useRef(version);
   useGSAP(
     () => {
-      if (reduced || !rolling) return;
+      const fresh = previous.current !== version;
+      previous.current = version;
+      if (reduced || !rolling || !fresh) return;
       gsap.fromTo(
         '.die',
         { rotate: 0, y: -8 },
         { rotate: 360, y: 0, stagger: 0.08, duration: 0.65, ease: 'bounce.out' },
       );
     },
-    { scope: ref, dependencies: [version], revertOnUpdate: true },
+    { scope: ref, dependencies: [version, reduced], revertOnUpdate: true },
   );
   const patterns = {
     1: [4],

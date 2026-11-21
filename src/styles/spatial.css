@@ -1,0 +1,438 @@
+.board-view-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  border: 1px solid #5e8aaf55;
+  border-radius: 7px;
+  background: linear-gradient(110deg, #152f46e8, #0a1c30ee);
+  box-shadow: inset 0 1px #bddfff1a;
+}
+.board-view-bar > span {
+  font-size: 8px;
+  letter-spacing: 1.6px;
+  color: #b2d3e5;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.board-view-bar > span > i {
+  width: 4px;
+  height: 4px;
+  background: #90ded0;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #90ded0;
+}
+.board-view-bar small {
+  color: #6f95ae;
+  font-size: 7px;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+}
+.board-view-bar > div {
+  display: flex;
+  gap: 3px;
+  background: #06111f;
+  border-radius: 5px;
+  padding: 3px;
+}
+.board-view-bar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #91b0c6;
+  padding: 7px 10px;
+  font-size: 10px;
+  border-radius: 3px;
+}
+.board-view-bar button[aria-pressed='true'] {
+  color: #ffdfaa;
+  background: linear-gradient(130deg, #395771, #19334b);
+  box-shadow:
+    inset 0 1px #a7d9ff33,
+    0 2px 8px #0004;
+}
+.board-view-notice {
+  color: #ddc593;
+  background: #302c2277;
+  border: 1px solid #9c824755;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+.spatial-board {
+  border: 1px solid #668aaa;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 20%, #234f71, #091b30 55%, #061323);
+  box-shadow:
+    0 20px 45px #0007,
+    0 0 0 3px #0b1729,
+    0 0 0 4px #728daa33,
+    inset 0 1px #c0e7ff33;
+}
+.spatial-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 13px;
+  gap: 8px;
+  border-bottom: 1px solid #42648088;
+  background: #091e32c9;
+}
+.spatial-tools > span {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #e0c994;
+}
+.spatial-tools small {
+  display: block;
+  margin-top: 5px;
+  font-size: 8px;
+  letter-spacing: 0.2px;
+  color: #9cbbd1;
+}
+.spatial-tools > div {
+  display: flex;
+  gap: 5px;
+}
+.spatial-tools button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #5a819e77;
+  border-radius: 4px;
+  background: #143049;
+  color: #c2dfeb;
+}
+.spatial-tools button:hover {
+  border-color: #d4b77c;
+  color: #ffe0a3;
+}
+.spatial-stage {
+  height: clamp(330px, calc(100dvh - 390px), 600px);
+  position: relative;
+  background: radial-gradient(ellipse at 50% 40%, #2d59764d, transparent 70%);
+}
+.spatial-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #b8dfff77, transparent),
+    radial-gradient(1px 1px at 73% 61%, #b9cfee99, transparent);
+  background-size:
+    137px 157px,
+    239px 203px;
+  opacity: 0.5;
+}
+.spatial-renderer {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+.spatial-renderer canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+.spatial-location-badge {
+  position: absolute;
+  transform: translate(-50%, -115%);
+  padding: 7px 29px 7px 10px;
+  border: 1px solid #8cafc588;
+  border-left: 3px solid var(--location-color);
+  border-radius: 4px;
+  background: #092136eb;
+  box-shadow: 0 5px 15px #0005;
+  pointer-events: none;
+  max-width: 180px;
+  z-index: 2;
+}
+.spatial-location-badge small {
+  display: block;
+  color: #a9bfd2;
+  font-size: 6px;
+  letter-spacing: 0.8px;
+}
+.spatial-location-badge strong {
+  display: block;
+  color: #fff0cc;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-top: 3px;
+}
+.spatial-location-badge button {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px;
+  border: 0;
+  background: none;
+  color: #d2e8f1;
+  pointer-events: auto;
+}
+.spatial-hover {
+  position: absolute;
+  pointer-events: none;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  background: #061321dc;
+  color: #fff2d3;
+  border: 1px solid #83aac488;
+  border-radius: 4px;
+  padding: 7px 12px;
+  font-size: 10px;
+  z-index: 3;
+}
+.spatial-action-dock {
+  padding: 10px 12px 12px;
+  background: linear-gradient(180deg, #0b2338bb, #071626);
+}
+.spatial-action-dock .turn-console {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  background: linear-gradient(110deg, #19394ded, #0c263bf5);
+  border-color: #688ba788;
+  padding: 12px 15px;
+}
+.spatial-action-dock .turn-banner {
+  margin-bottom: 10px;
+}
+.spatial-action-dock .roll-row {
+  display: flex;
+  gap: 14px;
+}
+.spatial-action-dock .roll-button {
+  flex: 1;
+  height: 40px;
+}
+.spatial-action-dock .die {
+  width: 36px;
+  height: 36px;
+}
+.spatial-directory {
+  padding: 8px 13px;
+  background: #071b2b;
+  border-top: 1px solid #43698066;
+  font-size: 9px;
+  color: #b9d4e2;
+}
+.spatial-directory summary {
+  cursor: pointer;
+  padding: 4px 0;
+}
+.spatial-directory > div {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 10px 0;
+}
+.spatial-directory button {
+  font-size: 9px;
+  padding: 8px;
+  background: #173249;
+  color: #d1e3eb;
+  border: 1px solid #4d739355;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-align: left;
+}
+.spatial-directory button > i {
+  width: 4px;
+  height: 13px;
+  background: var(--sector-color, #7596b7);
+  flex: none;
+}
+.spatial-directory button[aria-pressed='true'] {
+  border-color: #edc785;
+}
+.spatial-badges {
+  display: none;
+}
+.spatial-loading,
+.spatial-loading-placeholder {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: #0b243bcc;
+  color: #d8e8f1;
+  font-size: 12px;
+}
+.spatial-loading {
+  position: absolute;
+  inset: 0;
+}
+.spatial-loading-placeholder {
+  min-height: 520px;
+  position: relative;
+  border: 1px solid #648aa8;
+  border-radius: 10px;
+  padding: 20px;
+}
+.spatial-loading-placeholder .turn-console {
+  margin-top: 70px;
+  width: 90%;
+}
+.spatial-loader-ring {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #8cbadd44;
+  border-left: 2px solid #efc785;
+  border-top: 2px solid #8ad1eb;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 9px #6985a510,
+    0 0 25px #5bbaff22;
+}
+.motion-enabled .spatial-loader-ring {
+  animation: orbital-drift 1.6s linear infinite;
+}
+.classic-theme .board-view-bar {
+  background: linear-gradient(110deg, #eceddd, #fbf4e3);
+  border-color: #9aac80;
+}
+.classic-theme .board-view-bar > span {
+  color: #3e624b;
+}
+.classic-theme .board-view-bar small {
+  color: #688367;
+}
+.classic-theme .board-view-bar > div {
+  background: #dce4cd;
+}
+.classic-theme .board-view-bar button {
+  color: #547257;
+}
+.classic-theme .board-view-bar button[aria-pressed='true'] {
+  background: #315940;
+  color: #fff0c4;
+}
+.spatial-classic {
+  background: radial-gradient(ellipse at 50% 35%, #faf0d2, #b9ccb1);
+  border-color: #96a680;
+  box-shadow:
+    0 18px 45px #3d543633,
+    0 0 0 3px #ece3ce;
+}
+.spatial-classic .spatial-tools,
+.spatial-classic .spatial-action-dock {
+  background: #e4e6cecc;
+  border-color: #a3b38d;
+}
+.spatial-classic .spatial-tools > span {
+  color: #6d532c;
+}
+.spatial-classic .spatial-tools small {
+  color: #5c7759;
+}
+.spatial-classic .spatial-tools button,
+.spatial-classic .spatial-directory button {
+  background: #f1eed9;
+  color: #3b6049;
+  border-color: #9cb690;
+}
+.spatial-classic .spatial-directory {
+  background: #e8ecd8;
+  color: #426748;
+  border-color: #a4b896;
+}
+.spatial-classic .spatial-action-dock .turn-console {
+  background: #fff9e7;
+  border-color: #a4b58d;
+}
+.spatial-classic .spatial-location-badge {
+  background: #f8f0dcf5;
+  border-color: #98af85;
+}
+.spatial-classic .spatial-location-badge small,
+.spatial-classic .spatial-location-badge strong,
+.spatial-classic .spatial-location-badge button {
+  color: #31523d;
+}
+.spatial-classic .spatial-stage::before {
+  display: none;
+}
+.board-expanded .spatial-board {
+  width: min(100%, 1100px);
+}
+.board-expanded .spatial-stage {
+  height: calc(100dvh - 300px);
+  min-height: 380px;
+}
+@media (min-width: 1151px) {
+  .galactic-board,
+  .board-topline,
+  .board-footnote,
+  .board-view-bar,
+  .spatial-board {
+    max-width: calc(100dvh - 212px);
+  }
+  .board-expanded .galactic-board,
+  .board-expanded .board-topline,
+  .board-expanded .board-footnote,
+  .board-expanded .board-view-bar {
+    max-width: none;
+  }
+}
+@media (max-width: 700px) {
+  .board-view-bar small {
+    display: none;
+  }
+  .board-view-bar {
+    padding: 7px 9px;
+  }
+  .board-view-bar > span {
+    font-size: 6px;
+    letter-spacing: 0.8px;
+  }
+  .board-view-bar button {
+    padding: 7px;
+    font-size: 9px;
+  }
+  .spatial-stage {
+    height: 350px;
+  }
+  .spatial-action-dock {
+    padding: 7px;
+  }
+  .spatial-action-dock .turn-console {
+    padding: 10px;
+  }
+  .spatial-action-dock .turn-banner h3 small {
+    display: none;
+  }
+  .spatial-tools {
+    padding: 9px;
+  }
+  .spatial-tools button {
+    width: 28px;
+    height: 28px;
+  }
+  .spatial-tools small {
+    font-size: 6px;
+  }
+  .spatial-directory > div {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .spatial-location-badge {
+    padding: 5px 24px 5px 7px;
+  }
+  .spatial-location-badge strong {
+    font-size: 9px;
+  }
+}

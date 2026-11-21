@@ -6,6 +6,11 @@ const players = [
   { id: 'player-1', ai: true },
 ];
 describe('startup session restoration', () => {
+  it('restores a local board view preference without changing the match', () => {
+    const game = createGame(players);
+    expect(restoreSession({ game, boardView: '3d' }, {})).toMatchObject({ game, boardView: '3d' });
+    expect(restoreSession({ game, boardView: 'invalid' }, {}).boardView).toBe('2d');
+  });
   it('has an empty welcome session on a fresh visit', () => {
     expect(restoreSession({}, {})).toMatchObject({ game: null, playing: false });
   });

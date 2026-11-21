@@ -15,6 +15,9 @@ import { isClassic } from '../game/maps.js';
 import { PlanetArt, Emblem } from './Art.jsx';
 import Modal from './Modal.jsx';
 import { playSound } from '../services/audio.js';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+import useMotionPreference from '../hooks/useMotionPreference.js';
 
 export function Starfighter({ className = '' }) {
   return (
@@ -70,11 +73,27 @@ function ImperialCrest() {
   );
 }
 function EventScene({ card }) {
+  const ref = useRef(),
+    reduced = useMotionPreference();
+  useGSAP(
+    () => {
+      if (reduced) return;
+      gsap.from(ref.current, {
+        opacity: 0,
+        rotateY: -18,
+        scale: 0.92,
+        duration: 0.8,
+        ease: 'power3.out',
+      });
+    },
+    { scope: ref, dependencies: [card.id, reduced], revertOnUpdate: true },
+  );
   const force = card.deck === 'force',
     imperial = ['detention'].includes(card.effect) || card.title.toLowerCase().includes('imperial');
   const tile = card.effect === 'move' && card.target ? BOARD[card.target] : BOARD[force ? 14 : 1];
   return (
     <div
+      ref={ref}
       className={
         'event-scene ' +
         (force ? 'force-scene' : 'galactic-scene') +

@@ -56,6 +56,7 @@ export function PlayersPanel() {
           .map((p, i) => (
             <motion.button
               key={p.id}
+              data-player-card={p.id}
               className={`commander-card ${p.id === current.id ? 'active' : ''} ${p.bankrupt ? 'eliminated' : ''}`}
               whileHover={{
                 x: 2,

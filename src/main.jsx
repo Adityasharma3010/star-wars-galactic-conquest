@@ -10,6 +10,8 @@ import './styles/cinematics.css';
 import './styles/galaxy-menu.css';
 import './styles/classic.css';
 import './styles/experience.css';
+import './styles/spatial.css';
+import './styles/command-room.css';
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

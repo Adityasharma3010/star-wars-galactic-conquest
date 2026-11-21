@@ -52,6 +52,20 @@ test('real Supabase room, independent guests, readiness, sync, turn enforcement,
   await expect(host.getByRole('dialog')).toHaveCount(0, { timeout: 20000 });
   await expect(guest.getByRole('dialog')).toHaveCount(0, { timeout: 20000 });
   await expect(host.locator('.connection-badge')).toContainText('ONLINE');
+  const savedGame = (page) =>
+    page.evaluate(() => JSON.parse(localStorage.getItem('galactic-conquest-v1')).state.game);
+  const beforeView = await savedGame(host);
+  await host.getByRole('button', { name: '3D view', exact: true }).click();
+  await expect(host.getByTestId('board-3d')).toHaveAttribute('data-ready', 'true', {
+    timeout: 25000,
+  });
+  await expect(guest.getByTestId('game-board')).toBeVisible();
+  await expect(guest.getByRole('button', { name: '2D view', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(await savedGame(host)).toEqual(beforeView);
+  expect(await savedGame(guest)).toEqual(beforeView);
   await expect(guest.getByRole('button', { name: 'Roll dice', exact: true })).toBeDisabled();
   await host.getByRole('button', { name: 'Roll dice', exact: true }).click();
   await expect(host.locator('.log-entry').first()).not.toContainText(
@@ -80,6 +94,18 @@ test('real Supabase room, independent guests, readiness, sync, turn enforcement,
         .or(host.getByRole('button', { name: 'Continue · doubles', exact: true })),
     ).toBeVisible();
   }
+  await expect
+    .poll(async () => (await savedGame(guest)).version, { timeout: 20000 })
+    .toBe((await savedGame(host)).version);
+  expect((await savedGame(guest)).ownership).toEqual((await savedGame(host)).ownership);
+  await expect(host.getByRole('button', { name: '3D view', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(guest.getByRole('button', { name: '2D view', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await host.getByRole('button', { name: /^Comms/ }).click();
   await host.getByLabel('Chat message').fill('Transmission received, squadron.');
   await host.getByRole('button', { name: 'Send message' }).click();

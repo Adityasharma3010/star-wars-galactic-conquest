@@ -14,6 +14,7 @@ export function restoreSession(saved = {}, current = {}) {
   return {
     ...current,
     ...saved,
+    boardView: saved.boardView === '3d' ? '3d' : '2d',
     game,
     playing: Boolean(
       game &&
