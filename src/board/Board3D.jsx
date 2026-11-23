@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, Plus, Minus, Compass, ArrowUpRight, Crosshair } from 'lucide-react';
-import { boardFor, isClassic, tokensFor } from '../game/maps.js';
+import { boardFor, isClassic } from '../game/maps.js';
 import { useGameStore } from '../stores/gameStore.js';
-import { TokenArt } from '../components/Art.jsx';
 import { createTable } from './three/table.js';
 import TurnConsole from './TurnConsole.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
@@ -10,19 +9,20 @@ import { canRoll } from './rollPermission.js';
 
 export default function Board3D({ game, selected, onSelect, onMoving, moving, onUnavailable }) {
   const ref = useRef(),
-    badges = useRef(),
     table = useRef();
   const movingRef = useRef(moving);
   movingRef.current = moving;
   const [ready, setReady] = useState(false),
     [hover, setHover] = useState(null),
-    [anchor, setAnchor] = useState(null);
+    [anchor, setAnchor] = useState(null),
+    [worldLabels, setWorldLabels] = useState([]);
   const reduced = useMotionPreference(),
     board = boardFor(game),
     classic = isClassic(game);
   const open = useGameStore((state) => state.open);
   const hoveredPlayer = useGameStore((state) => state.hoveredPlayer);
-  const ownerFilter = useGameStore((state) => state.boardOwnerFilter);
+  const pinnedFilter = useGameStore((state) => state.boardOwnerFilter);
+  const ownerFilter = hoveredPlayer || pinnedFilter;
   useEffect(() => {
     let mounted = true;
     try {
@@ -49,11 +49,13 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
         onProject: (position) => {
           if (mounted) setAnchor(position);
         },
-        badgeFor: (player) =>
-          badges.current?.querySelector(`[data-badge="${player.id}"] svg`)?.outerHTML,
+        onWorldProject: (labels) => {
+          if (mounted) setWorldLabels(labels);
+        },
       });
       table.current.select(selected);
-    } catch {
+    } catch (error) {
+      console.warn('Unable to create the 3D table:', error);
       onUnavailable();
     }
     return () => {
@@ -78,19 +80,21 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
     owner = game.players.find((player) => player.id === game.ownership[selected]?.owner);
   return (
     <section
-      className={'spatial-board ' + (classic ? 'spatial-classic' : '')}
+      className={
+        'spatial-board tabletop-board ' + (classic ? 'spatial-classic' : 'holographic-board')
+      }
       data-testid="board-3d"
       data-ready={ready}
       data-selected-tile={selected}
       data-highlighted-player={hoveredPlayer || ''}
       data-owner-filter={ownerFilter || ''}
-      data-presentation={classic ? 'travel-atlas' : 'planetarium'}
+      data-presentation={classic ? 'tabletop' : 'holochess'}
     >
       <div className="spatial-tools">
         <span>
           <i />
-          {classic ? 'INDIA CAPITAL ATLAS' : 'PLANETARY COMMAND TABLE'}
-          <small>Drag to orbit · Scroll or pinch to zoom</small>
+          {classic ? 'INDIA · 3D MONOPOLY' : 'GALACTIC · DEJARIK HOLOTABLE'}
+          <small>Drag to rotate · Scroll or pinch to zoom</small>
         </span>
         <div>
           <button
@@ -115,10 +119,28 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
       </div>
       <div className="spatial-stage">
         <div className="spatial-renderer" ref={ref} />
+        {!classic && ready && (
+          <div className="holoworld-labels" aria-hidden="true">
+            {worldLabels
+              .filter((label) => label.visible)
+              .map((label) => (
+                <span
+                  key={label.id}
+                  data-world-id={label.id}
+                  data-model-x={label.modelX}
+                  data-model-y={label.modelY}
+                  className={'holoworld-label ' + (selected === label.id ? 'selected' : '')}
+                  style={{ left: label.x, top: label.y }}
+                >
+                  {label.name}
+                </span>
+              ))}
+          </div>
+        )}
         {!ready && (
           <div className="spatial-loading">
             <span className="spatial-loader-ring" />
-            <strong>{classic ? 'Opening the city atlas…' : 'Projecting the galaxy…'}</strong>
+            <strong>Setting up your table…</strong>
           </div>
         )}
         {anchor?.visible && ready && (
@@ -163,16 +185,6 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
           ))}
         </div>
       </details>
-      <div className="spatial-badges" ref={badges} aria-hidden="true">
-        {game.players.map((player) => (
-          <div key={player.id} data-badge={player.id}>
-            <TokenArt
-              character={tokensFor(game).find((token) => token.id === player.character)}
-              size={64}
-            />
-          </div>
-        ))}
-      </div>
     </section>
   );
 }

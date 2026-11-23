@@ -1,6 +1,6 @@
 # Development and verification status
 
-Updated 21 November 2026.
+Updated 23 November 2026.
 
 ## Implemented milestones
 
@@ -17,7 +17,17 @@ Updated 21 November 2026.
 
 ## Current update
 
-The latest 3D scene is a planetary command table for Star Wars and a raised geographic capital atlas for India. Star Wars has 22 spherical world models with adapted geological/cloud textures, original biome and night/lava shading, atmosphere, slow rotation and a selected-world focus camera. India has a beveled Natural Earth outline, 22 selectable geographic city markers, photographic perimeter tiles and classic pieces/buildings. Surface materials are cached and shared; the Star Wars-only six-image pack is approximately 3.8 MiB. Idle rendering is capped at 30 fps, with up to 60 fps during movement.
+The current 3D redesign uses a circular Falcon-inspired projector table for Star Wars and a physical Monopoly table for India. Star Wars retains the clockwise sequence of all 40 economic spaces on the rim and places all 22 textured planet models in the center, with three rings, atmosphere, rotation, projected pawns/buildings and sharp HTML world labels. Planet picking selects the corresponding property; camera focus targets the central model and preserves correct proportions when resized. The renderer uses higher resolution, higher-detail planet geometry and stronger surface contrast. India has an ivory board with brass trim, substantial pawns, solid houses/hotels, physical card stacks and visible depth. Both scenes retain shared dice/turn permissions, ownership inspection and saved-view behavior. This release is ready for publication through the repository's GitHub/Vercel integration; deployment status is verified separately.
+
+The updated scenes passed 14 browser scenarios covering all central planets and six surface textures, model picking/focus, both maps' dice, property/development actions, hover/filter behavior, view restoration, movement switching, context loss and desktop/mobile/focus layouts. All 117 tests passed with one worker, including circular-space ordering, crowded-sector spacing, solid models and exact house/hotel footprints. Screenshots of both scenes were visually inspected. A stopped development server was restarted, and an overly conservative rotated bounding box was replaced by a vertex-accurate check while tightening the projected building row to fit the narrower sectors.
+
+The play-screen update simplifies the board center to dimensional dice, the active commander and recent activity. Both maps use rounded colored characters with eyes, a restrained active-turn pulse, compact player cards, colored ownership rails and visible development counts. Sidebar hover and keyboard focus emphasize both a player's location and their holdings, then restore the pinned filter. Crowded 2D spaces use separate, smaller characters; 3D pieces use full meshes.
+
+Dialogs now have visible Back controls with a return path through subdialogs. New-game setup retains the complete draft and offers Save setup separately from Launch. Settings and cosmetics offer Save & close with error handling, and local matches expose Save game while retaining automatic persistence. Star Wars crawls choose among eight original campaigns with varied signals, routes, strategic passages and endings; each match's story remains stable across resumes and clients.
+
+Validation passed: 114 tests and 18 distinct browser scenarios across the initial checks and targeted retests. These cover both maps' hover/focus/filter behavior, loaded 3D pawn images, crowded mobile spaces, manual saving without a gameplay action, Back navigation, setup persistence, settings saving, 3D movement/picking/development/fallbacks, responsive layouts, official image loading, India setup/deeds/trades and automatic intro completion with music handoff. Story fixtures produced 64 distinct narratives and verified stable resumes and actual team/roster settings. The full formatting check passed. Sandbox-denied official image requests passed on the permitted-network retest; the mobile 3D control overlap, setup overflow and missing Save-game accessible label were fixed and retested.
+
+The previous 3D scene was a planetary command table for Star Wars and a raised geographic capital atlas for India. The new holo table reuses the six cached, credited surface textures (approximately 3.8 MiB) for the central world models. Idle rendering is capped at 30 fps, with up to 60 fps during movement; static shadow maps are cached between changes.
 
 Clicking the displayed dice or pressing Enter/Space on them rolls once when permitted. The actual 3D cubes are also clickable. Both paths enforce the same phase, turn, AI, spectator, intro, movement, busy and leave restrictions. Multiplayer dice remain server-generated. The per-browser 2D/3D preference and existing game rules remain unchanged.
 

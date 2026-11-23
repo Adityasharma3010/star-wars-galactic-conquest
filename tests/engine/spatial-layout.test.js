@@ -1,7 +1,13 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { Euler, Vector3 } from 'three';
-import { tilePlan, piecePosition, diceRotation } from '../../src/board/three/layout.js';
+import {
+  tilePlan,
+  piecePosition,
+  diceRotation,
+  scenePlan,
+  scenePiecePosition,
+} from '../../src/board/three/layout.js';
 
 describe('the physical board follows the shared 40-space board', () => {
   it('puts Hyperspace at top left and follows the four clockwise edges without overlaps', () => {
@@ -52,5 +58,26 @@ it('each committed dice value faces upward after its three-dimensional rotation'
   for (let value = 1; value <= 6; value++) {
     const rotation = new Euler(...diceRotation(value));
     expect(new Vector3(...normals[faces.indexOf(value)]).applyEuler(rotation).y).toBeCloseTo(1);
+  }
+});
+
+it('keeps all forty holotable spaces in clockwise order and eight pawns separated within a sector', () => {
+  const plans = Array.from({ length: 40 }, (_, id) => scenePlan(id, false));
+  expect(new Set(plans.map((plan) => `${plan.x},${plan.z}`)).size).toBe(40);
+  expect(plans[0].x).toBeLessThan(0);
+  expect(plans[0].z).toBeLessThan(0);
+  for (let id = 0; id < 40; id++) {
+    const plan = plans[id],
+      next = plans[(id + 1) % 40];
+    expect(Math.hypot(plan.x, plan.z)).toBeCloseTo(10.8);
+    expect(plan.x * next.z - plan.z * next.x).toBeGreaterThan(0);
+    const positions = Array.from({ length: 8 }, (_, index) =>
+      scenePiecePosition(id, index, 8, false),
+    );
+    for (const [index, point] of positions.entries()) {
+      expect(Math.abs(Math.hypot(point.x, point.z) - 10.8)).toBeLessThan(1.1);
+      for (const other of positions.slice(index + 1))
+        expect(Math.hypot(point.x - other.x, point.z - other.z)).toBeGreaterThanOrEqual(0.49);
+    }
   }
 });

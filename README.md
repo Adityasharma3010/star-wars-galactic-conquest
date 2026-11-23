@@ -1,6 +1,6 @@
 # Star Wars: Galactic Conquest
 
-A playable, non-commercial fan board game with 40 interactive sectors, official Databank location images, original token/building illustrations, local games, four AI difficulties and real Supabase multiplayer. Hyperspace is at the top left. Commander hover reveals their location; ownership badges/filters show holdings, and the board can expand for easier reading.
+A playable, non-commercial fan board game with 40 interactive sectors, official Databank location images, original token/building illustrations, local games, four AI difficulties and real Supabase multiplayer. Hyperspace is at the top left. Rounded colored characters pulse on their turn. Hovering or focusing a commander reveals both their position and their properties; leaving restores any pinned ownership filter. The board can expand for easier reading.
 
 This project is independent of Lucasfilm, Disney, Hasbro and the official Star Wars products. See [asset credits](ASSET_CREDITS.md).
 
@@ -36,7 +36,7 @@ The linked project is `iheauyxopwcpouogfkvi`, in Mumbai. Its migrations and Java
 
 The cinematic command room includes a framed command header, animated navigation, a photographic hologram, orbital lighting and larger launch controls. The board's sector controls browse each color group and open the selected deed. Token movement lights the route, property claims pulse, buildings reveal, and balances count to their committed value. Money transfers leave short light trails; event briefings, auctions and victory screens have their own effects. India keeps warmer materials, city imagery and classic effects. The operating system and in-game reduced-motion setting stop ambient effects and shorten transitions.
 
-Choose **2D view** or **3D view** above the board during any match. Star Wars 3D is a planetary command table with 22 modeled worlds, textured desert/ice/ocean/forest/lava/city surfaces, atmosphere, rotation and a larger selected-world model. India has a raised geographic outline and 22 selectable capital markers, photographic tiles, colored pills and classic buildings. Drag to orbit, scroll/pinch or use zoom, Top view, Focus selected world and Reset camera. Click a tile or city marker to inspect it, or use **Explore all 40 spaces** for keyboard-accessible selection. Player hover and ownership filters work in both views. Expand board opens a larger focus view.
+Choose **2D view** or **3D view** above the board during any match. Star Wars has a Falcon-inspired circular holo table: all 40 playable sectors follow the outer rim, and all 22 textured 3D planets sit in the center in three rings. Planets have atmosphere, rotation, distinct surfaces and crisp labels; clicking a model selects its property, and Focus selected world moves the camera to that model. Projected pawns and buildings use full geometry with subtle scan lines. India has a physical Monopoly table with a thick board, printed city tiles, solid colored pawns, green houses, red hotels, card stacks and dimensional dice. Drag to rotate, scroll/pinch to zoom, or use Top view, Focus selected world and Reset camera. **Explore all 40 spaces** supports keyboard selection. Player hover and ownership filters work in both views. Expand board opens a larger focus view.
 
 Click the displayed dice to roll, or focus them and press Enter/Space. The actual cubes inside the 3D scene are also clickable. These shortcuts use the same turn, spectator, AI, movement and syncing checks as the Roll button; they cannot roll during another player's turn or a different phase.
 
@@ -48,6 +48,8 @@ Your view is saved only on this browser. Changing it never changes room rules, t
 - Dropdowns: holographic lists with mouse/touch selection, arrow/Home/End/Enter keys, type-ahead, and Escape dismissal.
 - Custom settings: grouped controls, retained local/room drafts and an explicit Reset rules action. Room rules apply only on Save; background updates preserve edits.
 - New game: character, allegiance, 2–8 commanders, human/AI slots, difficulty and classic/quick/teams/custom rules.
+- Back and saving: dialogs have a visible Back action, including return paths through profile subdialogs. Save setup retains your name, character, faction, roster and rules without launching a match. Settings and cosmetics provide Save & close alongside their existing automatic saving. Local matches have Save game below the board; progress also saves after each move.
+- Opening stories vary their campaign, signal, route and ending between Star Wars matches, with the actual roster, factions, starting balance and team rules. The same match keeps its story across refreshes and independent clients. India has no opening crawl.
 - Find a game: authenticated public rooms, private codes, invite links, editable guest/registered callsigns, synchronized readiness, host settings, AI filling and refresh recovery.
 - Board: switch independently between 2D and 3D; roll, acquire/auction, manage developments and mortgages, negotiate trades and counteroffers, resolve detention/debt and view results.
 - Profile: cloud statistics/history, friends, invitations, rankings and device cosmetics.

@@ -1,6 +1,7 @@
 import { useId, useState, useEffect } from 'react';
 import { REFERENCE_IMAGES } from '../assets/referenceImages.js';
 import INDIA_IMAGES from '../assets/indiaImages.json';
+import PawnArt from './PawnArt.jsx';
 export function Emblem({ size = 36, className = '' }) {
   return (
     <svg
@@ -26,15 +27,11 @@ export function TokenArt({ character, size = 40 }) {
   const symbol = character?.symbol || 'saber';
   if (symbol === 'pill')
     return (
-      <span
+      <PawnArt
         className="color-pill"
-        role="img"
-        aria-label={(character.name || 'Player') + ' colored token'}
-        style={{
-          width: size * 0.78,
-          height: size * 0.44,
-          color: character.color || 'currentColor',
-        }}
+        name={character.name || 'Player'}
+        color={character.color || 'currentColor'}
+        size={size}
       />
     );
   const classic = {

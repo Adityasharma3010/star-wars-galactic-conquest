@@ -30,11 +30,13 @@ import { loadChat, supabase, serverCall } from '../services/supabase.js';
 import { blockPlayer } from '../services/social.js';
 import { PlanetArt, TokenArt, Emblem } from './Art.jsx';
 import ConnectionGrace from './ConnectionGrace.jsx';
+import PawnArt from './PawnArt.jsx';
 export function PlayersPanel() {
   const BOARD = boardFor(useGameStore.getState().game),
     GROUPS = groupsFor(useGameStore.getState().game),
     CHARACTERS = tokensFor(useGameStore.getState().game);
-  const { game, open, selected, select, online, onlinePlayer, presence } = useGameStore();
+  const { game, open, selected, select, online, onlinePlayer, presence, boardOwnerFilter } =
+    useGameStore();
   const current = game.players[game.turn];
   const [focus, setFocus] = useState(null);
   const selectedPlayer =
@@ -57,6 +59,7 @@ export function PlayersPanel() {
             <motion.button
               key={p.id}
               data-player-card={p.id}
+              aria-pressed={boardOwnerFilter === p.id}
               className={`commander-card ${p.id === current.id ? 'active' : ''} ${p.bankrupt ? 'eliminated' : ''}`}
               whileHover={{
                 x: 2,
@@ -99,7 +102,7 @@ export function PlayersPanel() {
                     color: p.color,
                   }}
                 >
-                  <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={42} />
+                  <PawnArt name={p.name} color={p.color} size={38} />
                 </span>
                 <span className="commander-name">
                   {p.name}

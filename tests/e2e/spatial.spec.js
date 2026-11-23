@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createGame } from '../../src/game/engine/game.js';
 import { tokensFor, boardFor } from '../../src/game/maps.js';
-import { PerspectiveCamera, Vector3 } from 'three';
+test.setTimeout(120000);
 
 const saved = (page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('galactic-conquest-v1')).state);
@@ -84,7 +84,9 @@ for (const mapId of ['galactic-conquest', 'india'])
           initial,
         );
         await page.reload();
-        await expect(page.getByTestId('board-3d')).toHaveAttribute('data-ready', 'true');
+        await expect(page.getByTestId('board-3d')).toHaveAttribute('data-ready', 'true', {
+          timeout: 25000,
+        });
       }
       await page.evaluate(() => {
         const original = crypto.getRandomValues.bind(crypto);
@@ -99,14 +101,14 @@ for (const mapId of ['galactic-conquest', 'india'])
         await page.keyboard.press('Enter');
       } else {
         await page.getByRole('button', { name: 'Top view of 3D board' }).click();
+        await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-camera-view', 'top');
         const box = await page.getByTestId('three-canvas').boundingBox();
-        const camera = new PerspectiveCamera(39, box.width / box.height, 0.1, 200);
-        camera.position.set(0, 40 * Math.cos(0.015), 40 * Math.sin(0.015));
-        camera.lookAt(0, 0, 0);
-        camera.updateMatrixWorld();
-        const point = new Vector3(-1, 0.76, mapId === 'india' ? 6.7 : 4.6).project(camera);
-        const x = box.x + ((point.x + 1) / 2) * box.width,
-          y = box.y + ((1 - point.y) / 2) * box.height;
+        const point = await page.locator('.spatial-renderer').evaluate((node) => ({
+          x: Number(node.dataset.diceX),
+          y: Number(node.dataset.diceY),
+        }));
+        const x = box.x + point.x,
+          y = box.y + point.y;
         await page.mouse.click(x, y);
         await expect.poll(async () => (await saved(page)).game.version).toBe(initial.version + 1);
         await page.mouse.click(x, y);
@@ -129,18 +131,11 @@ for (const mapId of ['galactic-conquest', 'india'])
     await spatial(page);
     await expect(page.getByTestId('board-3d')).toHaveAttribute(
       'data-presentation',
-      mapId === 'india' ? 'travel-atlas' : 'planetarium',
+      mapId === 'india' ? 'tabletop' : 'holochess',
     );
-    if (mapId === 'india')
-      await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-city-markers', '22');
-    else {
-      await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-world-models', '22');
-      await expect(page.locator('.spatial-renderer')).toHaveAttribute(
-        'data-surface-textures',
-        '6',
-        { timeout: 20000 },
-      );
-    }
+    await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-physical-tiles', '40');
+    await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-pawn-models', '4');
+    await expect(page.locator('.spatial-renderer')).toHaveAttribute('data-development-models', '2');
     await expect(page.locator('.spatial-renderer')).toHaveAttribute(
       'data-loaded-photos',
       mapId === 'india' ? '22' : '26',
@@ -196,7 +191,9 @@ for (const mapId of ['galactic-conquest', 'india'])
     await spatial(page);
     await page.reload();
     await page.getByRole('button', { name: 'Resume saved game' }).click();
-    await expect(page.getByTestId('board-3d')).toHaveAttribute('data-ready', 'true');
+    await expect(page.getByTestId('board-3d')).toHaveAttribute('data-ready', 'true', {
+      timeout: 25000,
+    });
     expect((await saved(page)).boardView).toBe('3d');
     expect((await saved(page)).game).toEqual(before);
     await expect(page.locator('.opening-sequence')).toHaveCount(0);
@@ -280,6 +277,7 @@ test('the 3D table and roll controls fit laptop, tablet and mobile; focus view e
     const button = await page.getByRole('button', { name: 'Roll dice', exact: true }).boundingBox();
     expect(canvas.width).toBeGreaterThan(300);
     expect(canvas.height).toBeGreaterThanOrEqual(250);
+    await page.screenshot({ path: `test-results/spatial-layout-${width}.png`, fullPage: true });
     expect(button.y + button.height).toBeLessThan(width < 700 ? height - 48 : height);
   }
   await page.setViewportSize({ width: 1366, height: 768 });

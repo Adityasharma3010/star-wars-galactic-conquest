@@ -13,6 +13,8 @@ import Cosmetics from './Cosmetics.jsx';
 import { motion } from 'motion/react';
 import {
   ArrowRight,
+  ArrowLeft,
+  Save,
   Check,
   Copy,
   Bot,
@@ -48,6 +50,7 @@ import {
   serverCall,
   supabase,
   syncProfile,
+  syncSettings,
   cloudProfile,
 } from '../services/supabase.js';
 function Notice({ children }) {
@@ -71,13 +74,16 @@ export function NewGame() {
     classic = isClassic(selectedMap),
     CHARACTERS = tokensFor(selectedMap);
   const draftKey = selectedMap === 'india' ? 'local:india' : 'local';
+  const draft = useGameStore.getState().ruleDrafts[draftKey];
   const { profile, start, game, online, open } = useGameStore(),
     [mode, setMode] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.mode || 'solo'),
     [character, setCharacter] = useState(() =>
-      CHARACTERS.some((c) => c.id === profile.character) ? profile.character : CHARACTERS[0].id,
+      CHARACTERS.some((c) => c.id === (draft?.character || profile.character))
+        ? draft?.character || profile.character
+        : CHARACTERS[0].id,
     ),
-    [faction, setFaction] = useState(classic ? 'Classic' : profile.faction),
-    [name, setName] = useState(profile.name),
+    [faction, setFaction] = useState(classic ? 'Classic' : draft?.faction || profile.faction),
+    [name, setName] = useState(draft?.name || profile.name),
     [count, setCount] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.count || 4),
     [difficulty, setDifficulty] = useState(
       () => useGameStore.getState().ruleDrafts[draftKey]?.difficulty || 'medium',
@@ -97,8 +103,11 @@ export function NewGame() {
         count,
         humans,
         difficulty,
+        name,
+        character,
+        faction,
       }),
-    [rules, mode, count, humans, difficulty],
+    [rules, mode, count, humans, difficulty, name, character, faction],
   );
   const selected = CHARACTERS.find((c) => c.id === character);
   const selectedDifficulty = mode === 'custom' ? rules.difficulty : difficulty;
@@ -303,10 +312,6 @@ export function NewGame() {
               ? 'Team members do not pay each other rent and share victory.'
               : 'Progress saves automatically on this device.'}
           </p>
-          <button className="button gold-button full" onClick={launch}>
-            {mapText('Launch conquest')}
-            <ArrowRight size={17} />
-          </button>
           <button className="text-button full online-link" onClick={() => open('rooms')}>
             Looking for online play? Find a room <ArrowRight size={12} />
           </button>
@@ -333,13 +338,35 @@ export function NewGame() {
               {mapText('commanders \xB7')} {rules.teams ? 'Teams' : 'Individual'}
               {mapText('conquest')}
             </span>
-            <button className="button gold-button" onClick={launch}>
-              {mapText('Launch conquest')}
-              <ArrowRight size={17} />
-            </button>
           </div>
         </div>
       )}
+      <div className="dialog-actions setup-actions">
+        <button className="button" onClick={() => useGameStore.getState().back()}>
+          <ArrowLeft size={15} /> Back
+        </button>
+        <button
+          className="button"
+          onClick={() => {
+            useGameStore.getState().updateRuleDraft(draftKey, {
+              rules,
+              mode,
+              count,
+              humans,
+              difficulty,
+              name,
+              character,
+              faction,
+            });
+            useGameStore.getState().close();
+          }}
+        >
+          <Save size={15} /> Save setup
+        </button>
+        <button className="button gold-button" onClick={launch}>
+          {mapText('Launch conquest')} <ArrowRight size={17} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1348,7 +1375,24 @@ const metadata = {
   rooms: ['Multiplayer command', 'Explore public rooms or invite your squadron.', true],
 };
 export default function Dialogs() {
-  const { modal, close, error } = useGameStore();
+  const { modal, close, back, error, modalHistory, playing } = useGameStore();
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  useEffect(() => {
+    setSaveError('');
+  }, [modal]);
+  const savePreferences = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      await syncSettings(useGameStore.getState().settings);
+      if (useGameStore.getState().modal === modal) close();
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   const components = {
     social: Social,
     cosmetics: Cosmetics,
@@ -1380,6 +1424,24 @@ export default function Dialogs() {
       {error && (
         <div className="form-error" role="alert">
           {error}
+        </div>
+      )}
+      {saveError && (
+        <p className="form-error" role="alert">
+          {saveError}
+        </p>
+      )}
+      {Content && modal !== 'newGame' && (
+        <div className="dialog-actions">
+          <button className="button" onClick={back} disabled={saving}>
+            <ArrowLeft size={15} />
+            {modalHistory.length ? 'Back' : playing ? 'Back to game' : 'Back'}
+          </button>
+          {['settings', 'cosmetics'].includes(modal) && (
+            <button className="button gold-button" onClick={savePreferences} disabled={saving}>
+              <Save size={15} /> {saving ? 'Saving…' : 'Save & close'}
+            </button>
+          )}
         </div>
       )}
     </Modal>

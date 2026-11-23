@@ -12,6 +12,7 @@ import './styles/classic.css';
 import './styles/experience.css';
 import './styles/spatial.css';
 import './styles/command-room.css';
+import './styles/clean-play.css';
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

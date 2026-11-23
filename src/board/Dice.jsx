@@ -9,6 +9,7 @@ export default function Dice({
   rolling = true,
   onRoll,
   canRoll = false,
+  solid = false,
 }) {
   const ref = useRef();
   const previous = useRef(version);
@@ -52,10 +53,25 @@ export default function Dice({
       title={onRoll && canRoll ? 'Click the dice to roll' : undefined}
     >
       {values.map((v, i) => (
-        <div className="die" key={i}>
-          {Array.from({ length: 9 }, (_, n) => (
-            <i className={patterns[v]?.includes(n) ? 'pip' : ''} key={n} />
-          ))}
+        <div className={'die ' + (solid ? 'die-solid' : '')} key={i}>
+          {solid
+            ? Object.entries({
+                front: v,
+                back: 7 - v,
+                top: [0, 2, 6, 1, 6, 1, 5][v],
+                bottom: 7 - [0, 2, 6, 1, 6, 1, 5][v],
+                right: [0, 3, 3, 5, 2, 3, 3][v],
+                left: 7 - [0, 3, 3, 5, 2, 3, 3][v],
+              }).map(([face, value]) => (
+                <div className={'die-face face-' + face} key={face}>
+                  {Array.from({ length: 9 }, (_, n) => (
+                    <i key={n} className={patterns[value]?.includes(n) ? 'pip' : ''} />
+                  ))}
+                </div>
+              ))
+            : Array.from({ length: 9 }, (_, n) => (
+                <i className={patterns[v]?.includes(n) ? 'pip' : ''} key={n} />
+              ))}
         </div>
       ))}
     </Container>

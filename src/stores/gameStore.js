@@ -45,6 +45,7 @@ export const useGameStore = create(
       error: null,
       busy: false,
       modal: null,
+      modalHistory: [],
       tab: 'events',
       messages: [],
       history: [],
@@ -83,8 +84,24 @@ export const useGameStore = create(
       },
       dismissEvent: () => set((s) => ({ eventQueue: s.eventQueue.slice(1) })),
       select: (id) => set({ selected: id }),
-      open: (modal) => set({ modal, error: null }),
-      close: () => set({ modal: null, error: null }),
+      open: (modal) =>
+        set((state) => ({
+          modal,
+          error: null,
+          modalHistory:
+            state.modal && state.modal !== modal
+              ? [...state.modalHistory, state.modal].slice(-8)
+              : state.modal
+                ? state.modalHistory
+                : [],
+        })),
+      back: () =>
+        set((state) => ({
+          modal: state.modalHistory.at(-1) || null,
+          modalHistory: state.modalHistory.slice(0, -1),
+          error: null,
+        })),
+      close: () => set({ modal: null, modalHistory: [], error: null }),
       clearError: () => set({ error: null }),
       updateProfile: (patch) => {
         const profile = { ...get().profile, ...patch };

@@ -2,14 +2,13 @@ import { mapText } from '../services/mapText.js';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { ArrowRight, LockKeyhole, Sparkles, Box, LayoutGrid } from 'lucide-react';
-import { boardFor, isClassic } from '../game/maps.js';
-import { Emblem } from '../components/Art.jsx';
+import { ArrowRight, LockKeyhole, Box, LayoutGrid, Save, Check } from 'lucide-react';
+import { boardFor } from '../game/maps.js';
 import BoardTile from './BoardTile.jsx';
 import PlayerToken, { tokenCoordinates } from './PlayerToken.jsx';
 import TurnConsole from './TurnConsole.jsx';
 import OwnershipLegend from './OwnershipLegend.jsx';
-import BoardScene from './BoardScene.jsx';
+import BoardCenter from './BoardCenter.jsx';
 import usePointerLight from '../hooks/usePointerLight.js';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 import { useGameStore } from '../stores/gameStore.js';
@@ -21,7 +20,13 @@ export default function Board() {
     wrapperRef = useRef(),
     ref = useRef(),
     [moving, setMoving] = useState(false),
-    [expanded, setExpanded] = useState(false);
+    [expanded, setExpanded] = useState(false),
+    [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (!saved) return;
+    const timer = setTimeout(() => setSaved(false), 2500);
+    return () => clearTimeout(timer);
+  }, [saved]);
   const reduced = useMotionPreference();
   const boardView = useGameStore((state) => state.boardView);
   const setBoardView = useGameStore((state) => state.setBoardView);
@@ -94,8 +99,7 @@ export default function Board() {
     },
     { scope: wrapperRef, dependencies: [game.version], revertOnUpdate: true },
   );
-  const BOARD = boardFor(game),
-    classic = isClassic(game);
+  const BOARD = boardFor(game);
   useGSAP(
     () => {
       const m = game.movement;
@@ -105,14 +109,26 @@ export default function Board() {
         setMoving(false);
         return;
       }
-      const el = ref.current.querySelector(`[data-token="${m.player}"]`),
-        index = game.players.filter((p) => !p.bankrupt).findIndex((p) => p.id === m.player);
+      const el = ref.current.querySelector(`[data-token="${m.player}"]`);
+      const coordinates = (position) => {
+        const occupants = game.players.filter(
+          (player) => !player.bankrupt && (player.position === position || player.id === m.player),
+        );
+        return tokenCoordinates(
+          position,
+          Math.max(
+            0,
+            occupants.findIndex((player) => player.id === m.player),
+          ),
+          occupants.length,
+        );
+      };
       if (!el) return;
       setMoving(true);
       const tl = gsap.timeline({
         onComplete: () => setMoving(false),
       });
-      tl.set(el, tokenCoordinates(m.from, index));
+      tl.set(el, coordinates(m.from));
       tl.to(el, {
         scale: 1.15,
         duration: 0.15,
@@ -130,7 +146,7 @@ export default function Board() {
         tl.to(
           el,
           {
-            ...tokenCoordinates(position, index),
+            ...coordinates(position),
             duration: 0.26,
             ease: 'power1.inOut',
           },
@@ -146,7 +162,7 @@ export default function Board() {
       const destination = game.players.find((p) => p.id === m.player)?.position;
       if (path.at(-1) !== destination)
         tl.to(el, {
-          ...tokenCoordinates(destination, index),
+          ...coordinates(destination),
           duration: 0.6,
           ease: 'power2.inOut',
         });
@@ -170,7 +186,7 @@ export default function Board() {
   }, [game.phase, open]);
   return (
     <div
-      className={'board-wrap ' + (expanded ? 'board-expanded' : '')}
+      className={'board-wrap clean-board ' + (expanded ? 'board-expanded' : '')}
       ref={wrapperRef}
       data-board-view={boardView}
     >
@@ -261,48 +277,11 @@ export default function Board() {
               onSelect={select}
             />
           ))}
-          <div className="board-center">
-            <BoardScene
-              game={game}
-              selected={selected}
-              onSelect={select}
-              onInspect={(id) => {
-                select(id);
-                open('deed');
-              }}
-              reduced={reduced}
-            />
-            <div className="center-title">
-              <span className="eyebrow gold">{mapText('THE GALAXY IS YOURS')}</span>
-              <h1>
-                {classic ? 'INDIA' : 'GALACTIC'}
-                <br />
-                <span>{classic ? 'CITY CAPITALS' : 'CONQUEST'}</span>
-              </h1>
-              <p>{mapText('Build your empire. Rewrite your destiny.')}</p>
-            </div>
-            <div className="center-rule">
-              <Emblem size={23} />
-              <span>FORTUNE FAVORS THE BOLD</span>
-            </div>
-            <TurnConsole moving={moving} />
-            <div className="center-bottom">
-              <span>
-                <Sparkles size={11} />
-                {mapText('AGE OF REBELLION')}
-              </span>
-              <span>
-                {game.inventory.outposts}
-                {mapText('OUTPOSTS \xB7')}
-                {game.inventory.bases}
-                {mapText('BASES')}
-              </span>
-            </div>
-          </div>
+          <BoardCenter game={game} moving={moving} />
           {game.players
             .filter((p) => !p.bankrupt)
-            .map((p, i) => (
-              <PlayerToken key={p.id} player={p} index={i} />
+            .map((p) => (
+              <PlayerToken key={p.id} player={p} />
             ))}
         </div>
       )}
@@ -314,6 +293,27 @@ export default function Board() {
             ? 'Server-authoritative game state'
             : 'Saved on this device · Solo & pass-and-play'}
         </span>
+        {!online && (
+          <button
+            className="board-save"
+            aria-label={saved ? 'Game saved' : 'Save game'}
+            onClick={() => {
+              try {
+                // Persist the current snapshot through the same middleware as automatic saves.
+                useGameStore.setState({ game: useGameStore.getState().game });
+                setSaved(true);
+              } catch {
+                useGameStore.setState({
+                  error:
+                    'This device could not save the match. Free some browser storage and try again.',
+                });
+              }
+            }}
+          >
+            {saved ? <Check size={12} /> : <Save size={12} />}
+            <span aria-live="polite">{saved ? 'Game saved' : 'Save game'}</span>
+          </button>
+        )}
         <span>
           {mapText('Click any world to explore its deed')}
           <ArrowRight size={11} />

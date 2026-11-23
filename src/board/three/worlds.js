@@ -37,7 +37,7 @@ float noise(vec3 p){
 float fbm(vec3 p){ return noise(p)*.57+noise(p*2.03)*.28+noise(p*4.11)*.15; }
 `;
 
-export function createPlanet(tile, register, large = false, getSurface) {
+export function createPlanet(tile, register, large = false, getSurface, options = {}) {
   const root = new THREE.Group();
   const [kind, dark, light, air, coast] = palettes[tile.name] || [
     0,
@@ -46,10 +46,13 @@ export function createPlanet(tile, register, large = false, getSurface) {
     '#d4a98a',
     0.5,
   ];
-  const radius = large ? 3.55 : 0.49;
+  const radius = options.radius ?? (large ? 3.55 : 0.49);
   const detail = getSurface?.(kind),
     cloud = getSurface?.('clouds');
-  const geometry = register(new THREE.SphereGeometry(radius, large ? 64 : 24, large ? 40 : 16));
+  const detailed = large || options.highDetail;
+  const geometry = register(
+    new THREE.SphereGeometry(radius, detailed ? 64 : 24, detailed ? 40 : 16),
+  );
   const surface = register(
     new THREE.ShaderMaterial({
       uniforms: {
@@ -61,6 +64,7 @@ export function createPlanet(tile, register, large = false, getSurface) {
         seed: { value: tile.id * 3.7 },
         time: { value: 0 },
         emphasis: { value: 1 },
+        projected: { value: options.holographic ? 1 : 0 },
         surfaceMap: { value: detail?.texture || null },
         surfaceReady: detail?.ready || { value: 0 },
         cloudMap: { value: cloud?.texture || null },
@@ -70,7 +74,7 @@ export function createPlanet(tile, register, large = false, getSurface) {
       void main(){vUv=uv;local=normalize(position);n=normalize(normalMatrix*normal);vec4 p=modelViewMatrix*vec4(position,1.);eye=-p.xyz;gl_Position=projectionMatrix*p;}`,
       fragmentShader: `${noise}
       uniform vec3 dark; uniform vec3 light; uniform vec3 air; uniform float kind; uniform float coast;
-      uniform float seed; uniform float time; uniform float emphasis;
+      uniform float seed; uniform float time; uniform float emphasis; uniform float projected;
       uniform sampler2D surfaceMap; uniform float surfaceReady; uniform sampler2D cloudMap; uniform float cloudReady;
       varying vec3 local; varying vec3 n; varying vec3 eye; varying vec2 vUv;
       void main(){
@@ -91,11 +95,12 @@ export function createPlanet(tile, register, large = false, getSurface) {
         if(cloudReady>.5) clouds=pow(texture2D(cloudMap,vUv+vec2(time*.001,0.)).r,.82);
         else clouds=smoothstep(.66,.8,fbm(p*13.+vec3(time*.007,0.,seed)));
         if(kind==2.||kind==5.) color=mix(color,vec3(.85,.91,.94),clouds*.63);
-        color*=.065+sun*.95;
+        color*=mix(.065,.32,projected)+sun*.85;
         if(kind==6.){float city=pow(noise(p*185.+seed),19.);if(surfaceReady>.5) city=mix(city,max(max(geology.r,geology.g),geology.b),.95);color+=vec3(1.,.64,.25)*city*(1.-sun)*3.5;}
         if(kind==3.){float lava=1.-smoothstep(.012,.052,abs(fbm(p*10.+seed)-.5));color+=light*lava*.75;}
         float rim=pow(1.-max(dot(normalize(n),normalize(eye)),0.),3.);
         color+=air*rim*.11;
+        if(projected>.5){float scan=.5+.5*sin(local.y*95.-time*2.);color*=.95+scan*.05;color+=air*rim*.18;}
         gl_FragColor=vec4(color*(.45+.55*emphasis),1.);
         #include <colorspace_fragment>
       }`,

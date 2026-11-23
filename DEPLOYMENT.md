@@ -2,9 +2,9 @@
 
 Updated 20 November 2026. **Public game: https://monopoly.adityasharma.site** (the original Vercel alias remains active).
 
-## Current production update
+## Last documented production verification
 
-The current game code was published from commit `1d61061` to deployment `dpl_8a1SrSKoWqdqCZXp6LRivDRX99Y4` on 20 November. Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. This release adds a cinematic menu with actual Star Wars Databank imagery, React Router map/match pages, automatic intro completion, the requested hidden theme-player panel, aligned setup controls, and the complete Force/Galactic event guide. Star Wars has one playable map; Default remains a coming-soon category.
+The previously verified game code was published from commit `1d61061` to deployment `dpl_8a1SrSKoWqdqCZXp6LRivDRX99Y4` on 20 November. Vercel reported Ready and assigned both https://monopoly.adityasharma.site and the original alias. That release added a cinematic menu with actual Star Wars Databank imagery, React Router map/match pages, automatic intro completion, the requested hidden theme-player panel, aligned setup controls, and the complete Force/Galactic event guide. At that time, Default was a coming-soon category; the current source includes the playable India map and rebuilt 3D boards.
 
 Five hosted browser scenarios passed on the custom domain: hidden original Main Title playback, personalized crawl/skip/resume, real menu image loading, map/category URLs and reloads, mobile field alignment, browser Back and saved-game recovery, automatic entry when the final story line leaves the screen, and private-song persistence/deletion/intro separation. Two independent Supabase guests also passed room joining, callsign edits, readiness, start, dice, chat and refresh recovery. The automatic intro scenario entered gameplay in about 55 seconds and confirmed that the theme iframe was removed and match music began.
 

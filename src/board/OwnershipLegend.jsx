@@ -1,13 +1,13 @@
 import { useGameStore } from '../stores/gameStore.js';
-import { TokenArt } from '../components/Art.jsx';
-import { CHARACTERS } from '../game/rules/data.js';
-import { tokensFor, isClassic } from '../game/maps.js';
+import { isClassic } from '../game/maps.js';
+import PawnArt from '../components/PawnArt.jsx';
 export default function OwnershipLegend() {
   const { game, online, onlinePlayer, boardOwnerFilter } = useGameStore();
   return (
     <div className="ownership-legend" aria-label="Board ownership filters">
       <button
         className={!boardOwnerFilter ? 'selected' : ''}
+        aria-pressed={!boardOwnerFilter}
         onClick={() => useGameStore.setState({ boardOwnerFilter: null })}
       >
         {isClassic(game) ? 'All cities' : 'All worlds'}
@@ -19,20 +19,13 @@ export default function OwnershipLegend() {
             key={p.id}
             style={{ '--player': p.color }}
             className={boardOwnerFilter === p.id ? 'selected' : ''}
+            aria-pressed={boardOwnerFilter === p.id}
             onClick={() =>
               useGameStore.setState({ boardOwnerFilter: boardOwnerFilter === p.id ? null : p.id })
             }
             aria-label={`Highlight ${p.name}'s worlds`}
           >
-            <TokenArt
-              character={
-                tokensFor(game).find((c) => c.id === p.character) || {
-                  ...tokensFor(game)[0],
-                  color: p.color,
-                }
-              }
-              size={19}
-            />
+            <PawnArt name={p.name} color={p.color} size={21} />
             <span>
               {online
                 ? p.id === onlinePlayer

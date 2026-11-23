@@ -93,7 +93,10 @@ test('India ownership, houses, deed and trades stay readable at desktop, tablet 
   );
   await page.goto('/');
   await expect(page.getByTestId('game-board')).toBeVisible();
-  await expect(page.locator('[data-tile="1"] .development')).toContainText('2 HOUSES');
+  await expect(page.locator('[data-tile="1"] .development')).toHaveAttribute(
+    'aria-label',
+    '2 houses',
+  );
   await expect(page.locator('.property-panel')).toContainText('Shimla');
   await expect(page.locator('.property-panel')).toContainText('₹');
   await page.getByRole('button', { name: 'Propose a trade', exact: true }).click();

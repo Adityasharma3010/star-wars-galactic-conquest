@@ -10,9 +10,14 @@ export function tilePlan(id) {
     depth: row === 0 || row === 10 ? 3 : 2,
   };
 }
-export function piecePosition(position, index = 0) {
+export function piecePosition(position, index = 0, count = 8) {
   const plan = tilePlan(position);
-  return { x: plan.x + ((index % 4) - 1.5) * 0.48, z: plan.z + (index < 4 ? 0.34 : -0.34) };
+  const columns = Math.min(count, plan.width < plan.depth ? 2 : 4);
+  const rows = Math.ceil(count / columns);
+  return {
+    x: plan.x + ((index % columns) - (columns - 1) / 2) * 0.55,
+    z: plan.z + (Math.floor(index / columns) - (rows - 1) / 2) * 0.55,
+  };
 }
 export function diceRotation(value) {
   return {
@@ -23,4 +28,36 @@ export function diceRotation(value) {
     5: [Math.PI / 2, 0, 0],
     6: [0, 0, Math.PI],
   }[value];
+}
+
+export function scenePlan(id, classic = true) {
+  const plan = tilePlan(id);
+  if (classic)
+    return {
+      ...plan,
+      rotation: id <= 10 ? Math.PI : id <= 20 ? Math.PI / 2 : id <= 30 ? 0 : -Math.PI / 2,
+    };
+  const angle = -Math.PI / 4 + (id * Math.PI) / 20;
+  const radius = 10.8;
+  return {
+    x: Math.sin(angle) * radius,
+    z: -Math.cos(angle) * radius,
+    width: 2 * radius * Math.tan(Math.PI / 40) * 0.96,
+    depth: 3,
+    rotation: Math.PI - angle,
+    radius,
+  };
+}
+
+export function scenePiecePosition(position, index = 0, count = 1, classic = true) {
+  if (classic) return piecePosition(position, index, count);
+  const plan = scenePlan(position, false);
+  const columns = Math.min(2, count),
+    rows = Math.ceil(count / columns);
+  const dx = ((index % columns) - (columns - 1) / 2) * 0.5;
+  const dz = (Math.floor(index / columns) - (rows - 1) / 2) * 0.55;
+  return {
+    x: plan.x + dx * Math.cos(plan.rotation) + dz * Math.sin(plan.rotation),
+    z: plan.z - dx * Math.sin(plan.rotation) + dz * Math.cos(plan.rotation),
+  };
 }

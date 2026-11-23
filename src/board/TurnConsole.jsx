@@ -1,15 +1,15 @@
 import { motion } from 'motion/react';
 import { Dices, ArrowRight, ChevronRight } from 'lucide-react';
-import { boardFor, tokensFor } from '../game/maps.js';
+import { boardFor } from '../game/maps.js';
 import { mapText } from '../services/mapText.js';
 import { useGameStore } from '../stores/gameStore.js';
-import { TokenArt } from '../components/Art.jsx';
 import ConnectionGrace from '../components/ConnectionGrace.jsx';
 import Dice from './Dice.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 import { canRoll } from './rollPermission.js';
+import PawnArt from '../components/PawnArt.jsx';
 
-export default function TurnConsole({ moving = false, spatial = false }) {
+export default function TurnConsole({ moving = false, spatial = false, clean = false }) {
   const { game, dispatch, busy, online, onlinePlayer, open, matchAway } = useGameStore();
   const reduced = useMotionPreference(),
     player = game.players[game.turn];
@@ -53,13 +53,15 @@ export default function TurnConsole({ moving = false, spatial = false }) {
     else open('victory');
   };
   return (
-    <div className={'turn-console ' + (spatial ? 'spatial-console' : '')}>
+    <div
+      className={
+        'turn-console ' + (spatial ? 'spatial-console ' : '') + (clean ? 'clean-console' : '')
+      }
+      data-phase={game.phase}
+    >
       <div className="turn-banner">
         <span className="mini-avatar" style={{ color: player.color }}>
-          <TokenArt
-            character={tokensFor(game).find((token) => token.id === player.character)}
-            size={24}
-          />
+          <PawnArt name={player.name} color={player.color} size={clean ? 24 : 28} />
         </span>
         <div>
           <span className="eyebrow">
@@ -99,6 +101,7 @@ export default function TurnConsole({ moving = false, spatial = false }) {
           version={game.version}
           rolling={game.lastActionType === 'ROLL'}
           reduced={reduced}
+          solid={clean}
           canRoll={canRoll(useGameStore.getState(), moving)}
           onRoll={() => {
             if (canRoll(useGameStore.getState(), moving)) dispatch('ROLL');

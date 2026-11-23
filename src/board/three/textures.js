@@ -69,20 +69,20 @@ export function paintTile(
     w = canvas.width,
     h = canvas.height;
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = classic ? '#f9f1dc' : '#102638';
+  ctx.fillStyle = classic ? '#fbf3dd' : '#0d2937';
   ctx.fillRect(0, 0, w, h);
   if (image) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0, 0, w, h * 0.65);
+    ctx.rect(w * 0.13, h * 0.4, w * 0.74, h * 0.27);
     ctx.clip();
-    cover(ctx, image, w, h * 0.65);
+    ctx.translate(w * 0.13, h * 0.4);
+    cover(ctx, image, w * 0.74, h * 0.27);
     ctx.restore();
-    const gradient = ctx.createLinearGradient(0, h * 0.32, 0, h * 0.7);
-    gradient.addColorStop(0, 'transparent');
-    gradient.addColorStop(1, classic ? '#f9f1dc' : '#102638');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, h * 0.32, w, h * 0.4);
+    if (!classic) {
+      ctx.fillStyle = '#286f843b';
+      ctx.fillRect(w * 0.13, h * 0.4, w * 0.74, h * 0.27);
+    }
   } else if (!projected) {
     const symbols = {
       force: '✦',
@@ -96,26 +96,29 @@ export function paintTile(
     };
     ctx.textAlign = 'center';
     ctx.font = `bold ${Math.round(h * 0.23)}px Segoe UI, sans-serif`;
-    ctx.fillStyle = classic ? '#658371' : tile.type === 'force' ? '#c2a5ff' : '#a5dce9';
-    ctx.fillText(symbols[tile.type] || '◆', w / 2, h * 0.41);
+    ctx.fillStyle = classic ? '#365347' : '#9dcde0';
+    ctx.fillText(symbols[tile.type] || '◆', w / 2, h * 0.56);
   }
   if (tile.color) {
     ctx.fillStyle = tile.color;
-    ctx.fillRect(0, 0, w, h * 0.05);
+    ctx.fillRect(0, 0, w, h * 0.14);
+    ctx.strokeStyle = '#233e3855';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, w, h * 0.14);
   }
   if (owned) {
     ctx.fillStyle = ownerColor;
-    ctx.fillRect(0, h * 0.945, w, h * 0.055);
+    ctx.fillRect(0, h * 0.958, w, h * 0.042);
   }
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = `700 ${Math.round(w * 0.108)}px Segoe UI, sans-serif`;
-  ctx.fillStyle = classic ? '#264739' : '#f3f1e9';
+  ctx.font = `700 ${Math.round(w * 0.12)}px Segoe UI, sans-serif`;
+  ctx.fillStyle = classic ? '#263d38' : '#d6eee7';
   const name = lines(ctx, tile.name, w * 0.89).slice(0, 3);
-  const top = h * 0.68 - (name.length - 1) * w * 0.061;
+  const top = h * 0.28 - (name.length - 1) * w * 0.061;
   name.forEach((line, i) => ctx.fillText(line, w / 2, top + i * w * 0.123));
-  ctx.font = `600 ${Math.round(w * 0.073)}px Segoe UI, sans-serif`;
-  ctx.fillStyle = classic ? '#a36d2f' : '#eec685';
+  ctx.font = `600 ${Math.round(w * 0.1)}px Segoe UI, sans-serif`;
+  ctx.fillStyle = classic ? '#334b41' : '#94cbd7';
   const price = tile.price
     ? `${classic ? '₹' : '◈'} ${tile.price}`
     : tile.id === 4
@@ -125,65 +128,54 @@ export function paintTile(
         : tile.type === 'tax'
           ? `${classic ? '₹' : '◈'} ${rules.luxuryTax}`
           : tile.label || 'DRAW A CARD';
-  ctx.fillText(price, w / 2, h * 0.88, w * 0.91);
+  ctx.fillText(price, w / 2, h * 0.82, w * 0.91);
   if (owned?.mortgaged) {
-    ctx.fillStyle = '#152539b0';
+    ctx.fillStyle = '#e2d3bacc';
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#7c433b';
     ctx.font = `bold ${w * 0.1}px Segoe UI`;
     ctx.fillText('MORTGAGED', w / 2, h * 0.5);
   }
   surface.texture.needsUpdate = true;
 }
-export function paintCenter(surface, classic, image) {
-  const { context: ctx, canvas } = surface,
-    size = canvas.width;
-  ctx.fillStyle = classic ? '#1d4538' : '#061e30';
+export function paintCenter(surface, classic) {
+  const { context: ctx, canvas } = surface;
+  const size = canvas.width;
+  ctx.fillStyle = classic ? '#315448' : '#234a49';
   ctx.fillRect(0, 0, size, size);
-  if (image) {
-    cover(ctx, image, size, size);
-    ctx.fillStyle = classic ? '#15382bb8' : '#071c32aa';
-    ctx.fillRect(0, 0, size, size);
+  for (let y = 0; y < size; y += 3) {
+    ctx.fillStyle = y % 9 === 0 ? '#ffffff04' : '#00000004';
+    ctx.fillRect(0, y, size, 1);
   }
-  const gradient = ctx.createRadialGradient(
-    size * 0.5,
-    size * 0.3,
-    10,
-    size * 0.5,
-    size * 0.5,
-    size * 0.65,
-  );
-  gradient.addColorStop(0, '#76b9ff22');
-  gradient.addColorStop(1, '#03111bdb');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-  ctx.strokeStyle = classic ? '#e5bd7433' : '#95d2ef33';
-  ctx.lineWidth = 2;
-  [size * 0.29, size * 0.36, size * 0.44].forEach((radius) => {
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
-    ctx.stroke();
-  });
+  ctx.strokeStyle = '#d2bd8350';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(size * 0.025, size * 0.025, size * 0.95, size * 0.95);
+  ctx.strokeStyle = '#d2bd8325';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(size * 0.038, size * 0.038, size * 0.924, size * 0.924);
+  ctx.save();
+  ctx.translate(size * 0.5, size * 0.3);
+  ctx.rotate(-0.12);
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#f5cd82';
-  ctx.font = `600 ${size * 0.022}px Segoe UI`;
-  ctx.fillText(
-    classic ? 'INDIAN CITY CAPITALS' : 'A GALAXY. A THOUSAND WORLDS.',
-    size / 2,
-    size * 0.86,
-  );
-  ctx.font = `800 ${size * 0.043}px Segoe UI`;
-  ctx.fillStyle = '#fff4d5';
-  ctx.fillText(classic ? 'INDIA' : 'GALACTIC', size / 2, size * 0.92);
-  ctx.fillStyle = '#efc882';
-  ctx.fillText(classic ? 'CITY CAPITALS' : 'CONQUEST', size / 2, size * 0.97);
-  ctx.font = `500 ${size * 0.021}px Segoe UI`;
-  ctx.fillStyle = '#b8dce6';
-  ctx.fillText(
-    classic ? 'CITY COLLECTION / INDIA' : 'HOLOGRAPHIC TACTICAL ARRAY',
-    size / 2,
-    size * 0.09,
-  );
+  ctx.fillStyle = '#142f2a';
+  ctx.fillRect(-size * 0.335, -size * 0.112, size * 0.67, size * 0.24);
+  ctx.strokeStyle = '#dcc799';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(-size * 0.335, -size * 0.112, size * 0.67, size * 0.24);
+  ctx.fillStyle = '#f2e5c4';
+  ctx.font = '800 ' + size * 0.081 + 'px Georgia, serif';
+  ctx.fillText(classic ? 'MONOPOLY' : 'GALACTIC', 0, -size * 0.005);
+  ctx.font = '700 ' + size * 0.035 + 'px Segoe UI, sans-serif';
+  ctx.fillStyle = '#d9c68e';
+  ctx.fillText(classic ? 'INDIA · CITY CAPITALS' : 'CONQUEST', 0, size * 0.075);
+  ctx.restore();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#c4cbb2';
+  ctx.font = '500 ' + size * 0.02 + 'px Segoe UI, sans-serif';
+  ctx.fillText('40 SPACES · 2–8 PLAYERS', size * 0.5, size * 0.48);
+  ctx.font = '500 ' + size * 0.018 + 'px Segoe UI, sans-serif';
+  ctx.fillStyle = '#e4d3a580';
+  ctx.fillText(classic ? 'BUY · BUILD · TRADE' : 'CLAIM · BUILD · TRADE', size * 0.5, size * 0.93);
   surface.texture.needsUpdate = true;
 }
 export function diceSurface(value) {

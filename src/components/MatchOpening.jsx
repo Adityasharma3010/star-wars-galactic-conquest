@@ -129,7 +129,7 @@ export default function MatchOpening() {
                 finishIntro();
             }}
           >
-            <span className="opening-episode">EPISODE I</span>
+            <span className="opening-episode">A GALACTIC CHRONICLE</span>
             <h2>{story.title}</h2>
             {story.paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
