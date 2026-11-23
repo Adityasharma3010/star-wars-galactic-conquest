@@ -2,6 +2,8 @@ import { mapText } from '../services/mapText.js';
 import { boardFor, groupsFor, tokensFor, isClassic, mapFor } from '../game/maps.js';
 import { MusicSettings } from '../components/MatchMusic.jsx';
 import HoloSelect from '../components/HoloSelect.jsx';
+import MapPicker from '../components/MapPicker.jsx';
+import TokenPicker from '../components/TokenPicker.jsx';
 import { useEffect, useState } from 'react';
 import Social from './Social.jsx';
 import Victory from './MatchResults.jsx';
@@ -13,6 +15,7 @@ import Cosmetics from './Cosmetics.jsx';
 import { motion } from 'motion/react';
 import {
   ArrowRight,
+  ChevronDown,
   ArrowLeft,
   Save,
   Check,
@@ -70,163 +73,81 @@ function Field({ label, children }) {
   );
 }
 export function NewGame() {
-  const selectedMap = useGameStore((state) => state.selectedMap),
-    classic = isClassic(selectedMap),
-    CHARACTERS = tokensFor(selectedMap);
-  const draftKey = selectedMap === 'india' ? 'local:india' : 'local';
+  const selectedMap = useGameStore((state) => state.selectedMap);
+  return <LocalSetup key={selectedMap} selectedMap={selectedMap} />;
+}
+function LocalSetup({ selectedMap }) {
+  const classic = isClassic(selectedMap),
+    characters = tokensFor(selectedMap);
+  const draftKey = classic ? 'local:india' : 'local';
   const draft = useGameStore.getState().ruleDrafts[draftKey];
-  const { profile, start, game, online, open } = useGameStore(),
-    [mode, setMode] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.mode || 'solo'),
-    [character, setCharacter] = useState(() =>
-      CHARACTERS.some((c) => c.id === (draft?.character || profile.character))
-        ? draft?.character || profile.character
-        : CHARACTERS[0].id,
-    ),
-    [faction, setFaction] = useState(classic ? 'Classic' : draft?.faction || profile.faction),
-    [name, setName] = useState(draft?.name || profile.name),
-    [count, setCount] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.count || 4),
-    [difficulty, setDifficulty] = useState(
-      () => useGameStore.getState().ruleDrafts[draftKey]?.difficulty || 'medium',
-    ),
-    [rules, setRules] = useState(() => ({
-      ...DEFAULT_RULES,
-      ...useGameStore.getState().ruleDrafts[draftKey]?.rules,
-      mapId: selectedMap,
-    })),
-    [humans, setHumans] = useState(() => useGameStore.getState().ruleDrafts[draftKey]?.humans || 1);
-  const [customTab, setCustomTab] = useState('rules');
-  useEffect(
-    () =>
-      useGameStore.getState().updateRuleDraft(draftKey, {
-        rules,
-        mode,
-        count,
-        humans,
-        difficulty,
-        name,
-        character,
-        faction,
-      }),
-    [rules, mode, count, humans, difficulty, name, character, faction],
+  const { profile, start, open, chooseMap } = useGameStore();
+  const [mode, setMode] = useState(draft?.mode || 'solo');
+  const [character, setCharacter] = useState(() =>
+    characters.some((c) => c.id === (draft?.character || profile.character))
+      ? draft?.character || profile.character
+      : characters[0].id,
   );
-  const selected = CHARACTERS.find((c) => c.id === character);
-  const selectedDifficulty = mode === 'custom' ? rules.difficulty : difficulty;
-  const launch = () => {
-    const chars = [selected, ...CHARACTERS.filter((c) => c.id !== character)].slice(0, count),
-      ps = chars.map((c, i) => ({
-        id: i === 0 ? 'you' : `player-${i}`,
-        name: i === 0 ? name.trim() || 'Commander' : i < humans ? `Commander ${i + 1}` : c.name,
-        character: c.id,
-        color: c.color,
-        faction: i === 0 ? faction : c.faction,
-        ai: i >= humans,
-        difficulty: selectedDifficulty,
-        team:
-          mode === 'teams' || (mode === 'custom' && rules.teams)
-            ? i % 2 === 0
-              ? classic
-                ? 'Team 1'
-                : 'Rebel Squadron'
-              : classic
-                ? 'Team 2'
-                : 'Imperial Squadron'
-            : null,
-      }));
-    useGameStore.getState().updateProfile({
-      name: name.trim() || 'Commander',
+  const [faction, setFaction] = useState(
+    classic
+      ? 'Classic'
+      : draft?.faction || (FACTIONS.includes(profile.faction) ? profile.faction : FACTIONS[0]),
+  );
+  const [name, setName] = useState(draft?.name || profile.name);
+  const [count, setCount] = useState(draft?.count || 4);
+  const [rules, setRules] = useState({
+    ...DEFAULT_RULES,
+    ...draft?.rules,
+    difficulty: draft?.rules?.difficulty || draft?.difficulty || 'medium',
+    mapId: selectedMap,
+  });
+  const [humans, setHumans] = useState(draft?.humans || 1);
+  const persistDraft = () =>
+    useGameStore.getState().updateRuleDraft(draftKey, {
+      rules,
+      mode,
+      count,
+      humans,
+      difficulty: rules.difficulty,
+      name,
       character,
       faction,
     });
+  useEffect(persistDraft, [draftKey, rules, mode, count, humans, name, character, faction]);
+  const selected = characters.find((c) => c.id === character) || characters[0];
+  const launch = () => {
+    const chars = [selected, ...characters.filter((c) => c.id !== character)].slice(0, count);
+    const teams = mode === 'teams' || rules.teams;
+    const ps = chars.map((c, i) => ({
+      id: i === 0 ? 'you' : `player-${i}`,
+      name: i === 0 ? name.trim() || 'Commander' : i < humans ? `Commander ${i + 1}` : c.name,
+      character: c.id,
+      color: c.color,
+      faction: i === 0 ? faction : c.faction,
+      ai: i >= humans,
+      difficulty: rules.difficulty,
+      team: teams
+        ? classic
+          ? `Team ${(i % 2) + 1}`
+          : i % 2 === 0
+            ? 'Rebel Squadron'
+            : 'Imperial Squadron'
+        : null,
+    }));
+    useGameStore.getState().updateProfile({ name: name.trim() || 'Commander', character, faction });
     start(ps, {
       ...rules,
       mapId: selectedMap,
-      taxBasis: mode === 'custom' ? rules.taxBasis || 'cash' : 'cash',
-      teams: mode === 'teams' || (mode === 'custom' && rules.teams),
-      difficulty: selectedDifficulty,
+      teams,
       startingCredits: mode === 'quick' ? 1000 : rules.startingCredits,
       roundLimit: mode === 'quick' ? 20 : rules.roundLimit,
     });
   };
   return (
-    <div className="new-game">
-      <div className="mode-tabs">
-        {[
-          ['solo', Bot, 'Solo vs AI'],
-          ['local', Users, 'Pass & play'],
-          ['teams', Shield, 'Teams'],
-          ['quick', Sparkles, 'Quick'],
-          ['custom', Dices, 'Custom'],
-        ].map(([id, Icon, label]) => (
-          <button
-            key={id}
-            className={mode === id ? 'selected' : ''}
-            onClick={() => {
-              setMode(id);
-              setHumans(id === 'local' ? 2 : 1);
-            }}
-          >
-            <Icon size={16} />
-            {label}
-          </button>
-        ))}
-      </div>
-      {mode === 'custom' && (
-        <div className="custom-setup-tabs">
-          <button
-            className={customTab === 'commander' ? 'selected' : ''}
-            onClick={() => setCustomTab('commander')}
-          >
-            <Users size={14} />
-            {mapText('Commander & roster')}
-          </button>
-          <button
-            className={customTab === 'rules' ? 'selected' : ''}
-            onClick={() => setCustomTab('rules')}
-          >
-            <Dices size={14} />
-            Match rules
-          </button>
-        </div>
-      )}
-      <div
-        className="setup-grid"
-        style={{
-          display: mode === 'custom' && customTab === 'rules' ? 'none' : undefined,
-        }}
-      >
-        <div>
-          <div
-            className="character-preview"
-            style={{
-              color: selected.color,
-            }}
-          >
-            <TokenArt character={selected} size={140} />
-            <span className="eyebrow">{classic ? 'YOUR COLOR' : 'YOUR CHARACTER'}</span>
-            <h3>{selected.name}</h3>
-            <small>
-              {classic ? 'Choose a color for your token' : selected.faction + ' · Abstract token'}
-            </small>
-          </div>
-          <div className="character-grid">
-            {CHARACTERS.map((c) => (
-              <button
-                key={c.id}
-                className={character === c.id ? 'selected' : ''}
-                style={{
-                  color: c.color,
-                }}
-                onClick={() => setCharacter(c.id)}
-                aria-label={`Select ${c.name}`}
-              >
-                <TokenArt character={c} size={42} />
-                <span>{c.name.split(' ').slice(-1)[0]}</span>
-                {character === c.id && <Check size={11} />}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="setup-fields">
+    <div className="new-game unified-setup">
+      <div className="setup-columns">
+        <section className="setup-appearance" aria-label="Your player">
+          <TokenPicker mapId={selectedMap} value={character} onChange={setCharacter} />
           <Field label="COMMANDER NAME">
             <input
               maxLength={24}
@@ -244,6 +165,34 @@ export function NewGame() {
               </HoloSelect>
             </Field>
           )}
+        </section>
+        <section className="setup-configuration" aria-label="Game settings">
+          <h3>Game settings</h3>
+          <MapPicker value={selectedMap} onChange={chooseMap} />
+          <div className="setup-mode-label">HOW DO YOU WANT TO PLAY?</div>
+          <div className="mode-tabs">
+            {[
+              ['solo', Bot, 'Solo vs AI'],
+              ['local', Users, 'Pass & play'],
+              ['teams', Shield, 'Teams'],
+              ['quick', Sparkles, 'Quick'],
+              ['custom', Dices, 'Custom'],
+            ].map(([id, Icon, label]) => (
+              <button
+                type="button"
+                key={id}
+                className={mode === id ? 'selected' : ''}
+                aria-pressed={mode === id}
+                onClick={() => {
+                  setMode(id);
+                  setHumans(id === 'local' ? 2 : 1);
+                }}
+              >
+                <Icon size={15} />
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="field-row">
             <Field label="COMMANDERS">
               <HoloSelect
@@ -260,111 +209,92 @@ export function NewGame() {
                 ))}
               </HoloSelect>
             </Field>
-            {mode !== 'custom' && (
-              <Field label="AI DIFFICULTY">
-                <HoloSelect value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-                  {['easy', 'medium', 'hard', 'expert'].map((d) => (
-                    <option key={d}>{d}</option>
-                  ))}
-                </HoloSelect>
-              </Field>
-            )}
+            <Field label="AI DIFFICULTY">
+              <HoloSelect
+                value={rules.difficulty}
+                onChange={(e) => setRules({ ...rules, difficulty: e.target.value })}
+              >
+                {['easy', 'medium', 'hard', 'expert'].map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </HoloSelect>
+            </Field>
           </div>
           {mode !== 'solo' && (
             <Field label="HUMAN PLAYERS ON THIS DEVICE">
               <HoloSelect value={humans} onChange={(e) => setHumans(+e.target.value)}>
-                {Array.from(
-                  {
-                    length: count,
-                  },
-                  (_, i) => (
-                    <option key={i} value={i + 1}>
-                      {i + 1} human{i ? 's' : ''} · {count - i - 1} AI
-                    </option>
-                  ),
-                )}
+                {Array.from({ length: count }, (_, i) => (
+                  <option key={i} value={i + 1}>
+                    {i + 1} human{i ? 's' : ''} · {count - i - 1} AI
+                  </option>
+                ))}
               </HoloSelect>
             </Field>
           )}
           <div className="setup-summary">
             <div>
-              <Coins size={14} />
+              <Coins size={15} />
               <span>{mapText('Starting credits')}</span>
               <strong>
-                {mapText('\u25C8 ')}
+                {mapText('◈ ')}
                 {mode === 'quick' ? 1000 : rules.startingCredits}
               </strong>
             </div>
             <div>
-              <Globe2 size={14} />
-              <span>{mapText('Worlds to acquire')}</span>
-              <strong>22</strong>
-            </div>
-            <div>
-              <Shield size={14} />
-              <span>Match type</span>
-              <strong>{mode === 'teams' ? '2 teams' : 'Individual'}</strong>
+              <Dices size={15} />
+              <span>Round limit</span>
+              <strong>{mode === 'quick' ? 20 : rules.roundLimit || 'Unlimited'}</strong>
             </div>
           </div>
-          <p className="muted setup-note">
-            This starts a fresh local match and replaces the current save.{' '}
-            {mode === 'teams'
-              ? 'Team members do not pay each other rent and share victory.'
-              : 'Progress saves automatically on this device.'}
-          </p>
-          <button className="text-button full online-link" onClick={() => open('rooms')}>
-            Looking for online play? Find a room <ArrowRight size={12} />
+          <details
+            className="setup-rule-disclosure"
+            key={mode}
+            open={mode === 'custom' ? true : undefined}
+          >
+            <summary>
+              <Dices size={16} />
+              <span>
+                Gameplay rules<small>Economy, trading, teams & development</small>
+              </span>
+              <ChevronDown size={15} />
+            </summary>
+            {mode === 'quick' && (
+              <p className="muted">
+                {mapText('Quick matches use 1,000 starting credits and a 20-round limit.')}
+              </p>
+            )}
+            <RuleFields
+              rules={rules}
+              setRules={setRules}
+              showDifficulty={false}
+              onReset={() => setRules({ ...DEFAULT_RULES, mapId: selectedMap })}
+            />
+          </details>
+          <p className="muted setup-note">Progress saves automatically on this device.</p>
+          <button className="text-button online-link" onClick={() => open('rooms')}>
+            Online multiplayer
+            <ArrowRight size={14} />
           </button>
-        </div>
+        </section>
       </div>
-      {mode === 'custom' && customTab === 'rules' && (
-        <div className="custom-match-rules">
-          <RuleFields
-            rules={rules}
-            setRules={setRules}
-            onReset={() =>
-              setRules({
-                ...DEFAULT_RULES,
-                mapId: selectedMap,
-              })
-            }
-          />
-          <div className="custom-rule-launch">
-            <span>
-              {mapText(' \u25C8 ')}
-              {rules.startingCredits}
-              {mapText(' CR \xB7 ')}
-              {count}
-              {mapText('commanders \xB7')} {rules.teams ? 'Teams' : 'Individual'}
-              {mapText('conquest')}
-            </span>
-          </div>
-        </div>
-      )}
       <div className="dialog-actions setup-actions">
         <button className="button" onClick={() => useGameStore.getState().back()}>
-          <ArrowLeft size={15} /> Back
+          <ArrowLeft size={15} />
+          Back
         </button>
         <button
           className="button"
           onClick={() => {
-            useGameStore.getState().updateRuleDraft(draftKey, {
-              rules,
-              mode,
-              count,
-              humans,
-              difficulty,
-              name,
-              character,
-              faction,
-            });
+            persistDraft();
             useGameStore.getState().close();
           }}
         >
-          <Save size={15} /> Save setup
+          <Save size={15} />
+          Save setup
         </button>
         <button className="button gold-button" onClick={launch}>
-          {mapText('Launch conquest')} <ArrowRight size={17} />
+          {mapText('Launch conquest')}
+          <ArrowRight size={17} />
         </button>
       </div>
     </div>
@@ -1361,7 +1291,7 @@ export function Account() {
 const metadata = {
   social: ['Friends & rankings', 'Connect with commanders across the galaxy.', true],
   cosmetics: ['Command-deck cosmetics', 'Earn your colors across the galaxy.'],
-  newGame: ['Launch a new conquest', 'Choose your character, squadron, and rules.', true],
+  newGame: ['Set up your game', 'Your board, your player, your rules.', true],
   deed: ['Property deed', 'Every world has a story.'],
   trade: ['Galactic negotiations', 'Build alliances. Make your next great deal.', true],
   auction: ['Claim a new world', 'Competitive bidding across the galaxy.'],
@@ -1372,7 +1302,7 @@ const metadata = {
   history: ['Match history', 'Every conquest leaves a legacy.'],
   victory: ['Conquest complete', 'Your final mission report.'],
   account: ['Galactic account', 'Connect to your persistent online identity.'],
-  rooms: ['Multiplayer command', 'Explore public rooms or invite your squadron.', true],
+  rooms: ['Play with friends', 'Join a room or set up your own table.', true],
 };
 export default function Dialogs() {
   const { modal, close, back, error, modalHistory, playing } = useGameStore();

@@ -41,6 +41,7 @@ export const useGameStore = create(
       },
       chooseMap: (selectedMap) => set({ selectedMap }),
       lobbyRoom: null,
+      roomIntent: 'browse',
       selected: 1,
       error: null,
       busy: false,

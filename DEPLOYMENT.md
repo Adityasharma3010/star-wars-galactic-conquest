@@ -1,6 +1,12 @@
 # Hosting and deployment
 
-Updated 20 November 2026. **Public game: https://monopoly.adityasharma.site** (the original Vercel alias remains active).
+Updated 23 November 2026. **Public game: https://monopoly.adityasharma.site** (the original Vercel alias remains active).
+
+## Menu and setup release
+
+The current frontend uses the blue-and-gold menu with inline map selection, player appearance and rules together in local setup and waiting rooms. Local drafts are retained per map. Hosts explicitly save map/rule changes, which reset readiness; guests receive the saved map and valid tokens. Both older map routes remain supported. No backend migration or Edge Function deployment is required.
+
+Local validation passed all 130 unit tests and 12 browser scenarios, including actual independent Supabase guests, draft persistence during polling and saves, map changes, readiness, a two-player India start, saved-game recovery and desktop/tablet/mobile layouts. Network-enabled retests resolved the two sandbox-blocked multiplayer requests. Production build and formatting checks passed. Publication uses the existing GitHub-to-Vercel integration; final production status is checked against the pushed commit.
 
 ## Last documented production verification
 

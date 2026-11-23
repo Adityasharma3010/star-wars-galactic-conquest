@@ -2,7 +2,6 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
   Home,
-  Map,
   Crosshair,
   Users,
   BookOpen,
@@ -19,8 +18,18 @@ import { Emblem, TokenArt } from './Art.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 
 export default function CommandHeader({ classic, connected }) {
-  const { game, playing, profile, settings, updateSettings, returnHome, open, online, boardView } =
-    useGameStore();
+  const {
+    game,
+    playing,
+    profile,
+    settings,
+    updateSettings,
+    returnHome,
+    open,
+    online,
+    boardView,
+    modal,
+  } = useGameStore();
   const reduced = useMotionPreference(),
     route = useLocation(),
     navigate = useNavigate();
@@ -43,7 +52,8 @@ export default function CommandHeader({ classic, connected }) {
   );
   return (
     <motion.header
-      className="app-header command-header"
+      className="app-header command-header simple-header"
+      inert={Boolean(modal)}
       initial={reduced ? false : { opacity: 0, y: -14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55 }}
@@ -70,12 +80,6 @@ export default function CommandHeader({ classic, connected }) {
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'selected' : '')}>
           {tab(Home, 'Main menu', route.pathname === '/')}
         </NavLink>
-        <NavLink
-          to="/maps/star-wars"
-          className={route.pathname.startsWith('/maps') ? 'selected' : ''}
-        >
-          {tab(Map, 'Choose maps', route.pathname.startsWith('/maps'))}
-        </NavLink>
         {playing && game && (
           <NavLink
             to={'/match/' + encodeURIComponent(game.id)}
@@ -84,7 +88,14 @@ export default function CommandHeader({ classic, connected }) {
             {tab(Crosshair, 'Command deck', route.pathname.startsWith('/match/'))}
           </NavLink>
         )}
-        <button onClick={() => open('rooms')}>{tab(Users, 'Find a game', false)}</button>
+        <button
+          onClick={() => {
+            useGameStore.setState({ roomIntent: 'browse' });
+            open('rooms');
+          }}
+        >
+          {tab(Users, 'Find a game', false)}
+        </button>
         <button onClick={() => open('rules')}>{tab(BookOpen, 'How to play', false)}</button>
       </nav>
       <div className="header-actions">

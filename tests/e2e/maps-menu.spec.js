@@ -1,22 +1,15 @@
 import { test, expect } from '@playwright/test';
 
-test('cinematic menu and routed map categories stay readable and launch the existing map', async ({
+test('the simple menu and compatible map routes stay readable and launch the existing map', async ({
   page,
 }) => {
   test.setTimeout(120000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'THE GALAXY AWAITS.' })).toBeVisible();
-  await expect
-    .poll(() =>
-      page
-        .locator('.galaxy-reference-scene img')
-        .evaluate((image) => image.complete && image.naturalWidth > 0),
-    )
-    .toBe(true);
+  await expect(page.getByRole('heading', { name: 'GALACTIC CONQUEST' })).toBeVisible();
   await page.screenshot({ path: 'test-results/galaxy-menu-desktop.png', fullPage: true });
-  await page.getByRole('link', { name: /03.*Choose maps/ }).click();
+  await page.goto('/maps/star-wars');
   await expect(page).toHaveURL(/\/maps\/star-wars$/);
   await expect(page.getByRole('heading', { name: 'Galactic Conquest', exact: true })).toBeVisible();
   await page
@@ -100,7 +93,7 @@ test('map routes recover invalid URLs and the main menu fits tablet and mobile',
   for (const width of [1024, 390]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 768 });
     await expect(page.getByRole('button', { name: /Play locally/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Choose maps', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Browse maps', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

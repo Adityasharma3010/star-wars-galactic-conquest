@@ -32,7 +32,7 @@ afterEach(cleanup);
 describe('command deck', () => {
   it('creates no game until the commander explicitly launches one', async () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'THE GALAXY AWAITS.' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'GALACTIC CONQUEST' })).toBeVisible();
     expect(screen.queryByTestId('game-board')).toBeNull();
     expect(useGameStore.getState().game).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Play locally/ }));

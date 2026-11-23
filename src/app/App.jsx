@@ -356,7 +356,7 @@ function GameApp() {
       <CommandHeader classic={classic} connected={connected} />
       <RouteTransmission />
       <GameMoment />
-      <main>
+      <main inert={Boolean(modal)}>
         <Routes>
           <Route path="/" element={<WelcomeScreen onResumeOnline={resume} />} />
           <Route path="/maps" element={<Navigate to="/maps/star-wars" replace />} />
@@ -484,7 +484,7 @@ function GameApp() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <footer>
+      <footer inert={Boolean(modal)}>
         <span>
           <Emblem size={15} /> {classic ? 'INDIA / CITY CAPITALS' : THEME.title}
           <i />A NON-COMMERCIAL FAN PROJECT

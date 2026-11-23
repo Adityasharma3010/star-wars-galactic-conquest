@@ -4,21 +4,10 @@ test('fresh visits show the menu and create a match only after launch', async ({
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'THE GALAXY AWAITS.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'GALACTIC CONQUEST' })).toBeVisible();
   await expect(page.getByTestId('game-board')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Roll dice', exact: true })).toHaveCount(0);
-  await expect
-    .poll(
-      () =>
-        page
-          .locator('.welcome-worlds img')
-          .evaluateAll(
-            (images) =>
-              images.length === 3 && images.every((i) => i.complete && i.naturalWidth > 0),
-          ),
-      { timeout: 30000 },
-    )
-    .toBe(true);
+  await expect(page.getByRole('button', { name: 'Browse maps' })).toBeVisible();
   await page.screenshot({ path: 'test-results/welcome-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

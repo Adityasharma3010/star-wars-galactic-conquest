@@ -27,7 +27,7 @@ const switches = {
     'Multiple commanders may use the same token.',
   ],
 };
-export default function RuleFields({ rules, setRules, onReset }) {
+export default function RuleFields({ rules, setRules, onReset, showDifficulty = true }) {
   const classic = isClassic(rules);
   const number = (key) => {
     const [label, min, max, help] = numbers[key];
@@ -126,24 +126,26 @@ export default function RuleFields({ rules, setRules, onReset }) {
           {mapText('Teams & commanders')}
         </h4>
         {['teams', 'noTeamRent', 'sharedProperties', 'duplicateCharacters'].map(toggle)}
-        <label className="field rule-number">
-          <span>AI DIFFICULTY</span>
-          <HoloSelect
-            value={rules.difficulty}
-            onChange={(e) =>
-              setRules({
-                ...rules,
-                difficulty: e.target.value,
-              })
-            }
-          >
-            {['easy', 'medium', 'hard', 'expert'].map((d) => (
-              <option key={d} value={d}>
-                {d[0].toUpperCase() + d.slice(1)}
-              </option>
-            ))}
-          </HoloSelect>
-        </label>
+        {showDifficulty && (
+          <label className="field rule-number">
+            <span>AI DIFFICULTY</span>
+            <HoloSelect
+              value={rules.difficulty}
+              onChange={(e) =>
+                setRules({
+                  ...rules,
+                  difficulty: e.target.value,
+                })
+              }
+            >
+              {['easy', 'medium', 'hard', 'expert'].map((d) => (
+                <option key={d} value={d}>
+                  {d[0].toUpperCase() + d.slice(1)}
+                </option>
+              ))}
+            </HoloSelect>
+          </label>
+        )}
       </section>
       <section className="rule-section">
         <h4>
