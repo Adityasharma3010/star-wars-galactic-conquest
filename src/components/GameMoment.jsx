@@ -6,30 +6,65 @@ import { boardFor, isClassic } from '../game/maps.js';
 import { PlanetArt } from './Art.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 
+function canCelebrate(player, online, onlinePlayer) {
+  return Boolean(player && !player.ai && (!online || player.id === onlinePlayer));
+}
+
 export default function GameMoment() {
-  const { game, playing, intro, modal } = useGameStore(),
+  const { game, playing, intro, modal, online, onlinePlayer } = useGameStore(),
     reduced = useMotionPreference();
+  const audience = online ? `online:${onlinePlayer || ''}` : 'local';
   const previous = useRef(game),
+    previousAudience = useRef(audience),
     [moment, setMoment] = useState(null),
     [transfers, setTransfers] = useState([]);
   useEffect(() => {
     const before = previous.current;
+    const viewerChanged = previousAudience.current !== audience;
     previous.current = game;
-    if (!playing || intro || !game || !before || before.id !== game.id || reduced) {
+    previousAudience.current = audience;
+    if (
+      !playing ||
+      intro ||
+      !game ||
+      !before ||
+      before.id !== game.id ||
+      reduced ||
+      viewerChanged
+    ) {
       setMoment(null);
       setTransfers([]);
       return;
     }
     if (before.version === game.version) return;
+    setMoment(null);
+    setTransfers([]);
     const board = boardFor(game),
       classic = isClassic(game);
+    const fresh = game.version === before.version + 1;
+    const events = game.events.filter((event) => !before.events.some((old) => old.id === event.id));
+    const purchaseId = before.auction?.property ?? before.pendingProperty;
+    const eligible = (tile) =>
+      canCelebrate(
+        game.players.find((player) => player.id === game.ownership[tile.id]?.owner),
+        online,
+        onlinePlayer,
+      );
     const claimed = board.find(
       (tile) =>
+        fresh &&
+        events.some((event) => event.type === 'purchase') &&
+        tile.id === purchaseId &&
+        eligible(tile) &&
         game.ownership[tile.id]?.owner &&
         game.ownership[tile.id]?.owner !== before.ownership[tile.id]?.owner,
     );
     const built = board.find(
-      (tile) => (game.ownership[tile.id]?.level || 0) > (before.ownership[tile.id]?.level || 0),
+      (tile) =>
+        fresh &&
+        events.some((event) => event.type === 'build') &&
+        eligible(tile) &&
+        (game.ownership[tile.id]?.level || 0) > (before.ownership[tile.id]?.level || 0),
     );
     if (claimed || built) {
       const tile = built || claimed,
@@ -81,12 +116,12 @@ export default function GameMoment() {
       setTransfers([]);
     }, 1500);
     return () => clearTimeout(timer);
-  }, [game?.id, game?.version, playing, intro, reduced]);
+  }, [game?.id, game?.version, playing, intro, reduced, online, onlinePlayer, audience]);
   if (!playing || intro || reduced) return null;
   return (
     <>
       <AnimatePresence>
-        {moment && !modal && (
+        {moment && !modal && canCelebrate(moment.owner, online, onlinePlayer) && (
           <motion.div
             key={moment.id}
             className="game-moment"
