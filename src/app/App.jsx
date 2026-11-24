@@ -341,6 +341,7 @@ function GameApp() {
         (motionReduced ? ' motion-reduced ' : ' motion-enabled ') +
         (settings.reducedMotion ? 'reduce-motion' : '') +
         (!playing ? ' welcome-screen' : '') +
+        (playing && !intro ? ' in-match' : '') +
         (classic ? ' classic-theme' : '')
       }
       style={{ '--gold': settings.accent || '#e5bd73' }}
@@ -385,6 +386,17 @@ function GameApp() {
                               ? 'Explore capital cities. Build houses and hotels. Outlast your rivals.'
                               : 'Explore iconic worlds. Build your empire. Rule the galaxy.'}
                           </p>
+                        </div>
+                        <div className="bottom-toolbar">
+                          <button disabled={spectator} onClick={() => open('trade')}>
+                            <ArrowRightLeft size={15} /> Trade
+                          </button>
+                          <button onClick={() => open('deed')}>
+                            <Globe2 size={15} /> Property deed
+                          </button>
+                          <button onClick={() => open('rules')}>
+                            <CircleHelp size={15} /> Rules
+                          </button>
                         </div>
                         <div className="mission-actions">
                           <MatchMusic active={!matchAway && game.phase !== 'finished'} />
@@ -458,20 +470,6 @@ function GameApp() {
                           <PropertyPanel />
                           <ActivityPanel />
                         </aside>
-                      </div>
-                      <div className="bottom-toolbar">
-                        <button disabled={spectator} onClick={() => open('trade')}>
-                          <ArrowRightLeft size={15} /> Trade
-                        </button>
-                        <button onClick={() => open('deed')}>
-                          <Globe2 size={15} /> Property deed
-                        </button>
-                        <button onClick={() => open('rules')}>
-                          <CircleHelp size={15} /> Rules
-                        </button>
-                        <button onClick={() => open('newGame')}>
-                          <Plus size={15} /> New game
-                        </button>
                       </div>
                     </>
                   )

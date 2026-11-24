@@ -1,14 +1,20 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { gsap } from 'gsap';
 import { boardFor, isClassic } from '../../game/maps.js';
-import { scenePlan, scenePiecePosition, diceRotation } from './layout.js';
-import { createPlanetarium } from './planetarium.js';
-import { canvasSurface, paintTile, tileImage } from './textures.js';
-import { createPiece, createBuildings, createDice } from './pieces.js';
-import { createFurniture, createTileFrame } from './tabletop.js';
+import { CHARACTERS } from '../../game/rules/data.js';
+import { diceRotation } from './layout.js';
+import { createStarWarsWorld } from './starwars.js';
+import { createIndiaWorld } from './india.js';
 
+/**
+ * Real-time 3D table. The orchestrator owns the renderer, camera, post-processing, game-state
+ * syncing, pawn/dice animation and picking; the theme "world" (starwars.js / india.js) owns the set.
+ */
 export function createTable(
   container,
   initialGame,
@@ -29,23 +35,22 @@ export function createTable(
     disposed = false,
     ready = false,
     dirty = true,
-    lastFrame = 0;
-  let selection = 1,
+    selection = 1,
     hover = null,
     highlightedPlayer = null,
     ownerFilter = null,
-    moveTween = null;
-  let cameraPreset = 'table';
+    moveTimeline = null,
+    following = null,
+    lastInteraction = 0,
+    cameraTween = null,
+    quality = 1;
   const classic = isClassic(game),
-    board = boardFor(game),
-    pawnHeight = classic ? 0.255 : 0.55;
+    board = boardFor(game);
   const resources = new Set(),
-    tiles = new Map(),
+    tweens = new Set(),
     pieces = new Map(),
-    tweens = new Set();
-  const images = new Map(),
-    loadingImages = new Map(),
-    tileMeshes = [];
+    images = new Map(),
+    loadingImages = new Map();
   const register = (resource) => {
     resources.add(resource);
     return resource;
@@ -54,105 +59,37 @@ export function createTable(
   container.dataset.loadedPhotos = '0';
   container.dataset.pawnModels = '0';
   container.dataset.physicalTiles = '40';
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(classic ? '#584b40' : '#354247');
-  const camera = new THREE.OrthographicCamera(-18, 18, 14, -14, 0.1, 150);
-  camera.position.set(12, 26, 28);
+  container.dataset.developmentModels = '0';
+
+  /* ---------- renderer ---------- */
   const renderer = new THREE.WebGLRenderer({
-    antialias: true,
+    antialias: false,
     powerPreference: 'high-performance',
+    stencil: false,
   });
-  renderer.setPixelRatio(
-    Math.max(innerWidth < 700 ? 1.5 : 2, Math.min(window.devicePixelRatio || 1, 2.5)),
-  );
+  const maxRatio = innerWidth < 700 ? 1.6 : 2;
+  const pixelRatio = () => Math.min(window.devicePixelRatio || 1, maxRatio) * quality;
+  renderer.setPixelRatio(pixelRatio());
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
-  renderer.shadowMap.autoUpdate = false;
-  renderer.shadowMap.needsUpdate = true;
-  renderer.domElement.setAttribute('aria-label', 'Interactive 3D Monopoly table');
+  renderer.shadowMap.type = classic ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  renderer.domElement.setAttribute('aria-label', 'Interactive 3D game table');
   renderer.domElement.dataset.testid = 'three-canvas';
+  renderer.domElement.style.touchAction = 'none';
   container.appendChild(renderer.domElement);
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const room = new RoomEnvironment();
-  const environment = pmrem.fromScene(room, 0.06);
-  register(environment);
-  scene.environment = environment.texture;
-  scene.environmentIntensity = 0.45;
-  room.dispose();
-  pmrem.dispose();
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = !reduced;
-  controls.dampingFactor = 0.1;
-  controls.minZoom = 0.6;
-  controls.maxZoom = 3;
-  controls.minPolarAngle = 0.015;
-  controls.maxPolarAngle = Math.PI * 0.4;
-  controls.enablePan = false;
-  controls.target.set(0, 0.3, 0);
-  controls.update();
-  let aspect = 1;
-  const fitCamera = () => {
-    camera.updateMatrixWorld();
-    let width = 0,
-      height = 0;
-    const bounds = classic
-      ? [-12.8, 12.8].flatMap((x) => [-12.8, 12.8].map((z) => ({ x, z })))
-      : Array.from({ length: 64 }, (_, index) => ({
-          x: Math.sin((index * Math.PI) / 32) * 13.9,
-          z: Math.cos((index * Math.PI) / 32) * 13.9,
-        }));
-    for (const { x, z } of bounds)
-      for (const y of [-0.95, 2.8]) {
-        const corner = new THREE.Vector3(x, y, z).applyMatrix4(camera.matrixWorldInverse);
-        width = Math.max(width, Math.abs(corner.x) * 2);
-        height = Math.max(height, Math.abs(corner.y) * 2);
-      }
-    const span = Math.max(height, width / aspect) * 1.055;
-    camera.left = (-span * aspect) / 2;
-    camera.right = (span * aspect) / 2;
-    camera.top = span / 2;
-    camera.bottom = -span / 2;
-    camera.updateProjectionMatrix();
-    dirty = true;
-  };
-  controls.addEventListener('start', () => {
-    cameraPreset = null;
-  });
-  controls.addEventListener('change', () => {
-    dirty = true;
-  });
-  scene.add(new THREE.HemisphereLight('#fff7df', '#65777c', 0.55));
-  const key = new THREE.DirectionalLight('#fff1d6', 2);
-  key.position.set(-14, 28, 12);
-  key.castShadow = true;
-  key.shadow.mapSize.set(innerWidth < 700 ? 1024 : 2048, innerWidth < 700 ? 1024 : 2048);
-  key.shadow.camera.left = key.shadow.camera.bottom = -19;
-  key.shadow.camera.right = key.shadow.camera.top = 19;
-  key.shadow.camera.near = 0.5;
-  key.shadow.camera.far = 75;
-  key.shadow.normalBias = 0.015;
-  key.shadow.bias = -0.00015;
-  key.shadow.radius = 4;
-  scene.add(key);
-  const fill = new THREE.DirectionalLight('#d8edff', 0.5);
-  fill.position.set(16, 12, -18);
-  scene.add(fill);
-  createFurniture(scene, classic, register);
 
-  const material = (color, options = {}) =>
-    register(new THREE.MeshStandardMaterial({ color, roughness: 0.62, ...options }));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(34, 1.6, 0.1, 700);
+
   const disposeGroup = (group) => {
     const used = new Set();
     group.traverse((object) => {
       if (object.geometry) used.add(object.geometry);
       if (object.material)
-        (Array.isArray(object.material) ? object.material : [object.material]).forEach((mat) => {
-          used.add(mat);
-          if (mat.map) used.add(mat.map);
-        });
+        (Array.isArray(object.material) ? object.material : [object.material]).forEach((m) =>
+          used.add(m),
+        );
     });
     used.forEach((resource) => {
       if (resources.has(resource)) {
@@ -162,16 +99,22 @@ export function createTable(
     });
     group.removeFromParent();
   };
+  const tween = (target, { from, to, duration = 0.5, ease = 'power2.out' }) => {
+    if (reduced) return null;
+    const t = gsap.fromTo(target, from, {
+      ...to,
+      duration,
+      ease,
+      onUpdate: () => (dirty = true),
+      onComplete: () => tweens.delete(t),
+    });
+    tweens.add(t);
+    return t;
+  };
   const requestImage = (url, finished) => {
     if (!url) return;
-    if (images.has(url)) {
-      finished(images.get(url));
-      return;
-    }
-    if (loadingImages.has(url)) {
-      loadingImages.get(url).callbacks.push(finished);
-      return;
-    }
+    if (images.has(url)) return finished(images.get(url));
+    if (loadingImages.has(url)) return loadingImages.get(url).callbacks.push(finished);
     const image = new Image(),
       callbacks = [finished];
     image.crossOrigin = 'anonymous';
@@ -182,188 +125,253 @@ export function createTable(
       if (disposed) return;
       images.set(url, image);
       container.dataset.loadedPhotos = images.size;
-      callbacks.forEach((callback) => callback(image));
+      callbacks.forEach((cb) => cb(image));
       dirty = true;
     };
     image.onerror = () => loadingImages.delete(url);
     image.src = url;
   };
-  const highlightTile = (info) => {
-    const player = game.players.find((player) => player.id === highlightedPlayer);
-    const location = player && !player.bankrupt && player.position === info.tile.id;
-    const owned = ownerFilter && game.ownership[info.tile.id]?.owner === ownerFilter;
-    const owner = game.players.find((player) => player.id === ownerFilter);
-    info.border.visible = Boolean(
-      location ||
-      owned ||
-      (!highlightedPlayer && (selection === info.tile.id || hover === info.tile.id)),
-    );
-    info.border.userData.material.color.set(
-      location ? player.color : owned ? owner.color : '#d4ad62',
-    );
-    const dim = ownerFilter && !location && !owned;
-    info.top.color.set(dim ? '#92978d' : '#ffffff');
-    info.group.position.y = classic
-      ? selection === info.tile.id
-        ? 0.175
-        : 0.14
-      : selection === info.tile.id
-        ? 0.42
-        : 0.38;
+
+  /* ---------- world ---------- */
+  const worldContext = {
+    scene,
+    register,
+    container,
+    renderer,
+    disposeGroup,
+    tween,
+    requestImage,
+    dirty: () => (dirty = true),
+    repaint: (info) => repaint(info),
   };
-  const repaint = (info) => {
-    const owned = game.ownership[info.tile.id],
-      owner = game.players.find((player) => player.id === owned?.owner);
-    paintTile(info.surface, info.tile, classic, info.photo, owned, owner?.color, game.rules);
-    info.ownerBar.visible = Boolean(owner);
-    if (owner) info.ownerBar.material.color.set(owner.color);
-    highlightTile(info);
-  };
-  for (const tile of board) {
-    const plan = scenePlan(tile.id, classic),
-      corner = tile.id % 10 === 0;
-    const width = classic ? (corner ? 3 : 2) : plan.width,
-      depth = 3;
-    const group = new THREE.Group();
-    group.position.set(plan.x, classic ? 0.14 : 0.38, plan.z);
-    group.rotation.y = plan.rotation;
-    scene.add(group);
-    const surface = canvasSurface(768, classic && corner ? 768 : 1152);
-    register(surface.texture);
-    surface.texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    const side = classic
-      ? material('#d8cdb4', { roughness: 0.72 })
-      : material('#236981', { transparent: true, opacity: 0.28, depthWrite: false });
-    const top = material(
-      '#ffffff',
-      classic
-        ? { map: surface.texture, roughness: 0.76 }
-        : {
-            map: surface.texture,
-            roughness: 0.6,
-            transparent: true,
-            opacity: 0.94,
-            emissive: '#35758a',
-            emissiveIntensity: 0.28,
-          },
-    );
-    const geometry = register(
-      new THREE.BoxGeometry(width - 0.055, classic ? 0.2 : 0.13, depth - 0.055),
-    );
-    if (!classic) {
-      const vertices = geometry.attributes.position;
-      for (let index = 0; index < vertices.count; index++)
-        vertices.setX(
-          index,
-          (vertices.getX(index) * (plan.radius + vertices.getZ(index))) / plan.radius,
-        );
-      vertices.needsUpdate = true;
-      geometry.computeVertexNormals();
-    }
-    const mesh = new THREE.Mesh(geometry, [side, side, top, side, side, side]);
-    mesh.castShadow = mesh.receiveShadow = classic;
-    mesh.userData.tileId = tile.id;
-    group.add(mesh);
-    tileMeshes.push(mesh);
-    const ownerBar = new THREE.Mesh(
-      register(new THREE.BoxGeometry(width - 0.12, 0.055, 0.12)),
-      material('#d4ad62', { roughness: 0.35 }),
-    );
-    ownerBar.position.set(0, 0.13, depth / 2 - 0.12);
-    group.add(ownerBar);
-    const border = classic
-      ? createTileFrame(width - 0.025, depth - 0.025, register)
-      : new THREE.LineSegments(
-          register(new THREE.EdgesGeometry(geometry)),
-          register(
-            new THREE.LineBasicMaterial({ color: '#93e5eb', transparent: true, opacity: 0.75 }),
-          ),
-        );
-    if (!classic) border.userData.material = border.material;
-    group.add(border);
-    border.visible = false;
-    const info = {
-      tile,
-      plan,
-      group,
-      mesh,
-      top,
-      surface,
-      ownerBar,
-      border,
-      photo: null,
-      buildings: null,
-      level: 0,
-      width,
-      depth,
-    };
-    tiles.set(tile.id, info);
-    requestImage(tileImage(tile), (image) => {
-      info.photo = image;
-      repaint(info);
-    });
+  let world;
+  try {
+    world = classic
+      ? createIndiaWorld(worldContext, board)
+      : createStarWarsWorld(worldContext, board);
+  } catch (error) {
+    console.warn('3D world failed to build', error);
+    renderer.dispose();
+    renderer.domElement.remove();
+    throw error;
   }
-  const planets = classic
-    ? null
-    : createPlanetarium(scene, board, register, container, () => {
-        if (!disposed) dirty = true;
-      });
-  const dice = [createDice(register, classic), createDice(register, classic)];
-  dice.forEach((die, index) => {
-    die.position.set(index ? 1 : -1, 0.76, classic ? 6.7 : 8.5);
-    die.receiveShadow = true;
+  renderer.toneMappingExposure = world.exposure;
+
+  /* ---------- post-processing ---------- */
+  let composer = null,
+    bloom = null;
+  const buildComposer = () => {
+    try {
+      const target = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 4 });
+      composer = new EffectComposer(renderer, target);
+      composer.addPass(new RenderPass(scene, camera));
+      bloom = new UnrealBloomPass(
+        new THREE.Vector2(512, 512),
+        world.bloom.strength,
+        world.bloom.radius,
+        world.bloom.threshold,
+      );
+      composer.addPass(bloom);
+      composer.addPass(new OutputPass());
+    } catch (error) {
+      console.warn('Post-processing unavailable; rendering directly.', error);
+      composer = null;
+    }
+  };
+  buildComposer();
+
+  /* ---------- camera & controls ---------- */
+  const home = { target: new THREE.Vector3(0, classic ? 0.2 : 0.5, world.camera.lift || 0) };
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = !reduced;
+  controls.dampingFactor = 0.08;
+  controls.rotateSpeed = 0.7;
+  controls.zoomSpeed = 0.8;
+  controls.enablePan = true;
+  controls.screenSpacePanning = false;
+  controls.minPolarAngle = 0.08;
+  controls.maxPolarAngle = classic ? 1.38 : 1.46;
+  controls.minDistance = world.camera.min;
+  controls.maxDistance = world.camera.max;
+  controls.target.copy(home.target);
+  let aspect = 1.6;
+  const fitDistance = () => {
+    const vfov = THREE.MathUtils.degToRad(world.camera.fov);
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * aspect);
+    const sinE = Math.sin(world.camera.elevation);
+    const dv = (world.bounds * (sinE + 0.22)) / Math.tan(vfov / 2);
+    const dh = (world.bounds * 1.04) / Math.tan(hfov / 2);
+    return Math.min(world.camera.max * 0.92, Math.max(dv, dh) * 1.02);
+  };
+  const place = (distance, elevation, azimuth, target) => {
+    const phi = Math.PI / 2 - elevation;
+    camera.position.set(
+      target.x + distance * Math.sin(phi) * Math.sin(azimuth),
+      target.y + distance * Math.cos(phi),
+      target.z + distance * Math.sin(phi) * Math.cos(azimuth),
+    );
+    controls.target.copy(target);
+    camera.lookAt(target);
+  };
+  const currentPose = () => {
+    const offset = camera.position.clone().sub(controls.target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    return {
+      distance: spherical.radius,
+      phi: spherical.phi,
+      theta: spherical.theta,
+      target: controls.target.clone(),
+    };
+  };
+  const flyTo = ({ distance, elevation, azimuth, target }, duration = 1.1) => {
+    cameraTween?.kill();
+    following = null;
+    const from = currentPose();
+    const to = {
+      distance: distance ?? from.distance,
+      phi: elevation === undefined ? from.phi : Math.PI / 2 - elevation,
+      theta: azimuth === undefined ? from.theta : azimuth,
+      target: target || from.target,
+    };
+    // shortest way around
+    while (to.theta - from.theta > Math.PI) to.theta -= Math.PI * 2;
+    while (to.theta - from.theta < -Math.PI) to.theta += Math.PI * 2;
+    const apply = (p) => {
+      const spherical = new THREE.Spherical(p.distance, p.phi, p.theta);
+      camera.position.setFromSpherical(spherical).add(p.target);
+      controls.target.copy(p.target);
+      camera.lookAt(p.target);
+      dirty = true;
+    };
+    if (reduced || duration <= 0) return apply(to);
+    const state = { k: 0 };
+    cameraTween = gsap.to(state, {
+      k: 1,
+      duration,
+      ease: 'power3.inOut',
+      onUpdate: () => {
+        apply({
+          distance: THREE.MathUtils.lerp(from.distance, to.distance, state.k),
+          phi: THREE.MathUtils.lerp(from.phi, to.phi, state.k),
+          theta: THREE.MathUtils.lerp(from.theta, to.theta, state.k),
+          target: from.target.clone().lerp(to.target, state.k),
+        });
+      },
+    });
+  };
+  const homePose = () => ({
+    distance: fitDistance(),
+    elevation: world.camera.elevation,
+    azimuth: 0,
+    target: home.target,
+  });
+  const resetHome = () => {
+    const p = homePose();
+    place(p.distance, p.elevation, p.azimuth, p.target);
+  };
+  resetHome();
+  controls.update();
+  controls.addEventListener('start', () => {
+    cameraTween?.kill();
+    following = null;
+    lastInteraction = performance.now();
+  });
+  controls.addEventListener('change', () => (dirty = true));
+
+  /* ---------- tile state ---------- */
+  const styleTile = (info) => {
+    const hp = game.players.find((p) => p.id === highlightedPlayer);
+    const location = hp && !hp.bankrupt && hp.position === info.tile.id ? hp.color : null;
+    const filterOwner = game.players.find((p) => p.id === ownerFilter);
+    const owned = ownerFilter && game.ownership[info.tile.id]?.owner === ownerFilter;
+    world.style(info, {
+      selected: selection === info.tile.id && !highlightedPlayer,
+      hover: hover === info.tile.id && !highlightedPlayer,
+      location,
+      ownerMatch: owned ? filterOwner?.color : null,
+      dim: Boolean(ownerFilter && !location && !owned),
+    });
+  };
+  function repaint(info) {
+    const owned = game.ownership[info.tile.id];
+    const owner = game.players.find((p) => p.id === owned?.owner);
+    world.paint(info, game, owner);
+    styleTile(info);
+  }
+
+  /* ---------- dice ---------- */
+  const dice = [world.createDie(), world.createDie()];
+  dice.forEach((die, i) => {
+    die.position.copy(world.diceHome[i]);
     scene.add(die);
   });
   const setDice = (animated) =>
-    dice.forEach((die) => {
-      const index = dice.indexOf(die),
-        [x, y, z] = diceRotation(game.dice[index]);
+    dice.forEach((die, i) => {
+      const [x, y, z] = diceRotation(game.dice[i]);
+      const home = world.diceHome[i];
       if (animated && !reduced) {
-        const timeline = gsap.timeline({ onComplete: () => tweens.delete(timeline) });
+        const timeline = gsap.timeline({
+          onComplete: () => tweens.delete(timeline),
+          onUpdate: () => (dirty = true),
+        });
         tweens.add(timeline);
+        const startX = home.x + (i ? 4.5 : -4.5),
+          startZ = home.z + (i ? 5 : 4);
         timeline.fromTo(
           die.rotation,
-          { x: x + Math.PI * 4, y: Math.PI * 3, z: z + Math.PI * 2 },
-          { x, y, z, duration: 1.05, ease: 'power3.out' },
+          { x: x + Math.PI * 6, y: Math.PI * 5, z: z + Math.PI * 3 },
+          { x, y, z, duration: 1.15, ease: 'power3.out' },
           0,
         );
         timeline.fromTo(
           die.position,
-          { y: 2.8 },
-          { y: 0.76, duration: 1.05, ease: 'bounce.out' },
+          { x: startX, z: startZ },
+          { x: home.x, z: home.z, duration: 1.1, ease: 'power2.out' },
           0,
         );
-      } else die.rotation.set(x, y, z);
+        timeline.fromTo(
+          die.position,
+          { y: home.y + 5.5 },
+          { y: home.y, duration: 1.15, ease: 'bounce.out' },
+          0,
+        );
+      } else {
+        die.rotation.set(x, y, z);
+        die.position.copy(home);
+      }
     });
+
+  /* ---------- pieces ---------- */
+  const pawnKind = (player) => CHARACTERS.find((c) => c.id === player.character)?.symbol || 'saber';
   const pawnPosition = (position, player) => {
     const occupants = game.players.filter(
-      (pawn) => !pawn.bankrupt && (pawn.position === position || pawn.id === player.id),
+      (p) => !p.bankrupt && (p.position === position || p.id === player.id),
     );
-    return scenePiecePosition(
+    return world.piecePosition(
       position,
       Math.max(
         0,
-        occupants.findIndex((pawn) => pawn.id === player.id),
+        occupants.findIndex((p) => p.id === player.id),
       ),
       occupants.length,
-      classic,
     );
   };
   const stylePiece = (piece, player) => {
-    const count = game.players.filter(
-      (pawn) => !pawn.bankrupt && pawn.position === player.position,
-    ).length;
-    const scale = count > 4 ? 0.66 : count > 1 ? 0.8 : 1.12;
-    piece.scale.setScalar(scale * (player.id === highlightedPlayer ? 1.12 : 1));
-    piece.userData.ring.visible =
-      (game.phase !== 'finished' && player.id === game.players[game.turn].id) ||
-      player.id === highlightedPlayer;
-    piece.userData.ring.scale.setScalar(1);
-    piece.userData.visual.scale.setScalar(1);
+    const count = game.players.filter((p) => !p.bankrupt && p.position === player.position).length;
+    const scale =
+      (count > 4 ? 0.7 : count > 1 ? 0.86 : 1.05) *
+      world.pawnScale *
+      (player.id === highlightedPlayer ? 1.12 : 1);
+    piece.userData.baseScale = scale;
+    piece.scale.setScalar(scale);
+    const active = game.phase !== 'finished' && player.id === game.players[game.turn].id;
+    piece.userData.active = active || player.id === highlightedPlayer;
+    piece.userData.ring.visible = piece.userData.active;
+    if (piece.userData.beam) piece.userData.beam.visible = piece.userData.active;
   };
   const setPieces = (before, animate) => {
-    const active = game.players.filter((player) => !player.bankrupt),
-      ids = new Set(active.map((player) => player.id));
+    const active = game.players.filter((p) => !p.bankrupt),
+      ids = new Set(active.map((p) => p.id));
     for (const [id, piece] of pieces)
       if (!ids.has(id)) {
         disposeGroup(piece);
@@ -372,7 +380,8 @@ export function createTable(
     for (const player of active) {
       let piece = pieces.get(player.id);
       if (!piece) {
-        piece = createPiece(player.color, classic, register);
+        piece = world.createPawn({ ...player, pawnKind: pawnKind(player) });
+        piece.traverse((o) => (o.userData.playerId = player.id));
         scene.add(piece);
         pieces.set(player.id, piece);
       }
@@ -380,53 +389,59 @@ export function createTable(
       piece.userData.playerId = player.id;
       stylePiece(piece, player);
       const position = pawnPosition(player.position, player);
+      const y = world.pawnY + (world.tileTop === undefined ? 0 : 0);
       if (animate && !reduced && game.movement?.player === player.id) {
-        const movement = game.movement;
+        const m = game.movement;
         const path =
-          movement.path ||
+          m.path ||
           Array.from(
-            { length: movement.steps },
-            (_, step) => (movement.from + (movement.back ? -(step + 1) : step + 1) + 80) % 40,
+            { length: m.steps },
+            (_, step) => (m.from + (m.back ? -(step + 1) : step + 1) + 80) % 40,
           );
-        const start = pawnPosition(movement.from, player);
-        piece.position.set(start.x, pawnHeight, start.z);
-        if (moveTween) {
-          moveTween.kill();
-          tweens.delete(moveTween);
-        }
+        const start = pawnPosition(m.from, player);
+        piece.position.set(start.x, y, start.z);
+        moveTimeline?.kill();
         onMoving(true);
+        const follow = { enabled: true };
+        following = follow;
         const timeline = gsap.timeline({
+          onUpdate: () => (dirty = true),
           onComplete: () => {
             onMoving(false);
             tweens.delete(timeline);
-            moveTween = null;
+            moveTimeline = null;
             dirty = true;
+            if (following === follow) {
+              following = null;
+              if (performance.now() - lastInteraction > 4000)
+                flyTo(
+                  {
+                    ...homePose(),
+                    distance: currentPose().distance,
+                    azimuth: currentPose().theta,
+                    elevation: Math.PI / 2 - currentPose().phi,
+                  },
+                  1.4,
+                );
+            }
           },
         });
-        moveTween = timeline;
+        moveTimeline = timeline;
         tweens.add(timeline);
-        let previousPosition = start;
+        let previous = start;
         path.forEach((id, step) => {
           const target = pawnPosition(id, player),
-            at = step * 0.26;
-          const angle = Math.atan2(target.x - previousPosition.x, target.z - previousPosition.z);
+            at = step * 0.28;
+          const angle = Math.atan2(target.x - previous.x, target.z - previous.z);
           timeline.to(piece.rotation, { y: angle, duration: 0.18, ease: 'power1.out' }, at);
           timeline.to(
             piece.position,
-            { x: target.x, z: target.z, duration: 0.26, ease: 'power1.inOut' },
+            { x: target.x, z: target.z, duration: 0.28, ease: 'power1.inOut' },
             at,
           );
-          timeline.to(
-            piece.position,
-            { y: pawnHeight + 0.4, duration: 0.13, ease: 'power1.out' },
-            at,
-          );
-          timeline.to(
-            piece.position,
-            { y: pawnHeight, duration: 0.13, ease: 'power1.in' },
-            at + 0.13,
-          );
-          previousPosition = target;
+          timeline.to(piece.position, { y: y + 0.55, duration: 0.14, ease: 'power2.out' }, at);
+          timeline.to(piece.position, { y, duration: 0.14, ease: 'power2.in' }, at + 0.14);
+          previous = target;
         });
         if (path.at(-1) !== player.position)
           timeline.to(piece.position, {
@@ -435,52 +450,39 @@ export function createTable(
             duration: 0.45,
             ease: 'power2.inOut',
           });
+        piece.userData.following = true;
       } else if (
-        !moveTween ||
-        before?.players.find((old) => old.id === player.id)?.position !== player.position
+        !moveTimeline ||
+        before?.players.find((o) => o.id === player.id)?.position !== player.position
       ) {
-        piece.position.set(position.x, pawnHeight, position.z);
+        piece.position.set(position.x, y, position.z);
       }
     }
     container.dataset.pawnModels = pieces.size;
   };
+
+  /* ---------- game sync ---------- */
   function setGame(next) {
     const before = game,
       changed = next.version !== game.version;
     game = next;
-    for (const info of tiles.values()) {
+    for (const info of world.tiles.values()) {
       repaint(info);
       const level = game.ownership[info.tile.id]?.level || 0;
-      if (level !== info.level) {
-        if (info.buildings) disposeGroup(info.buildings);
-        info.level = level;
-        info.buildings = null;
-        if (level) {
-          info.buildings = createBuildings(level, classic, register);
-          info.buildings.position.set(0, 0.11, -info.depth / 2 + 0.42);
-          info.group.add(info.buildings);
-          if (changed && !reduced) {
-            const tween = gsap.from(info.buildings.scale, {
-              y: 0.01,
-              duration: 0.55,
-              ease: 'back.out(1.3)',
-              onComplete: () => tweens.delete(tween),
-            });
-            tweens.add(tween);
-          }
-        }
-      }
+      if (level !== info.level) world.setDevelopment(info, level, changed);
     }
-    planets?.highlight(game, selection, ownerFilter);
+    world.styleWorlds(game, selection, ownerFilter);
     setPieces(before, changed);
     setDice(changed && game.lastActionType === 'ROLL');
-    dirty = true;
-    container.dataset.developmentModels = [...tiles.values()].reduce(
-      (count, info) => count + (info.level === 5 ? 1 : info.level),
+    container.dataset.developmentModels = [...world.tiles.values()].reduce(
+      (n, info) => n + (info.level === 5 ? 1 : info.level),
       0,
     );
+    dirty = true;
   }
   setGame(game);
+
+  /* ---------- picking ---------- */
   const raycaster = new THREE.Raycaster(),
     pointer = new THREE.Vector2();
   const pick = (event) => {
@@ -491,42 +493,42 @@ export function createTable(
     );
     raycaster.setFromCamera(pointer, camera);
     const hit = raycaster.intersectObjects(
-      [...tileMeshes, ...dice, ...pieces.values(), ...(planets?.pickables || [])],
+      [...world.pickables, ...dice, ...pieces.values()],
       true,
     )[0]?.object;
+    if (!hit) return null;
     if (dice.includes(hit)) return 'dice';
-    for (let object = hit; object; object = object.parent)
-      if (object.userData.tileId !== undefined) return object.userData.tileId;
+    for (let o = hit; o; o = o.parent)
+      if (o.userData.tileId !== undefined) return o.userData.tileId;
     return null;
   };
-  let down;
-  const pointerDown = (event) => {
-    down = { x: event.clientX, y: event.clientY };
-  };
-  const pointerUp = (event) => {
+  let down = null;
+  const pointerDown = (e) => (down = { x: e.clientX, y: e.clientY });
+  const pointerUp = (e) => {
     const started = down;
     down = null;
-    if (!started || Math.hypot(event.clientX - started.x, event.clientY - started.y) > 6) return;
-    const id = pick(event);
+    if (!started || Math.hypot(e.clientX - started.x, e.clientY - started.y) > 6) return;
+    const id = pick(e);
     if (id === 'dice') onRoll?.();
     else if (id !== null) onSelect(id);
   };
-  const pointerMove = (event) => {
-    if (down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 6) {
+  const pointerMove = (e) => {
+    if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) {
       if (hover !== null) {
         hover = null;
         onHover(null);
+        world.tiles.forEach(styleTile);
       }
       renderer.domElement.style.cursor = 'grabbing';
       return;
     }
-    const id = pick(event);
+    const id = pick(e);
     renderer.domElement.style.cursor =
       id === 'dice' ? (mayRoll?.() ? 'pointer' : 'default') : id === null ? 'grab' : 'pointer';
     const tile = id === 'dice' ? null : id;
     if (tile === hover) return;
     hover = tile;
-    tiles.forEach(highlightTile);
+    world.tiles.forEach(styleTile);
     onHover(tile);
     dirty = true;
   };
@@ -534,78 +536,157 @@ export function createTable(
     hover = null;
     down = null;
     onHover(null);
-    tiles.forEach(highlightTile);
+    world.tiles.forEach(styleTile);
     dirty = true;
   };
-  const contextLost = (event) => {
-    event.preventDefault();
+  const contextLost = (e) => {
+    e.preventDefault();
     if (!disposed) onError();
   };
-  for (const [name, handler] of [
+  const listeners = [
     ['pointerdown', pointerDown],
     ['pointerup', pointerUp],
     ['pointermove', pointerMove],
     ['pointerleave', pointerLeave],
     ['webglcontextlost', contextLost],
-  ])
-    renderer.domElement.addEventListener(name, handler);
+  ];
+  listeners.forEach(([n, h]) => renderer.domElement.addEventListener(n, h));
+
+  /* ---------- sizing ---------- */
   const resize = new ResizeObserver(() => {
     const width = container.clientWidth,
       height = container.clientHeight;
     if (!width || !height || disposed) return;
-    renderer.setSize(width, height, false);
+    const previousAspect = aspect;
     aspect = width / height;
-    if (cameraPreset === 'focus') {
-      const span = camera.top - camera.bottom;
-      camera.left = (-span * aspect) / 2;
-      camera.right = (span * aspect) / 2;
-      camera.updateProjectionMatrix();
-    } else fitCamera();
+    renderer.setPixelRatio(pixelRatio());
+    renderer.setSize(width, height, false);
+    camera.aspect = aspect;
+    camera.updateProjectionMatrix();
+    composer?.setPixelRatio(pixelRatio());
+    composer?.setSize(width, height);
+    bloom?.resolution.set(width / 2, height / 2);
+    if (!ready || Math.abs(previousAspect - aspect) > 0.001) {
+      const pose = currentPose();
+      if (!ready || !cameraTween) {
+        const p = homePose();
+        if (!ready) place(p.distance, p.elevation, p.azimuth, p.target);
+        else
+          place(
+            Math.max(pose.distance, p.distance * 0.7) *
+              (pose.distance > p.distance * 1.4 ? 1 : p.distance / Math.max(pose.distance, 1)),
+            Math.PI / 2 - pose.phi,
+            pose.theta,
+            pose.target,
+          );
+      }
+    }
     dirty = true;
   });
   resize.observe(container);
+
+  /* ---------- frame loop ---------- */
+  let frames = 0,
+    slowFrames = 0,
+    lastNow = 0,
+    lastOverlay = 0,
+    lastAnchor = null,
+    lastLabels = '';
+  const projectVector = new THREE.Vector3();
   renderer.setAnimationLoop((now) => {
-    if (disposed || document.hidden || now - lastFrame < (tweens.size ? 16 : 32)) return;
-    lastFrame = now;
-    const changed = controls.update();
-    if (!reduced) {
-      resources.forEach((resource) => {
-        if (resource.userData?.holoTime) resource.userData.holoTime.value = now / 1000;
-      });
-      planets?.animate(now / 1000);
+    if (disposed || document.hidden) return;
+    const dt = Math.min(0.1, (now - lastNow) / 1000 || 0.016);
+    lastNow = now;
+    const time = now / 1000;
+    const moved = controls.update();
+    // follow the moving pawn (soft)
+    if (following && moveTimeline) {
+      const piece = pieces.get(game.movement?.player);
+      if (piece) {
+        const goal = piece.position.clone();
+        goal.y = home.target.y;
+        goal.multiplyScalar(0.55);
+        const delta = goal
+          .clone()
+          .sub(controls.target)
+          .multiplyScalar(Math.min(1, dt * 2.6));
+        controls.target.add(delta);
+        camera.position.add(delta);
+        dirty = true;
+      }
     }
-    if (!reduced)
+    const animating = !reduced;
+    if (animating) {
+      world.animate(time);
       pieces.forEach((piece) => {
-        if (piece.userData.ring.visible) {
-          const breathe = 1 + Math.sin(now / 380) * 0.035;
-          piece.userData.visual.scale.setScalar(breathe);
-          piece.userData.ring.scale.setScalar(1 + Math.sin(now / 380) * 0.045);
+        const ud = piece.userData;
+        if (ud.active) {
+          const pulse = 1 + Math.sin(time * 3) * 0.04;
+          ud.ring.scale.setScalar(pulse);
+          if (!moveTimeline) ud.visual.position.y = Math.sin(time * 2.2) * 0.04 + 0.04;
+          if (ud.beam) ud.beam.material.opacity = 0.06 + Math.sin(time * 3) * 0.015;
+        } else ud.visual.position.y = 0;
+      });
+    }
+    if (reduced && !dirty && !moved && !tweens.size) return;
+    // adaptive quality: drop resolution if the GPU struggles
+    frames++;
+    if (animating && dt > 0.034) slowFrames++;
+    if (frames === 120) {
+      if (slowFrames > 70 && quality > 0.6) {
+        quality = Math.max(0.6, quality - 0.2);
+        renderer.setPixelRatio(pixelRatio());
+        composer?.setPixelRatio(pixelRatio());
+        const w = container.clientWidth,
+          h = container.clientHeight;
+        renderer.setSize(w, h, false);
+        composer?.setSize(w, h);
+      }
+      frames = 0;
+      slowFrames = 0;
+    }
+    if (composer) composer.render(dt);
+    else renderer.render(scene, camera);
+    // overlay anchors for the HTML layer
+    const width = container.clientWidth,
+      height = container.clientHeight;
+    if (dirty || moved || animating) {
+      const plan = world.plan(selection);
+      projectVector.set(plan.x, world.tileTop + 0.4, plan.z).project(camera);
+      const anchor = {
+        x: Math.round(((projectVector.x + 1) / 2) * width),
+        y: Math.round(((1 - projectVector.y) / 2) * height),
+        visible:
+          Math.abs(projectVector.x) < 1 && Math.abs(projectVector.y) < 1 && projectVector.z < 1,
+      };
+      // Throttle React updates: only when something moved on screen, at most ~25 times a second.
+      if (now - lastOverlay > 40) {
+        lastOverlay = now;
+        if (
+          !lastAnchor ||
+          lastAnchor.x !== anchor.x ||
+          lastAnchor.y !== anchor.y ||
+          lastAnchor.visible !== anchor.visible
+        ) {
+          lastAnchor = anchor;
+          onProject(anchor);
         }
-      });
-    if (reduced && !dirty && !changed && !tweens.size) return;
-    if (dirty || tweens.size) renderer.shadowMap.needsUpdate = true;
-    renderer.render(scene, camera);
-    if (dirty || changed || !ready) {
-      const plan = scenePlan(selection, classic),
-        point = new THREE.Vector3(plan.x, 0.4, plan.z).project(camera);
-      onWorldProject?.(
-        planets?.project(camera, container.clientWidth, container.clientHeight) || [],
-      );
-      onProject({
-        x: ((point.x + 1) / 2) * container.clientWidth,
-        y: ((1 - point.y) / 2) * container.clientHeight,
-        visible: Math.abs(point.x) < 1 && Math.abs(point.y) < 1,
-      });
-      const die = dice[0].position.clone().project(camera);
-      container.dataset.diceX = ((die.x + 1) / 2) * container.clientWidth;
-      container.dataset.diceY = ((1 - die.y) / 2) * container.clientHeight;
-      container.dataset.cameraZoom = camera.zoom;
-      container.dataset.cameraView = cameraPreset || 'orbit';
-      // Equal scales keep projected spheres round at every viewport size.
-      container.dataset.pixelScaleX =
-        (Math.abs(camera.projectionMatrix.elements[0]) * container.clientWidth) / 2;
-      container.dataset.pixelScaleY =
-        (Math.abs(camera.projectionMatrix.elements[5]) * container.clientHeight) / 2;
+        const labels = world.project(camera, width, height, game);
+        const signature = labels
+          .map(
+            (l) =>
+              `${l.id}:${Math.round(l.x)}:${Math.round(l.y)}:${l.visible ? 1 : 0}:${l.color || ''}`,
+          )
+          .join('|');
+        if (signature !== lastLabels) {
+          lastLabels = signature;
+          onWorldProject?.(labels);
+        }
+      }
+      projectVector.copy(dice[0].position).project(camera);
+      container.dataset.diceX = ((projectVector.x + 1) / 2) * width;
+      container.dataset.diceY = ((1 - projectVector.y) / 2) * height;
+      container.dataset.cameraZoom = (fitDistance() / currentPose().distance).toFixed(3);
     }
     dirty = false;
     if (!ready) {
@@ -613,89 +694,95 @@ export function createTable(
       onReady();
     }
   });
+
   return {
     update: setGame,
     highlight(playerId, filter) {
       highlightedPlayer = playerId;
       ownerFilter = filter;
-      planets?.highlight(game, selection, ownerFilter);
-      tiles.forEach(highlightTile);
+      world.styleWorlds(game, selection, ownerFilter);
+      world.tiles.forEach(styleTile);
       pieces.forEach((piece, id) => {
-        const player = game.players.find((player) => player.id === id);
+        const player = game.players.find((p) => p.id === id);
         if (player) stylePiece(piece, player);
       });
       dirty = true;
     },
     select(id) {
       selection = id;
-      planets?.highlight(game, id, ownerFilter);
-      tiles.forEach(highlightTile);
+      world.styleWorlds(game, id, ownerFilter);
+      world.tiles.forEach(styleTile);
       dirty = true;
     },
     reduced(value) {
       reduced = value;
       controls.enableDamping = !value;
       if (value) {
-        tweens.forEach((tween) => tween.kill());
+        tweens.forEach((t) => t.kill());
         tweens.clear();
-        moveTween = null;
+        moveTimeline = null;
         onMoving(false);
         setGame(game);
-        dice.forEach((die) => {
-          die.position.y = 0.76;
-        });
       }
       dirty = true;
     },
     camera(mode) {
-      cameraPreset = mode === 'projection' ? 'focus' : mode;
-      const plan = planets?.position(selection) || scenePlan(selection, classic),
-        target =
-          mode === 'projection'
-            ? new THREE.Vector3(plan.x, plan.y ?? 0.3, plan.z)
-            : new THREE.Vector3(0, 0.3, 0);
-      const offset = mode === 'top' ? new THREE.Vector3(0, 40, 0.6) : new THREE.Vector3(12, 26, 28);
-      // Set a complete camera pose together so a preset cannot lose its framing mid-transition.
-      controls.target.copy(target);
-      camera.position.copy(target).add(offset);
-      camera.zoom = 1;
-      controls.update();
-      if (mode !== 'projection') fitCamera();
-      else {
-        camera.zoom = 1.7;
-        camera.updateProjectionMatrix();
-      }
+      container.dataset.cameraView = mode === 'projection' ? 'focus' : mode;
+      const base = homePose();
+      if (mode === 'top') flyTo({ ...base, elevation: 1.5, azimuth: 0 }, 1.1);
+      else if (mode === 'projection') {
+        const point = world.focusPoint(selection);
+        const angle = Math.atan2(point.x, point.z);
+        flyTo(
+          {
+            distance: Math.max(world.camera.min * 1.7, base.distance * 0.42),
+            elevation: 0.62,
+            azimuth: angle,
+            target: point,
+          },
+          1.2,
+        );
+      } else flyTo(base, 1.1);
       dirty = true;
     },
     zoom(factor) {
-      cameraPreset = null;
-      camera.zoom = THREE.MathUtils.clamp(camera.zoom / factor, 0.6, 3);
-      camera.updateProjectionMatrix();
-      controls.update();
-      dirty = true;
+      const pose = currentPose();
+      flyTo(
+        {
+          distance: THREE.MathUtils.clamp(
+            pose.distance * factor,
+            world.camera.min,
+            world.camera.max,
+          ),
+        },
+        0.35,
+      );
     },
     dispose() {
       disposed = true;
       renderer.setAnimationLoop(null);
       resize.disconnect();
       controls.dispose();
-      tweens.forEach((tween) => tween.kill());
+      cameraTween?.kill();
+      tweens.forEach((t) => t.kill());
       onMoving(false);
       loadingImages.forEach(({ image }) => {
         image.onload = image.onerror = null;
         image.src = '';
       });
       loadingImages.clear();
-      for (const [name, handler] of [
-        ['pointerdown', pointerDown],
-        ['pointerup', pointerUp],
-        ['pointermove', pointerMove],
-        ['pointerleave', pointerLeave],
-        ['webglcontextlost', contextLost],
-      ])
-        renderer.domElement.removeEventListener(name, handler);
-      resources.forEach((resource) => resource.dispose());
+      listeners.forEach(([n, h]) => renderer.domElement.removeEventListener(n, h));
+      scene.traverse((o) => {
+        if (o.geometry) o.geometry.dispose?.();
+        const m = o.material;
+        (Array.isArray(m) ? m : m ? [m] : []).forEach((mm) => {
+          Object.values(mm).forEach((v) => v?.isTexture && v.dispose());
+          mm.dispose?.();
+        });
+      });
+      resources.forEach((r) => r.dispose?.());
       resources.clear();
+      composer?.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();

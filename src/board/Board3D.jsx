@@ -129,8 +129,12 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
                   data-world-id={label.id}
                   data-model-x={label.modelX}
                   data-model-y={label.modelY}
-                  className={'holoworld-label ' + (selected === label.id ? 'selected' : '')}
-                  style={{ left: label.x, top: label.y }}
+                  className={
+                    'holoworld-label ' +
+                    (selected === label.id ? 'selected ' : '') +
+                    (label.color ? 'owned' : '')
+                  }
+                  style={{ left: label.x, top: label.y, '--owner': label.color || 'transparent' }}
                 >
                   {label.name}
                 </span>
@@ -146,7 +150,13 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
         {anchor?.visible && ready && (
           <div
             className="spatial-location-badge"
-            style={{ left: anchor.x, top: anchor.y, '--location-color': tile.color || '#b9dcea' }}
+            style={{
+              '--ax': anchor.x + 'px',
+              '--ay': anchor.y + 'px',
+              left: anchor.x,
+              top: anchor.y,
+              '--location-color': tile.color || '#b9dcea',
+            }}
           >
             <small>{owner ? owner.name : 'UNCLAIMED'}</small>
             <strong>{tile.name}</strong>
