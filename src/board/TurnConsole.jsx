@@ -101,7 +101,7 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
           version={game.version}
           rolling={game.lastActionType === 'ROLL'}
           reduced={reduced}
-          solid={clean}
+          solid={clean || spatial}
           canRoll={canRoll(useGameStore.getState(), moving)}
           onRoll={() => {
             if (canRoll(useGameStore.getState(), moving)) dispatch('ROLL');

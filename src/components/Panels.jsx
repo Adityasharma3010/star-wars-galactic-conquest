@@ -148,6 +148,19 @@ export function PlayersPanel() {
                   <small>{mapText('WORLDS')}</small>
                 </span>
               </div>
+              {(() => {
+                const owned = BOARD.filter((t) => game.ownership[t.id]?.owner === p.id);
+                return owned.length ? (
+                  <div className="commander-holdings" aria-label={`${p.name}'s holdings`}>
+                    {owned.slice(0, 4).map((t) => (
+                      <span key={t.id} style={{ '--c': t.color || '#8fb4cc' }}>
+                        {t.name}
+                      </span>
+                    ))}
+                    {owned.length > 4 && <span className="more">+{owned.length - 4}</span>}
+                  </div>
+                ) : null;
+              })()}
               <ConnectionGrace player={p} />
               {p.id === current.id && (
                 <div className="current-turn-line">

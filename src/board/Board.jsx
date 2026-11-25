@@ -285,7 +285,7 @@ export default function Board() {
             ))}
         </div>
       )}
-      <OwnershipLegend />
+      {boardView === '3d' && <OwnershipLegend />}
       <div className="board-footnote">
         <span>
           <LockKeyhole size={11} />{' '}
