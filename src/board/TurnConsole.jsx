@@ -6,11 +6,11 @@ import { useGameStore } from '../stores/gameStore.js';
 import ConnectionGrace from '../components/ConnectionGrace.jsx';
 import Dice from './Dice.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
-import { canRoll } from './rollPermission.js';
+import { canRoll, takeRoll } from './rollPermission.js';
 import PawnArt from '../components/PawnArt.jsx';
 
 export default function TurnConsole({ moving = false, spatial = false, clean = false }) {
-  const { game, dispatch, busy, online, onlinePlayer, open, matchAway } = useGameStore();
+  const { game, dispatch, busy, online, onlinePlayer, open, matchAway, staging } = useGameStore();
   const reduced = useMotionPreference(),
     player = game.players[game.turn];
   const spectator = online && !onlinePlayer;
@@ -20,6 +20,7 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
     !matchAway &&
     !moving &&
     !busy &&
+    !staging &&
     (!online || player.id === onlinePlayer) &&
     !player.ai;
   const canSettle = Boolean(
@@ -35,7 +36,7 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
         ? `Acquire ${pending?.name}`
         : game.phase === 'end'
           ? game.extraTurn
-            ? 'Continue · doubles'
+            ? 'Roll again · doubles'
             : 'End turn'
           : game.phase === 'auction'
             ? 'Join auction'
@@ -45,8 +46,9 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
                 : 'Waiting for ' + game.players.find((p) => p.id === game.debt.payer)?.name
               : 'View results';
   const act = () => {
-    if (game.phase === 'roll') dispatch('ROLL');
+    if (game.phase === 'roll') takeRoll();
     else if (game.phase === 'purchase') dispatch('BUY');
+    else if (game.phase === 'end' && game.extraTurn && !player.detained) takeRoll();
     else if (game.phase === 'end') dispatch('END');
     else if (game.phase === 'auction') open('auction');
     else if (game.phase === 'debt' && canSettle) open('debt');
@@ -98,13 +100,13 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
       <div className="roll-row">
         <Dice
           values={game.dice}
-          version={game.version}
+          version={Math.ceil(game.version)}
           rolling={game.lastActionType === 'ROLL'}
           reduced={reduced}
           solid={clean || spatial}
           canRoll={canRoll(useGameStore.getState(), moving)}
           onRoll={() => {
-            if (canRoll(useGameStore.getState(), moving)) dispatch('ROLL');
+            if (canRoll(useGameStore.getState(), moving)) takeRoll();
           }}
         />
         <motion.button
@@ -116,19 +118,22 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
             matchAway ||
             spectator ||
             moving ||
+            staging ||
             busy
           }
           onClick={act}
         >
           {moving
             ? 'Travelling…'
-            : busy
-              ? 'Syncing…'
-              : spectator
-                ? 'Spectating · ' + player.name + '’s turn'
-                : player.ai && !['auction', 'debt', 'finished'].includes(game.phase)
-                  ? 'Commander is thinking…'
-                  : main}
+            : staging
+              ? 'Resolving…'
+              : busy
+                ? 'Syncing…'
+                : spectator
+                  ? 'Spectating · ' + player.name + '’s turn'
+                  : player.ai && !['auction', 'debt', 'finished'].includes(game.phase)
+                    ? 'Commander is thinking…'
+                    : main}
           {game.phase === 'roll' ? <Dices size={19} /> : <ArrowRight size={18} />}
         </motion.button>
       </div>

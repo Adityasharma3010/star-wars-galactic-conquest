@@ -445,84 +445,134 @@ export function Trade() {
     [requestCash, setRequestCash] = useState(0),
     [giveCards, setGiveCards] = useState([]),
     [takeCards, setTakeCards] = useState([]);
+  const canAnswer = (t) =>
+    t.status === 'pending' &&
+    (online ? t.to === onlinePlayer : !game.players.find((p) => p.id === t.to).ai);
+  const incoming = game.trades.filter(canAnswer);
+  const [tab, setTab] = useState(incoming.length ? 'deals' : 'offer');
   const partner = game.players.find((p) => p.id === to),
     toggle = (list, set, id) =>
       set(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
-  const selection = (p, list, set, cardList, setCards) => (
-    <div className="trade-side">
-      <span className="trade-manifest-label">
-        {p.id === me.id ? 'YOUR OFFER' : 'REQUESTED FROM ' + p.name.toUpperCase()}
-      </span>
-      <div
-        className="trade-person"
-        style={{
-          color: p.color,
-        }}
-      >
-        <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={35} />
-        <strong>{p.name}</strong>
-        <span>
-          {mapText('\u25C8 ')}
-          {p.credits}
-        </span>
-      </div>
-      <div className="trade-properties">
-        {BOARD.filter((t) => game.ownership[t.id]?.owner === p.id).map((t) => (
-          <label key={t.id}>
+  const valueOf = (ids, credits) =>
+    ids.reduce((sum, id) => sum + (BOARD[id].price || 0), 0) + (Number(credits) || 0);
+  const giveValue = valueOf(give, cash),
+    takeValue = valueOf(take, requestCash);
+  const total = Math.max(1, giveValue + takeValue);
+  const verdict =
+    !giveValue && !takeValue
+      ? 'Pick worlds or credits to begin'
+      : giveValue > takeValue * 1.25
+        ? 'Generous offer'
+        : takeValue > giveValue * 1.25
+          ? 'Bold request'
+          : 'Balanced deal';
+  const selection = (p, list, set, cardList, setCards) => {
+    const mine = p.id === me.id,
+      credits = mine ? cash : requestCash,
+      setCredits = mine ? setCash : setRequestCash,
+      owned = BOARD.filter((t) => game.ownership[t.id]?.owner === p.id);
+    const bump = (amount) =>
+      setCredits(Math.max(0, Math.min(p.credits, (Number(credits) || 0) + amount)));
+    return (
+      <section className={'trade-side ' + (mine ? 'give' : 'get')} style={{ '--who': p.color }}>
+        <header className="trade-person" style={{ color: p.color }}>
+          <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={38} />
+          <div>
+            <span className="trade-manifest-label">
+              {mine ? 'YOU GIVE' : 'YOU GET FROM ' + p.name.toUpperCase()}
+            </span>
+            <strong>{p.name}</strong>
+          </div>
+          <span className="trade-balance">
+            {mapText('\u25C8 ')}
+            {p.credits}
+          </span>
+        </header>
+        <div className="trade-properties">
+          {owned.map((t) => (
+            <label
+              key={t.id}
+              className={
+                'trade-card' +
+                (list.includes(t.id) ? ' selected' : '') +
+                (game.ownership[t.id]?.mortgaged ? ' mortgaged' : '')
+              }
+              style={{ '--c': t.color || '#8b9dac' }}
+            >
+              <input
+                type="checkbox"
+                checked={list.includes(t.id)}
+                onChange={() => toggle(list, set, t.id)}
+              />
+              <span className="trade-world-image">
+                <PlanetArt tile={t} />
+              </span>
+              <i className="trade-stripe" />
+              <span className="trade-world-name">
+                {t.name}
+                <small>
+                  {game.ownership[t.id]?.mortgaged
+                    ? 'MORTGAGED WORLD'
+                    : GROUPS.find((g) => g.id === t.group)?.name || 'TRANSPORT & INFRASTRUCTURE'}
+                </small>
+              </span>
+              <b>
+                {mapText('\u25C8 ')}
+                {t.price}
+              </b>
+              <em className="trade-check" aria-hidden="true">
+                <Check size={13} />
+              </em>
+            </label>
+          ))}
+          {!owned.length && !p.cards.length && (
+            <p className="muted trade-empty">{mapText('No worlds owned yet.')}</p>
+          )}
+          {p.cards.map((id) => (
+            <label
+              key={id}
+              className={'trade-card trade-item' + (cardList.includes(id) ? ' selected' : '')}
+              style={{ '--c': '#9fe3ff' }}
+            >
+              <input
+                type="checkbox"
+                checked={cardList.includes(id)}
+                onChange={() => toggle(cardList, setCards, id)}
+              />
+              <span className="trade-world-name">{mapText('Detention escape card')}</span>
+              <em className="trade-check" aria-hidden="true">
+                <Check size={13} />
+              </em>
+            </label>
+          ))}
+        </div>
+        <div className="trade-cash">
+          <Field label="CREDITS INCLUDED">
             <input
-              type="checkbox"
-              checked={list.includes(t.id)}
-              onChange={() => toggle(list, set, t.id)}
+              type="number"
+              min="0"
+              max={p.credits}
+              value={credits}
+              onChange={(e) => setCredits(+e.target.value)}
             />
-            <span className="trade-world-image">
-              <PlanetArt tile={t} />
-            </span>
-            <i
-              style={{
-                background: t.color || '#8b9dac',
-              }}
-            />
-            <span className="trade-world-name">
-              {t.name}
-              <small>
-                {game.ownership[t.id]?.mortgaged
-                  ? 'MORTGAGED WORLD'
-                  : GROUPS.find((g) => g.id === t.group)?.name || 'TRANSPORT & INFRASTRUCTURE'}
-              </small>
-            </span>
-            <span>
-              {mapText('\u25C8 ')}
-              {t.price}
-            </span>
-          </label>
-        ))}
-        {!Object.values(game.ownership).some((o) => o.owner === p.id) && (
-          <p className="muted">{mapText('No worlds owned yet.')}</p>
-        )}
-        {p.cards.map((id) => (
-          <label key={id}>
-            <input
-              type="checkbox"
-              checked={cardList.includes(id)}
-              onChange={() => toggle(cardList, setCards, id)}
-            />
-            {mapText('Detention escape card')}
-          </label>
-        ))}
-      </div>
-      <Field label="CREDITS INCLUDED">
-        <input
-          type="number"
-          min="0"
-          max={p.credits}
-          value={p.id === me.id ? cash : requestCash}
-          onChange={(e) =>
-            p.id === me.id ? setCash(+e.target.value) : setRequestCash(+e.target.value)
-          }
-        />
-      </Field>
-    </div>
-  );
+          </Field>
+          <div className="cash-chips">
+            {[50, 100, 250].map((n) => (
+              <button type="button" key={n} onClick={() => bump(n)}>
+                +{n}
+              </button>
+            ))}
+            <button type="button" onClick={() => setCredits(p.credits)}>
+              Max
+            </button>
+            <button type="button" onClick={() => setCredits(0)}>
+              Clear
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  };
   return (
     <div className="negotiation-deck">
       <div className="trade-banner">
@@ -535,120 +585,185 @@ export function Trade() {
           <i /> {mapText('SECURE HOLOLINK')}
         </span>
       </div>
-      <Field label="TRADE PARTNER">
-        <HoloSelect
-          value={to}
-          onChange={(e) => {
-            setTo(e.target.value);
-            setTake([]);
-            setTakeCards([]);
-          }}
+      <div className="trade-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'offer'}
+          className={tab === 'offer' ? 'on' : ''}
+          onClick={() => setTab('offer')}
         >
-          {game.players
-            .filter((p) => p.id !== me.id && !p.bankrupt)
-            .map((p) => (
-              <option value={p.id} key={p.id}>
-                {p.name}
-              </option>
-            ))}
-        </HoloSelect>
-      </Field>
-      <div className="trade-grid">
-        {selection(me, give, setGive, giveCards, setGiveCards)}
-        <div className="trade-transfer" aria-hidden="true">
-          <ArrowRightLeft size={26} />
-          <span>NEGOTIATE</span>
-        </div>
-        {partner && selection(partner, take, setTake, takeCards, setTakeCards)}
+          {counter ? 'Counteroffer' : 'New offer'}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'deals'}
+          className={tab === 'deals' ? 'on' : ''}
+          onClick={() => setTab('deals')}
+        >
+          Negotiations
+          {game.trades.length > 0 && (
+            <em className={incoming.length ? 'alert' : ''}>
+              {incoming.length ? incoming.length + ' waiting' : game.trades.length}
+            </em>
+          )}
+        </button>
       </div>
-      <p className="muted">
-        Offers expire after three rounds. Developments must be sold before transferring a group. A
-        recipient pays 10% interest on transferred mortgages.
-      </p>
-      <button
-        className="button gold-button full"
-        disabled={!['roll', 'end'].includes(game.phase)}
-        onClick={async () => {
-          await dispatch(
-            counter ? 'TRADE_COUNTER' : 'TRADE_OFFER',
-            {
-              trade: counter,
-              to,
-              give,
-              take,
-              cash,
-              requestCash,
-              giveCards,
-              takeCards,
-            },
-            me.id,
-          );
-          if (!useGameStore.getState().error) {
-            const actor = online
-              ? onlinePlayer
-              : useGameStore.getState().game.players[useGameStore.getState().game.turn].id;
-            setDraftActor(actor);
-            setCounter(null);
-            setGive([]);
-            setTake([]);
-            setCash(0);
-            setRequestCash(0);
-            setGiveCards([]);
-            setTakeCards([]);
-            setTo(game.players.find((p) => p.id !== actor && !p.bankrupt)?.id);
-          }
-        }}
-      >
-        <ArrowRightLeft size={16} /> {counter ? 'Send counteroffer' : 'Send trade offer'}
-      </button>
-      <div className="pending-trades">
-        <h4>Negotiations</h4>
-        {game.trades.length ? (
-          [...game.trades].reverse().map((t) => (
-            <div className={'trade-offer ' + t.status} key={t.id}>
-              <strong>
-                {game.players.find((p) => p.id === t.from).name} →{' '}
-                {game.players.find((p) => p.id === t.to).name}
-              </strong>
-              <small>
-                {t.status.toUpperCase()} · EXPIRES ROUND {t.expires}
-              </small>
-              <p>
-                {t.give.map((id) => BOARD[id].name).join(', ') || 'No worlds'}
-                {mapText(' + \u25C8 ')}
-                {t.cash}
-                <br />
-                for {t.take.map((id) => BOARD[id].name).join(', ') || 'No worlds'}
-                {mapText(' + \u25C8')} {t.requestCash}
-              </p>
-              {t.status === 'pending' &&
-                (online ? t.to === onlinePlayer : !game.players.find((p) => p.id === t.to).ai) && (
+      {tab === 'offer' && (
+        <div className="trade-builder">
+          <div className="trade-partners" role="radiogroup" aria-label="Trade partner">
+            <span className="trade-manifest-label">TRADE PARTNER</span>
+            {game.players
+              .filter((p) => p.id !== me.id && !p.bankrupt)
+              .map((p) => (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={p.id === to}
+                  key={p.id}
+                  className={'partner-chip' + (p.id === to ? ' on' : '')}
+                  style={{ '--who': p.color }}
+                  onClick={() => {
+                    setTo(p.id);
+                    setTake([]);
+                    setTakeCards([]);
+                  }}
+                >
+                  <TokenArt character={CHARACTERS.find((c) => c.id === p.character)} size={24} />
+                  {p.name}
+                  <small>
+                    {mapText('\u25C8 ')}
+                    {p.credits}
+                  </small>
+                </button>
+              ))}
+          </div>
+          <div className="trade-grid">
+            {selection(me, give, setGive, giveCards, setGiveCards)}
+            <div className="trade-transfer" aria-hidden="true">
+              <ArrowRightLeft size={24} />
+            </div>
+            {partner && selection(partner, take, setTake, takeCards, setTakeCards)}
+          </div>
+          <div className="trade-footer">
+            <div className="trade-summary">
+              <div>
+                <small>YOU GIVE</small>
+                <strong>
+                  {mapText('\u25C8 ')}
+                  {giveValue}
+                </strong>
+                <span>
+                  {give.length + giveCards.length} item
+                  {give.length + giveCards.length === 1 ? '' : 's'}
+                  {cash > 0 && ' + credits'}
+                </span>
+              </div>
+              <div className="trade-meter" title={verdict}>
+                <i style={{ width: (giveValue / total) * 100 + '%' }} />
+                <b>{verdict}</b>
+              </div>
+              <div>
+                <small>YOU GET</small>
+                <strong>
+                  {mapText('\u25C8 ')}
+                  {takeValue}
+                </strong>
+                <span>
+                  {take.length + takeCards.length} item
+                  {take.length + takeCards.length === 1 ? '' : 's'}
+                  {requestCash > 0 && ' + credits'}
+                </span>
+              </div>
+            </div>
+            <p className="muted trade-note">
+              Offers expire after three rounds. Developments must be sold before transferring a
+              group. A recipient pays 10% interest on transferred mortgages.
+            </p>
+            <button
+              className="button gold-button full trade-send"
+              disabled={!['roll', 'end'].includes(game.phase)}
+              onClick={async () => {
+                await dispatch(
+                  counter ? 'TRADE_COUNTER' : 'TRADE_OFFER',
+                  {
+                    trade: counter,
+                    to,
+                    give,
+                    take,
+                    cash,
+                    requestCash,
+                    giveCards,
+                    takeCards,
+                  },
+                  me.id,
+                );
+                if (!useGameStore.getState().error) {
+                  const actor = online
+                    ? onlinePlayer
+                    : useGameStore.getState().game.players[useGameStore.getState().game.turn].id;
+                  setDraftActor(actor);
+                  setCounter(null);
+                  setGive([]);
+                  setTake([]);
+                  setCash(0);
+                  setRequestCash(0);
+                  setGiveCards([]);
+                  setTakeCards([]);
+                  setTo(game.players.find((p) => p.id !== actor && !p.bankrupt)?.id);
+                  setTab('deals');
+                }
+              }}
+            >
+              <ArrowRightLeft size={16} /> {counter ? 'Send counteroffer' : 'Send trade offer'}
+            </button>
+          </div>
+        </div>
+      )}
+      {tab === 'deals' && (
+        <div className="pending-trades">
+          {game.trades.length ? (
+            [...game.trades].reverse().map((t) => (
+              <div className={'trade-offer ' + t.status} key={t.id}>
+                <div className="trade-offer-head">
+                  <strong>
+                    {game.players.find((p) => p.id === t.from).name} <ArrowRight size={14} />{' '}
+                    {game.players.find((p) => p.id === t.to).name}
+                  </strong>
+                  <small>
+                    {t.status.toUpperCase()} · EXPIRES ROUND {t.expires}
+                  </small>
+                </div>
+                <div className="trade-offer-body">
+                  <div>
+                    <span>OFFERED</span>
+                    <p>
+                      {t.give.map((id) => BOARD[id].name).join(', ') || 'No worlds'}
+                      {mapText(' + \u25C8 ')}
+                      {t.cash}
+                    </p>
+                  </div>
+                  <ArrowRightLeft size={16} />
+                  <div>
+                    <span>IN RETURN</span>
+                    <p>
+                      {t.take.map((id) => BOARD[id].name).join(', ') || 'No worlds'}
+                      {mapText(' + \u25C8')} {t.requestCash}
+                    </p>
+                  </div>
+                </div>
+                {canAnswer(t) && (
                   <div className="button-row">
                     <button
-                      className="button"
-                      onClick={() =>
-                        dispatch(
-                          'TRADE_ACCEPT',
-                          {
-                            trade: t.id,
-                          },
-                          t.to,
-                        )
-                      }
+                      className="button gold-button"
+                      onClick={() => dispatch('TRADE_ACCEPT', { trade: t.id }, t.to)}
                     >
                       Accept
                     </button>
                     <button
                       className="button"
-                      onClick={() =>
-                        dispatch(
-                          'TRADE_DECLINE',
-                          {
-                            trade: t.id,
-                          },
-                          t.to,
-                        )
-                      }
+                      onClick={() => dispatch('TRADE_DECLINE', { trade: t.id }, t.to)}
                     >
                       Decline
                     </button>
@@ -664,41 +779,34 @@ export function Trade() {
                         setTakeCards(t.giveCards);
                         setCash(t.requestCash);
                         setRequestCash(t.cash);
+                        setTab('offer');
                       }}
                     >
                       Counter
                     </button>
                   </div>
                 )}
-              {t.status === 'pending' && t.from === me.id && (
-                <button
-                  className="text-button"
-                  onClick={() =>
-                    dispatch(
-                      'TRADE_CANCEL',
-                      {
-                        trade: t.id,
-                      },
-                      t.from,
-                    )
-                  }
-                >
-                  Cancel offer
-                </button>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="muted">No trade offers this match.</p>
-        )}
-      </div>
+                {t.status === 'pending' && t.from === me.id && (
+                  <button
+                    className="text-button"
+                    onClick={() => dispatch('TRADE_CANCEL', { trade: t.id }, t.from)}
+                  >
+                    Cancel offer
+                  </button>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="muted trade-empty">No trade offers this match.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 export function Auction() {
   const BOARD = boardFor(useGameStore.getState().game),
-    GROUPS = groupsFor(useGameStore.getState().game),
-    CHARACTERS = tokensFor(useGameStore.getState().game);
+    GROUPS = groupsFor(useGameStore.getState().game);
   const { game, dispatch, online, onlinePlayer } = useGameStore(),
     a = game.auction,
     [amount, setAmount] = useState((a?.bid || 0) + 10),
@@ -709,22 +817,28 @@ export function Auction() {
   if (!a)
     return <Notice>The auction has concluded. The result is recorded in your flight log.</Notice>;
   const t = BOARD[a.property],
-    p = game.players.find((p) => p.id === bidder);
+    p = game.players.find((p) => p.id === bidder),
+    leader = game.players.find((x) => x.id === a.bidder),
+    passed = a.passed.includes(bidder),
+    group = GROUPS.find((g) => g.id === t.group);
+  const quick = [10, 20, 50, 100];
   return (
-    <div className="auction-modal">
+    <div className="auction-modal" style={{ '--c': t.color || '#8fb4cc' }}>
       <div className="auction-world">
         <PlanetArt tile={t} />
         <div>
           <span className="eyebrow gold">LIVE AUCTION</span>
           <h3>{t.name}</h3>
           <p>
+            {group?.name || 'Transport & infrastructure'}
+            {' · '}
             {mapText('Listed value \u25C8 ')}
             {t.price}
           </p>
         </div>
+        <Countdown deadline={a.deadline} auction />
       </div>
       <div className="auction-bid">
-        <Countdown deadline={a.deadline} auction />
         <small>CURRENT BID</small>
         <motion.strong
           key={a.bid}
@@ -740,83 +854,93 @@ export function Auction() {
           {mapText('\u25C8 ')}
           {a.bid}
         </motion.strong>
-        <span>{game.players.find((p) => p.id === a.bidder)?.name || 'Awaiting the first bid'}</span>
+        <span className="auction-leader" style={leader ? { '--who': leader.color } : undefined}>
+          {leader ? (
+            <>
+              <i /> {leader.name} is leading
+            </>
+          ) : (
+            'Awaiting the first bid'
+          )}
+        </span>
       </div>
-      {!online && (
-        <Field label="BIDDING COMMANDER">
-          <HoloSelect value={bidder} onChange={(e) => setBidder(e.target.value)}>
-            {game.players
-              .filter((p) => !p.ai && !p.bankrupt)
-              .map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-          </HoloSelect>
-        </Field>
-      )}
-      <Field label={mapText(`YOUR BID · AVAILABLE ◈ ${p?.credits || 0}`)}>
-        <input
-          type="number"
-          min={a.bid + 10}
-          step="10"
-          value={amount}
-          onChange={(e) => setAmount(+e.target.value)}
-        />
-      </Field>
-      <div className="button-row">
-        <button
-          className="button gold-button"
-          disabled={a.passed.includes(bidder)}
-          onClick={() =>
-            dispatch(
-              'BID',
-              {
-                amount,
-              },
-              bidder,
-            )
-          }
-        >
-          Place bid <Coins size={16} />
-        </button>
-        <button
-          className="button"
-          disabled={a.passed.includes(bidder) || a.bidder === bidder}
-          onClick={() => dispatch('PASS', {}, bidder)}
-        >
-          {a.passed.includes(bidder) ? 'You passed' : 'Pass auction'}
-        </button>
-      </div>
-      <p className="muted">
-        {mapText(
-          ' Minimum increment: 10 credits. Each bid resets the closing countdown to 10 seconds. The last bidder wins when everyone else passes. ',
+      <div className="auction-controls">
+        {!online && (
+          <Field label="BIDDING COMMANDER">
+            <HoloSelect value={bidder} onChange={(e) => setBidder(e.target.value)}>
+              {game.players
+                .filter((x) => !x.ai && !x.bankrupt)
+                .map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.name}
+                  </option>
+                ))}
+            </HoloSelect>
+          </Field>
         )}
-      </p>
+        <Field label={mapText(`YOUR BID · AVAILABLE ◈ ${p?.credits || 0}`)}>
+          <input
+            type="number"
+            min={a.bid + 10}
+            step="10"
+            value={amount}
+            onChange={(e) => setAmount(+e.target.value)}
+          />
+        </Field>
+        <div className="quick-bids" aria-label="Quick raise">
+          {quick.map((n) => (
+            <button
+              type="button"
+              key={n}
+              disabled={passed || a.bid + n > (p?.credits || 0)}
+              onClick={() => setAmount(a.bid + n)}
+            >
+              +{n}
+            </button>
+          ))}
+        </div>
+        <div className="button-row">
+          <button
+            className="button gold-button"
+            disabled={passed}
+            onClick={() => dispatch('BID', { amount }, bidder)}
+          >
+            Place bid <Coins size={16} />
+          </button>
+          <button
+            className="button"
+            disabled={passed || a.bidder === bidder}
+            onClick={() => dispatch('PASS', {}, bidder)}
+          >
+            {passed ? 'You passed' : 'Pass auction'}
+          </button>
+        </div>
+      </div>
       <div className="auction-status">
         {game.players
-          .filter((p) => !p.bankrupt)
-          .map((p) => (
+          .filter((x) => !x.bankrupt)
+          .map((x) => (
             <span
-              key={p.id}
-              style={{
-                color: p.color,
-              }}
+              key={x.id}
+              className={
+                a.passed.includes(x.id) ? 'passed' : a.bidder === x.id ? 'leading' : 'bidding'
+              }
+              style={{ '--who': x.color }}
             >
-              {p.name}
+              {x.name}
               <small>
-                {a.passed.includes(p.id) ? 'PASSED' : a.bidder === p.id ? 'LEADING' : 'BIDDING'}
+                {a.passed.includes(x.id) ? 'PASSED' : a.bidder === x.id ? 'LEADING' : 'BIDDING'}
               </small>
             </span>
           ))}
       </div>
-      <div className="rent-table">
+      <div className="rent-table auction-history">
         {[...a.bids]
           .reverse()
-          .slice(0, 8)
+          .slice(0, 6)
           .map((b, i) => (
             <div key={i}>
-              <span>{game.players.find((p) => p.id === b.player).name}</span>
+              <span>{game.players.find((x) => x.id === b.player).name}</span>
               <strong>
                 {mapText('\u25C8 ')}
                 {b.amount}
@@ -824,6 +948,11 @@ export function Auction() {
             </div>
           ))}
       </div>
+      <p className="muted">
+        {mapText(
+          ' Minimum increment: 10 credits. Each bid resets the closing countdown to 10 seconds. The last bidder wins when everyone else passes. ',
+        )}
+      </p>
     </div>
   );
 }

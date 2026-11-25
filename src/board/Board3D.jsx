@@ -5,7 +5,7 @@ import { useGameStore } from '../stores/gameStore.js';
 import { createTable } from './three/table.js';
 import TurnConsole from './TurnConsole.jsx';
 import useMotionPreference from '../hooks/useMotionPreference.js';
-import { canRoll } from './rollPermission.js';
+import { canRoll, takeRoll } from './rollPermission.js';
 
 export default function Board3D({ game, selected, onSelect, onMoving, moving, onUnavailable }) {
   const ref = useRef(),
@@ -32,7 +32,7 @@ export default function Board3D({ game, selected, onSelect, onMoving, moving, on
         mayRoll: () => canRoll(useGameStore.getState(), movingRef.current),
         onRoll: () => {
           const state = useGameStore.getState();
-          if (canRoll(state, movingRef.current)) state.dispatch('ROLL');
+          if (canRoll(state, movingRef.current)) takeRoll();
         },
         onHover: (id) => {
           if (mounted) setHover(id);

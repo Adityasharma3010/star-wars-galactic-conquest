@@ -139,7 +139,15 @@ function GameApp() {
     restoreSounds().catch(() => {});
   }, []);
   useEffect(() => {
-    if (!playing || !game || intro || online || game.phase === 'finished' || eventQueue.length)
+    if (
+      !playing ||
+      !game ||
+      intro ||
+      online ||
+      game.phase === 'finished' ||
+      eventQueue.length ||
+      useGameStore.getState().staging
+    )
       return;
     const p = automationPlayer(game);
     if (!p) return;

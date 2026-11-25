@@ -32,6 +32,10 @@ export default function Board() {
   const setBoardView = useGameStore((state) => state.setBoardView);
   const [viewNotice, setViewNotice] = useState('');
   const seenMovement = useRef(game.version);
+  useEffect(() => {
+    useGameStore.setState({ presentationActive: true });
+    return () => useGameStore.setState({ presentationActive: false });
+  }, []);
   useEffect(() => setMoving(false), [boardView]);
   usePointerLight(ref, reduced || boardView === '3d');
   const previous = useRef(game);

@@ -9,7 +9,11 @@ import { getCard } from '../game/cards/decks.js';
 import { mapFor } from '../game/maps.js';
 import { secureRandom } from '../game/engine/random.js';
 import { serverCall, syncProfile, syncSettings } from '../services/supabase.js';
+import { planStages, travelMs } from '../game/presentation.js';
 import { playSound } from '../services/audio.js';
+let stageToken = 0;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const useGameStore = create(
   persist(
     (set, get) => ({
@@ -63,6 +67,9 @@ export const useGameStore = create(
         music: false,
         reducedMotion: false,
       },
+      staging: false,
+      stagedFinal: null,
+      presentationActive: false,
       finishIntro: () => set({ intro: null }),
       clearTransmission: () => set({ observedEvent: null }),
       resumeSaved: () => {
@@ -70,6 +77,9 @@ export const useGameStore = create(
       },
       returnHome: async () => {
         const state = get();
+        stageToken++;
+        if (state.stagedFinal) get().applyCommit(state.stagedFinal);
+        set({ staging: false, stagedFinal: null });
         set({ playing: false, modal: null, eventQueue: [], intro: null, observedEvent: null });
         if (state.online && state.onlineRole !== 'spectator' && state.game?.phase !== 'finished') {
           set({ busy: true, matchAway: true });
@@ -115,6 +125,8 @@ export const useGameStore = create(
         syncSettings(settings).catch((e) => set({ error: e.message }));
       },
       start: async (players, rules) => {
+        stageToken++;
+        set({ staging: false, stagedFinal: null });
         if (get().online && get().game?.phase !== 'finished')
           await leaveMatch(get().game.id).catch(() => {});
         try {
@@ -145,6 +157,56 @@ export const useGameStore = create(
         }
       },
       commit: (game) => {
+        const state = get(),
+          old = state.game;
+        if (state.staging) {
+          // A newer authoritative state arrived while we were presenting the previous one.
+          const pending = state.stagedFinal;
+          if (pending && game.id === pending.id && game.version <= pending.version) return;
+          stageToken++;
+          set({ staging: false, stagedFinal: null });
+          if (pending) get().applyCommit(pending);
+        }
+        // Only stage when a board is on screen to animate it (store-only usage stays synchronous).
+        const plan = get().presentationActive ? planStages(get().game, game) : null;
+        if (!plan) {
+          get().applyCommit(game);
+          return;
+        }
+        const token = ++stageToken;
+        set({ staging: true, stagedFinal: game });
+        const reduced = Boolean(get().settings.reducedMotion);
+        const run = async () => {
+          for (const stage of plan.stages) {
+            if (token !== stageToken) return;
+            get().applyCommit(stage.state);
+            const mover = stage.state.movement
+              ? stage.state.players.find((p) => p.id === stage.state.movement.player)
+              : null;
+            if (mover) set({ selected: mover.position });
+            if (stage.kind === 'travel') await sleep(travelMs(stage.steps, reduced));
+            else {
+              await sleep(reduced ? 300 : 1400);
+              const started = Date.now();
+              while (
+                token === stageToken &&
+                (get().eventQueue.length || get().observedEvent) &&
+                Date.now() - started < 25000
+              )
+                await sleep(150);
+            }
+          }
+          if (token !== stageToken) return;
+          get().applyCommit(plan.final);
+          set({ staging: false, stagedFinal: null });
+        };
+        run().catch(() => {
+          if (token !== stageToken) return;
+          get().applyCommit(game);
+          set({ staging: false, stagedFinal: null });
+        });
+      },
+      applyCommit: (game) => {
         const old = get().game;
         if (!old) {
           set({ game });
@@ -214,6 +276,7 @@ export const useGameStore = create(
           !get().playing ||
           get().intro ||
           busy ||
+          get().staging ||
           matchAway ||
           (online && get().onlineRole === 'spectator')
         )
@@ -237,7 +300,7 @@ export const useGameStore = create(
             next = data.state;
           } else next = transition(game, action, secureRandom);
           get().commit(next);
-          if (next.movement)
+          if (next.movement && !get().staging)
             set({ selected: next.players.find((p) => p.id === next.movement.player).position });
         } catch (e) {
           set({ error: e.message });
@@ -251,6 +314,8 @@ export const useGameStore = create(
           set({ connections, onlinePlayer: player, onlineRole: player ? 'player' : 'spectator' });
           return;
         }
+        stageToken++;
+        set({ staging: false, stagedFinal: null });
         set({
           intro:
             player &&
@@ -308,7 +373,7 @@ export const useGameStore = create(
       version: 1,
       merge: restoreSession,
       partialize: (s) => ({
-        game: s.game,
+        game: s.stagedFinal || s.game,
         selected: s.selected,
         profile: s.profile,
         settings: s.settings,

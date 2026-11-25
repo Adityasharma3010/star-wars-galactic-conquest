@@ -2516,3 +2516,884 @@
     justify-content: center;
   }
 }
+
+/* =====================================================================
+   TRADE + AUCTION
+   ===================================================================== */
+.app-shell.in-match .modal.modal-trade {
+  max-width: 1040px !important;
+}
+.app-shell.in-match .modal.modal-auction {
+  max-width: 860px !important;
+}
+
+/* ---------- trade ---------- */
+.app-shell.in-match .negotiation-deck {
+  display: grid;
+  gap: 14px;
+}
+.app-shell.in-match .negotiation-deck .trade-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--hc-accent) 16%, transparent),
+    rgba(255, 255, 255, 0.03)
+  );
+  border: 1px solid var(--hc-line);
+  border-left: 3px solid var(--hc-gold);
+}
+.app-shell.in-match .negotiation-deck .trade-banner p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .negotiation-deck .hololink-status {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  color: var(--hc-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-shell.in-match .negotiation-deck .hololink-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--hc-good);
+  box-shadow: 0 0 10px var(--hc-good);
+}
+
+.app-shell.in-match .trade-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--hc-line);
+  width: fit-content;
+}
+.app-shell.in-match .trade-tabs button {
+  border: 0;
+  background: transparent;
+  color: var(--hc-muted);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-shell.in-match .trade-tabs button.on {
+  background: linear-gradient(180deg, #ffe3a4, var(--hc-gold) 60%, #d9a64f);
+  color: #1b1103;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--hc-gold) 40%, transparent);
+}
+.app-shell.in-match .trade-tabs em {
+  font-style: normal;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.app-shell.in-match .trade-tabs em.alert {
+  background: var(--hc-bad);
+  color: #fff;
+}
+
+.app-shell.in-match .trade-builder {
+  display: grid;
+  gap: 14px;
+}
+.app-shell.in-match .trade-partners {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.app-shell.in-match .trade-partners .trade-manifest-label {
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  font-weight: 800;
+  color: var(--hc-muted);
+  margin-right: 4px;
+}
+.app-shell.in-match .partner-chip {
+  --who: var(--hc-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--hc-line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--hc-text);
+  font-weight: 700;
+  font-size: 12.5px;
+  transition: all 0.2s;
+}
+.app-shell.in-match .partner-chip small {
+  color: var(--hc-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.app-shell.in-match .partner-chip:hover {
+  border-color: var(--hc-line-strong);
+}
+.app-shell.in-match .partner-chip.on {
+  background: color-mix(in srgb, var(--who) 22%, transparent);
+  border-color: var(--who);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--who) 35%, transparent);
+}
+
+.app-shell.in-match .negotiation-deck .trade-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
+}
+.app-shell.in-match .negotiation-deck .trade-transfer {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  color: var(--hc-gold);
+}
+.app-shell.in-match .negotiation-deck .trade-transfer svg {
+  padding: 9px;
+  box-sizing: content-box;
+  border-radius: 50%;
+  background: var(--hc-panel-solid);
+  border: 1px solid var(--hc-line-strong);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--hc-gold) 25%, transparent);
+}
+.app-shell.in-match .negotiation-deck .trade-side {
+  --who: var(--hc-accent);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  min-width: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--who) 9%, rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.015)
+  );
+  border: 1px solid color-mix(in srgb, var(--who) 38%, transparent);
+  box-shadow: none;
+}
+.app-shell.in-match .negotiation-deck .trade-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.app-shell.in-match .negotiation-deck .trade-person strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--hc-text);
+}
+.app-shell.in-match .negotiation-deck .trade-manifest-label {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  font-weight: 800;
+  color: var(--who, var(--hc-muted));
+  filter: brightness(1.25);
+}
+.app-shell.in-match .negotiation-deck .trade-balance {
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--hc-gold);
+  font-size: 15px;
+}
+.app-shell.in-match .negotiation-deck .trade-properties {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 300px;
+  overflow: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+  align-content: start;
+  min-height: 120px;
+}
+.app-shell.in-match .negotiation-deck .trade-card {
+  --c: #8b9dac;
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-areas: 'img name' 'img price';
+  column-gap: 9px;
+  align-items: center;
+  padding: 8px 10px 8px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hc-line);
+  transition:
+    transform 0.15s,
+    border-color 0.2s,
+    background 0.2s;
+}
+.app-shell.in-match .negotiation-deck .trade-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--hc-line-strong);
+}
+.app-shell.in-match .negotiation-deck .trade-card input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.app-shell.in-match .negotiation-deck .trade-card .trade-stripe {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--c);
+  box-shadow: 0 0 12px var(--c);
+}
+.app-shell.in-match .negotiation-deck .trade-card .trade-world-image {
+  grid-area: img;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: block;
+  border: 1px solid var(--hc-line);
+  background: rgba(0, 0, 0, 0.3);
+}
+.app-shell.in-match .negotiation-deck .trade-card .trade-world-name {
+  grid-area: name;
+  display: grid;
+  font-weight: 800;
+  font-size: 12.5px;
+  color: var(--hc-text);
+  min-width: 0;
+}
+.app-shell.in-match .negotiation-deck .trade-card .trade-world-name small {
+  font-size: 8.5px;
+  letter-spacing: 0.8px;
+  color: var(--hc-muted);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-shell.in-match .negotiation-deck .trade-card b {
+  grid-area: price;
+  font-size: 11.5px;
+  color: var(--hc-gold);
+  font-weight: 800;
+}
+.app-shell.in-match .negotiation-deck .trade-card .trade-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--hc-line-strong);
+  color: transparent;
+  font-style: normal;
+}
+.app-shell.in-match .negotiation-deck .trade-card.selected {
+  background: color-mix(in srgb, var(--c) 20%, rgba(255, 255, 255, 0.04));
+  border-color: var(--c);
+  box-shadow:
+    0 0 0 1px var(--c),
+    0 0 22px color-mix(in srgb, var(--c) 35%, transparent);
+}
+.app-shell.in-match .negotiation-deck .trade-card.selected .trade-check {
+  background: var(--hc-gold);
+  border-color: var(--hc-gold);
+  color: #1b1103;
+}
+.app-shell.in-match .negotiation-deck .trade-card.mortgaged {
+  opacity: 0.6;
+}
+.app-shell.in-match .negotiation-deck .trade-card.trade-item {
+  grid-template-columns: 1fr;
+  grid-template-areas: 'name';
+  padding: 14px 12px;
+}
+.app-shell.in-match .negotiation-deck .trade-card:focus-within {
+  outline: 2px solid var(--hc-accent);
+  outline-offset: 2px;
+}
+.app-shell.in-match .negotiation-deck .trade-empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  text-align: center;
+  margin: 0;
+  padding: 18px 8px;
+  border: 1px dashed var(--hc-line);
+  border-radius: 14px;
+}
+.app-shell.in-match .negotiation-deck .trade-cash {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--hc-line);
+}
+.app-shell.in-match .negotiation-deck .trade-cash .field {
+  margin: 0;
+}
+.app-shell.in-match .negotiation-deck .trade-cash input {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--hc-gold);
+}
+.app-shell.in-match .cash-chips,
+.app-shell.in-match .quick-bids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.app-shell.in-match .cash-chips button,
+.app-shell.in-match .quick-bids button {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--hc-line);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--hc-text);
+  font-weight: 800;
+  font-size: 11.5px;
+  transition: all 0.15s;
+}
+.app-shell.in-match .cash-chips button:hover,
+.app-shell.in-match .quick-bids button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--hc-gold) 25%, transparent);
+  border-color: var(--hc-gold);
+}
+.app-shell.in-match .quick-bids button:disabled {
+  opacity: 0.35;
+}
+
+.app-shell.in-match .trade-summary {
+  display: grid;
+  grid-template-columns: 1fr minmax(160px, 1.3fr) 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid var(--hc-line);
+}
+.app-shell.in-match .trade-summary > div:not(.trade-meter) {
+  display: grid;
+  gap: 2px;
+}
+.app-shell.in-match .trade-summary > div:last-child {
+  text-align: right;
+}
+.app-shell.in-match .trade-summary small {
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  font-weight: 800;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .trade-summary strong {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--hc-gold);
+}
+.app-shell.in-match .trade-summary span {
+  font-size: 11px;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .trade-meter {
+  position: relative;
+  height: 30px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--hc-accent) 28%, rgba(0, 0, 0, 0.4));
+  border: 1px solid var(--hc-line);
+}
+.app-shell.in-match .trade-meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--hc-gold) 55%, transparent),
+    color-mix(in srgb, var(--hc-gold) 30%, transparent)
+  );
+  transition: width 0.3s;
+}
+.app-shell.in-match .trade-meter b {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: var(--hc-text);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.app-shell.in-match .trade-note {
+  margin: 0;
+  font-size: 11px;
+}
+.app-shell.in-match .trade-send {
+  min-height: 50px;
+  font-size: 15px;
+  border-radius: 16px;
+}
+
+.app-shell.in-match .pending-trades {
+  display: grid;
+  gap: 10px;
+}
+.app-shell.in-match .pending-trades .trade-offer {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hc-line);
+  border-left: 3px solid var(--hc-accent);
+}
+.app-shell.in-match .pending-trades .trade-offer.accepted {
+  border-left-color: var(--hc-good);
+}
+.app-shell.in-match .pending-trades .trade-offer.declined,
+.app-shell.in-match .pending-trades .trade-offer.cancelled,
+.app-shell.in-match .pending-trades .trade-offer.expired {
+  border-left-color: var(--hc-bad);
+  opacity: 0.72;
+}
+.app-shell.in-match .pending-trades .trade-offer.pending {
+  border-left-color: var(--hc-gold);
+}
+.app-shell.in-match .trade-offer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.app-shell.in-match .trade-offer-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.app-shell.in-match .trade-offer-head small {
+  font-size: 9.5px;
+  letter-spacing: 1.4px;
+  font-weight: 800;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .trade-offer-body {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.app-shell.in-match .trade-offer-body > div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.app-shell.in-match .trade-offer-body span {
+  font-size: 8.5px;
+  letter-spacing: 1.6px;
+  font-weight: 800;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .trade-offer-body p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--hc-text);
+}
+.app-shell.in-match .trade-offer-body > svg {
+  color: var(--hc-gold);
+}
+
+/* ---------- auction ---------- */
+.app-shell.in-match .auction-modal {
+  --c: #8fb4cc;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-auto-rows: min-content;
+  align-content: start;
+  gap: 14px 22px;
+}
+.app-shell.in-match .auction-modal .auction-world {
+  grid-column: 1;
+  grid-row: 1;
+}
+.app-shell.in-match .auction-modal .auction-bid {
+  grid-column: 1;
+  grid-row: 2;
+}
+.app-shell.in-match .auction-modal .auction-status {
+  grid-column: 1;
+  grid-row: 3;
+}
+.app-shell.in-match .auction-modal .auction-history {
+  grid-column: 1;
+  grid-row: 4;
+}
+.app-shell.in-match .auction-modal .auction-controls {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+}
+.app-shell.in-match .auction-modal > .muted {
+  grid-column: 1 / -1;
+  grid-row: 5;
+}
+.app-shell.in-match .auction-modal .auction-world {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--c) 24%, transparent),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+}
+.app-shell.in-match .auction-modal .auction-world > :first-child {
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 0 26px color-mix(in srgb, var(--c) 40%, transparent);
+}
+.app-shell.in-match .auction-modal .auction-world h3 {
+  margin: 2px 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+.app-shell.in-match .auction-modal .auction-world p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .auction-modal .countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--hc-line);
+  color: var(--hc-text);
+}
+.app-shell.in-match .auction-modal .countdown.urgent {
+  color: #fff;
+  background: var(--hc-bad);
+  border-color: var(--hc-bad);
+  animation: hc-pulse 1s ease-in-out infinite;
+}
+.app-shell.in-match .auction-modal .auction-bid {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 18px 14px;
+  border-radius: 18px;
+  text-align: center;
+  background: radial-gradient(
+    circle at 50% 0%,
+    color-mix(in srgb, var(--hc-gold) 18%, transparent),
+    rgba(0, 0, 0, 0.25)
+  );
+  border: 1px solid var(--hc-line-strong);
+}
+.app-shell.in-match .auction-modal .auction-bid small {
+  font-size: 9px;
+  letter-spacing: 2.4px;
+  font-weight: 800;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .auction-modal .auction-amount {
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--hc-gold);
+  text-shadow: 0 0 30px color-mix(in srgb, var(--hc-gold) 45%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.app-shell.in-match .auction-leader {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .auction-leader i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--who);
+  box-shadow: 0 0 10px var(--who);
+}
+.app-shell.in-match .auction-modal .auction-controls {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--hc-line);
+}
+.app-shell.in-match .auction-modal .auction-controls .field {
+  margin: 0;
+}
+.app-shell.in-match .auction-modal .auction-controls input[type='number'] {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--hc-gold);
+}
+.app-shell.in-match .auction-modal .auction-controls .button-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+.app-shell.in-match .auction-modal .auction-controls .gold-button {
+  min-height: 48px;
+  font-size: 14.5px;
+  border-radius: 14px;
+}
+.app-shell.in-match .auction-modal .auction-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.app-shell.in-match .auction-status span {
+  --who: #888;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hc-text);
+  background: color-mix(in srgb, var(--who) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--who) 45%, transparent);
+}
+.app-shell.in-match .auction-status span small {
+  font-size: 8.5px;
+  letter-spacing: 1.2px;
+  font-weight: 800;
+  color: var(--hc-muted);
+}
+.app-shell.in-match .auction-status span.leading {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--who) 40%, transparent);
+  border-color: var(--who);
+}
+.app-shell.in-match .auction-status span.passed {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.app-shell.in-match .auction-modal .auction-history {
+  display: grid;
+  gap: 4px;
+}
+.app-shell.in-match .auction-history > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 12px;
+}
+.app-shell.in-match .auction-history > div:first-child {
+  background: color-mix(in srgb, var(--hc-gold) 14%, transparent);
+}
+.app-shell.in-match .auction-history strong {
+  color: var(--hc-gold);
+}
+.app-shell.in-match .auction-modal > .muted {
+  margin: 0;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .app-shell.in-match .negotiation-deck .trade-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .app-shell.in-match .negotiation-deck .trade-transfer {
+    transform: rotate(90deg);
+  }
+  .app-shell.in-match .trade-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .app-shell.in-match .trade-summary .trade-meter {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+  .app-shell.in-match .trade-offer-body {
+    grid-template-columns: 1fr;
+  }
+  .app-shell.in-match .trade-offer-body > svg {
+    transform: rotate(90deg);
+    justify-self: center;
+  }
+  .app-shell.in-match .auction-modal {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-shell.in-match .auction-modal > * {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .app-shell.in-match .auction-modal .auction-amount {
+    font-size: 44px;
+  }
+}
+
+/* compact so the offer, totals and send button fit on one screen */
+.app-shell.in-match .negotiation-deck {
+  gap: 10px;
+}
+.app-shell.in-match .negotiation-deck .trade-banner {
+  padding: 8px 14px;
+}
+.app-shell.in-match .negotiation-deck .trade-banner p {
+  display: none;
+}
+.app-shell.in-match .negotiation-deck .trade-properties {
+  max-height: 214px;
+  min-height: 100px;
+}
+.app-shell.in-match .negotiation-deck .trade-cash {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  padding-top: 10px;
+}
+.app-shell.in-match .negotiation-deck .trade-cash .cash-chips {
+  padding-bottom: 6px;
+  justify-content: flex-end;
+}
+.app-shell.in-match .negotiation-deck .trade-cash .field > span {
+  font-size: 9px;
+}
+.app-shell.in-match .trade-note {
+  display: none;
+}
+.app-shell.in-match .trade-send {
+  margin-top: 2px;
+}
+@media (max-width: 760px) {
+  .app-shell.in-match .negotiation-deck .trade-cash {
+    grid-template-columns: 1fr;
+  }
+}
+.app-shell.in-match .trade-footer {
+  position: sticky;
+  bottom: 62px;
+  z-index: 9;
+  display: grid;
+  gap: 10px;
+  padding: 10px 0 2px;
+  margin-top: 2px;
+  background: linear-gradient(180deg, transparent, rgba(8, 14, 24, 0.94) 22%);
+}
+.app-shell.in-match.classic-theme .trade-footer {
+  background: linear-gradient(180deg, transparent, rgba(24, 12, 8, 0.95) 22%);
+}
+.app-shell.in-match .modal-trade .modal-heading p {
+  display: none;
+}
+.app-shell.in-match .modal-trade .modal-heading {
+  margin-bottom: 8px;
+}
+.app-shell.in-match .negotiation-deck {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'banner tabs' 'main main' 'deals deals';
+  align-items: center;
+}
+.app-shell.in-match .negotiation-deck > .trade-banner {
+  grid-area: banner;
+}
+.app-shell.in-match .negotiation-deck > .trade-tabs {
+  grid-area: tabs;
+}
+.app-shell.in-match .negotiation-deck > .trade-builder {
+  grid-area: main;
+}
+.app-shell.in-match .negotiation-deck > .pending-trades {
+  grid-area: deals;
+}
+.app-shell.in-match .negotiation-deck .trade-properties {
+  max-height: 196px;
+}
+.app-shell.in-match .trade-summary {
+  padding: 9px 16px;
+}
+.app-shell.in-match .trade-summary strong {
+  font-size: 19px;
+}
+.app-shell.in-match .trade-meter {
+  height: 26px;
+}
+.app-shell.in-match .trade-send {
+  min-height: 46px;
+}
+@media (max-width: 760px) {
+  .app-shell.in-match .negotiation-deck {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'banner' 'tabs' 'main' 'deals';
+  }
+}
+.app-shell.in-match .negotiation-deck .trade-properties {
+  grid-auto-rows: min-content;
+}
+.app-shell.in-match .negotiation-deck .trade-card {
+  min-height: 62px;
+  row-gap: 1px;
+}
+.app-shell.in-match .modal.modal-auction {
+  width: min(860px, calc(100vw - 36px)) !important;
+}
+.app-shell.in-match .modal.modal-trade {
+  width: min(1040px, calc(100vw - 36px)) !important;
+}
+.app-shell.in-match .auction-modal .auction-controls {
+  align-self: start;
+  align-content: start;
+  grid-auto-rows: min-content;
+}
+.app-shell.in-match .auction-modal .auction-world {
+  align-self: start;
+}
+.app-shell.in-match .auction-modal .auction-world h3 {
+  color: var(--hc-text) !important;
+}
+.app-shell.in-match .modal .muted {
+  color: var(--hc-muted);
+}
+.app-shell.in-match .auction-modal .auction-status,
+.app-shell.in-match .auction-modal .auction-history,
+.app-shell.in-match .auction-modal .auction-bid,
+.app-shell.in-match .auction-modal .auction-world {
+  margin: 0 !important;
+}
+.app-shell.in-match .auction-modal {
+  row-gap: 12px;
+}

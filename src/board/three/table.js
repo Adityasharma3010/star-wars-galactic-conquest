@@ -473,7 +473,11 @@ export function createTable(
     }
     world.styleWorlds(game, selection, ownerFilter);
     setPieces(before, changed);
-    setDice(changed && game.lastActionType === 'ROLL');
+    setDice(
+      changed &&
+        game.lastActionType === 'ROLL' &&
+        !['card', 'hop', 'final'].includes(game.presentation),
+    );
     container.dataset.developmentModels = [...world.tiles.values()].reduce(
       (n, info) => n + (info.level === 5 ? 1 : info.level),
       0,
