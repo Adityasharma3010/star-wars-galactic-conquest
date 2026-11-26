@@ -2527,6 +2527,87 @@
   opacity: 1;
 }
 
+/* ---------- real 3D dice (WebGL) ---------- */
+.app-shell.in-match .dice-pair.dice-3d {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  perspective: none;
+  cursor: default;
+}
+.app-shell.in-match .dice-pair.dice-3d.dice-roll-control:not(:disabled) {
+  cursor: pointer;
+}
+.app-shell.in-match .dice-pair.dice-3d .dice-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 18px;
+}
+.app-shell.in-match .dice-pair.dice-3d .dice-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.app-shell.in-match .galactic-board .clean-console .dice-pair.dice-3d {
+  width: clamp(210px, 46cqw, 350px);
+  height: clamp(98px, 21cqw, 160px);
+  margin: 0 0 4px;
+}
+.app-shell.in-match .spatial-console .dice-pair.dice-3d {
+  width: 150px;
+  height: 64px;
+  margin: -4px 0;
+}
+.app-shell.in-match .dice-pair.dice-3d .die {
+  width: 44px;
+  height: 44px;
+}
+
+/* tighter centre stack so it fits shorter screens */
+.app-shell.in-match .galactic-board .clean-console .dice-pair.dice-3d {
+  width: clamp(190px, 44cqw, 330px);
+  height: clamp(82px, 17.5cqw, 135px);
+  margin: 0;
+}
+.app-shell.in-match .galactic-board .board-center {
+  gap: clamp(4px, 1.1cqw, 10px);
+  padding-top: clamp(8px, 1.8cqw, 16px);
+  padding-bottom: clamp(6px, 1.4cqw, 12px);
+}
+.app-shell.in-match .galactic-board .clean-console {
+  gap: clamp(4px, 1cqw, 10px);
+}
+.app-shell.in-match .galactic-board .clean-console .roll-row {
+  gap: clamp(4px, 1cqw, 10px);
+}
+.app-shell.in-match .galactic-board .clean-console .roll-button {
+  min-height: clamp(38px, 6cqw, 50px);
+}
+.app-shell.in-match .galactic-board .clean-console .text-button,
+.app-shell.in-match .galactic-board .clean-console .secondary-action {
+  min-height: 32px;
+}
+.app-shell.in-match .galactic-board .clean-console .turn-banner {
+  margin: 0;
+}
+.app-shell.in-match .offer-card {
+  padding: 7px 14px 8px 18px;
+  width: min(100%, 280px);
+}
+.app-shell.in-match .offer-card small {
+  display: none;
+}
+.app-shell.in-match .offer-card strong {
+  font-size: clamp(14px, 2.2cqw, 18px);
+}
+
 /* =====================================================================
    TRADE + AUCTION
    ===================================================================== */

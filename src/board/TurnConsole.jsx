@@ -5,6 +5,7 @@ import { mapText } from '../services/mapText.js';
 import { useGameStore } from '../stores/gameStore.js';
 import ConnectionGrace from '../components/ConnectionGrace.jsx';
 import Dice from './Dice.jsx';
+import { isClassic } from '../game/maps.js';
 import useMotionPreference from '../hooks/useMotionPreference.js';
 import { canRoll, takeRoll } from './rollPermission.js';
 import PawnArt from '../components/PawnArt.jsx';
@@ -103,7 +104,7 @@ export default function TurnConsole({ moving = false, spatial = false, clean = f
           version={Math.ceil(game.version)}
           rolling={game.lastActionType === 'ROLL'}
           reduced={reduced}
-          solid={clean || spatial}
+          classic={isClassic(game)}
           canRoll={canRoll(useGameStore.getState(), moving)}
           onRoll={() => {
             if (canRoll(useGameStore.getState(), moving)) takeRoll();

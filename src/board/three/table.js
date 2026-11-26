@@ -73,7 +73,7 @@ export function createTable(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = classic ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  renderer.shadowMap.type = classic ? THREE.PCFShadowMap : THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-label', 'Interactive 3D game table');
   renderer.domElement.dataset.testid = 'three-canvas';
   renderer.domElement.style.touchAction = 'none';
@@ -402,8 +402,6 @@ export function createTable(
         piece.position.set(start.x, y, start.z);
         moveTimeline?.kill();
         onMoving(true);
-        const follow = { enabled: true };
-        following = follow;
         const timeline = gsap.timeline({
           onUpdate: () => (dirty = true),
           onComplete: () => {
@@ -411,19 +409,6 @@ export function createTable(
             tweens.delete(timeline);
             moveTimeline = null;
             dirty = true;
-            if (following === follow) {
-              following = null;
-              if (performance.now() - lastInteraction > 4000)
-                flyTo(
-                  {
-                    ...homePose(),
-                    distance: currentPose().distance,
-                    azimuth: currentPose().theta,
-                    elevation: Math.PI / 2 - currentPose().phi,
-                  },
-                  1.4,
-                );
-            }
           },
         });
         moveTimeline = timeline;
@@ -450,7 +435,6 @@ export function createTable(
             duration: 0.45,
             ease: 'power2.inOut',
           });
-        piece.userData.following = true;
       } else if (
         !moveTimeline ||
         before?.players.find((o) => o.id === player.id)?.position !== player.position
@@ -603,22 +587,6 @@ export function createTable(
     lastNow = now;
     const time = now / 1000;
     const moved = controls.update();
-    // follow the moving pawn (soft)
-    if (following && moveTimeline) {
-      const piece = pieces.get(game.movement?.player);
-      if (piece) {
-        const goal = piece.position.clone();
-        goal.y = home.target.y;
-        goal.multiplyScalar(0.55);
-        const delta = goal
-          .clone()
-          .sub(controls.target)
-          .multiplyScalar(Math.min(1, dt * 2.6));
-        controls.target.add(delta);
-        camera.position.add(delta);
-        dirty = true;
-      }
-    }
     const animating = !reduced;
     if (animating) {
       world.animate(time);

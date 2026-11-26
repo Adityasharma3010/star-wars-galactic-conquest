@@ -1,7 +1,16 @@
-import { useRef } from 'react';
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
-gsap.registerPlugin(useGSAP);
+import { useEffect, useRef, useState } from 'react';
+import { createDiceScene } from './diceScene.js';
+
+const PATTERNS = {
+  1: [4],
+  2: [0, 8],
+  3: [0, 4, 8],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
+
+/** Two real 3D dice (WebGL). Falls back to flat pips when WebGL is unavailable. */
 export default function Dice({
   values,
   version,
@@ -9,36 +18,49 @@ export default function Dice({
   rolling = true,
   onRoll,
   canRoll = false,
-  solid = false,
+  classic = false,
 }) {
-  const ref = useRef();
+  const canvas = useRef(null);
+  const holder = useRef(null);
+  const scene = useRef(null);
   const previous = useRef(version);
-  useGSAP(
-    () => {
-      const fresh = previous.current !== version;
-      previous.current = version;
-      if (reduced || !rolling || !fresh) return;
-      gsap.fromTo(
-        '.die',
-        { rotate: 0, y: -8 },
-        { rotate: 360, y: 0, stagger: 0.08, duration: 0.65, ease: 'bounce.out' },
-      );
-    },
-    { scope: ref, dependencies: [version, reduced], revertOnUpdate: true },
-  );
-  const patterns = {
-    1: [4],
-    2: [0, 8],
-    3: [0, 4, 8],
-    4: [0, 2, 6, 8],
-    5: [0, 2, 4, 6, 8],
-    6: [0, 2, 3, 5, 6, 8],
-  };
+  const latest = useRef({ values, reduced });
+  const [fallback, setFallback] = useState(false);
+  latest.current = { values, reduced };
+
+  useEffect(() => {
+    if (!canvas.current) return;
+    let instance;
+    try {
+      instance = createDiceScene(canvas.current, { classic, reduced: latest.current.reduced });
+    } catch {
+      setFallback(true);
+      return;
+    }
+    scene.current = instance;
+    const box = holder.current;
+    const fit = () => instance.resize(box.clientWidth, box.clientHeight);
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    fit();
+    instance.setValues(latest.current.values, false);
+    return () => {
+      observer.disconnect();
+      instance.dispose();
+      scene.current = null;
+    };
+  }, [classic]);
+
+  useEffect(() => {
+    const fresh = previous.current !== version;
+    previous.current = version;
+    scene.current?.setValues(values, fresh && rolling && !reduced);
+  }, [values[0], values[1], version, rolling, reduced]);
+
   const Container = onRoll ? 'button' : 'div';
   return (
     <Container
-      className={'dice-pair ' + (onRoll ? 'dice-roll-control' : '')}
-      ref={ref}
+      className={'dice-pair dice-3d ' + (onRoll ? 'dice-roll-control' : '')}
       type={onRoll ? 'button' : undefined}
       disabled={onRoll ? !canRoll : undefined}
       onClick={
@@ -52,28 +74,19 @@ export default function Dice({
       aria-description={`Dice values: ${values.join(' and ')}`}
       title={onRoll && canRoll ? 'Click the dice to roll' : undefined}
     >
-      {values.map((v, i) => (
-        <div className={'die ' + (solid ? 'die-solid' : '')} key={i}>
-          {solid
-            ? Object.entries({
-                front: v,
-                back: 7 - v,
-                top: [0, 2, 6, 1, 6, 1, 5][v],
-                bottom: 7 - [0, 2, 6, 1, 6, 1, 5][v],
-                right: [0, 3, 3, 5, 2, 3, 3][v],
-                left: 7 - [0, 3, 3, 5, 2, 3, 3][v],
-              }).map(([face, value]) => (
-                <div className={'die-face face-' + face} key={face}>
-                  {Array.from({ length: 9 }, (_, n) => (
-                    <i key={n} className={patterns[value]?.includes(n) ? 'pip' : ''} />
-                  ))}
-                </div>
-              ))
-            : Array.from({ length: 9 }, (_, n) => (
-                <i className={patterns[v]?.includes(n) ? 'pip' : ''} key={n} />
+      <span className="dice-stage" ref={holder}>
+        {fallback ? (
+          values.map((v, i) => (
+            <span className="die" key={i}>
+              {Array.from({ length: 9 }, (_, n) => (
+                <i className={PATTERNS[v]?.includes(n) ? 'pip' : ''} key={n} />
               ))}
-        </div>
-      ))}
+            </span>
+          ))
+        ) : (
+          <canvas ref={canvas} className="dice-canvas" />
+        )}
+      </span>
     </Container>
   );
 }
