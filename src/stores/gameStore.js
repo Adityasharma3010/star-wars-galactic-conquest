@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createGame, transition, wealth } from '../game/engine/game.js';
 import { restoreSession } from '../game/restoreSession.js';
+import { clearedSession, pruneStaleSession } from '../game/staleSession.js';
 import { leaveMatch } from '../services/matchConnection.js';
 import { canAcceptMission, missionRecipient } from '../game/missions.js';
 import { getCard } from '../game/cards/decks.js';
@@ -33,6 +34,9 @@ export const useGameStore = create(
       observedEvent: null,
       connections: {},
       matchAway: false,
+      leftAt: null,
+      sessionSeenAt: 0,
+      markSeen: () => set({ sessionSeenAt: Date.now() }),
       game: null,
       playing: false,
       online: false,
@@ -72,6 +76,10 @@ export const useGameStore = create(
       presentationActive: false,
       finishIntro: () => set({ intro: null }),
       clearTransmission: () => set({ observedEvent: null }),
+      discardSession: () => {
+        stageToken++;
+        set({ ...clearedSession(), error: null });
+      },
       resumeSaved: () => {
         if (get().game) set({ playing: true, modal: null, error: null });
       },
@@ -82,12 +90,12 @@ export const useGameStore = create(
         set({ staging: false, stagedFinal: null });
         set({ playing: false, modal: null, eventQueue: [], intro: null, observedEvent: null });
         if (state.online && state.onlineRole !== 'spectator' && state.game?.phase !== 'finished') {
-          set({ busy: true, matchAway: true });
+          set({ busy: true, matchAway: true, leftAt: Date.now() });
           try {
             const d = await leaveMatch(state.game.id);
             set({ connections: d.connections });
           } catch (e) {
-            set({ playing: true, matchAway: false, error: e.message });
+            set({ playing: true, matchAway: false, leftAt: null, error: e.message });
           } finally {
             set({ busy: false });
           }
@@ -332,6 +340,8 @@ export const useGameStore = create(
           connections,
           eventQueue: [],
           matchAway: false,
+          leftAt: null,
+          sessionSeenAt: Date.now(),
           online: true,
           onlinePlayer: player,
           onlineRole: player ? 'player' : 'spectator',
@@ -371,7 +381,7 @@ export const useGameStore = create(
     {
       name: 'galactic-conquest-v1',
       version: 1,
-      merge: restoreSession,
+      merge: (saved, current) => pruneStaleSession(restoreSession(saved, current)),
       partialize: (s) => ({
         game: s.stagedFinal || s.game,
         selected: s.selected,
@@ -386,6 +396,8 @@ export const useGameStore = create(
         boardView: s.boardView,
         onlineRole: s.onlineRole,
         matchAway: s.matchAway,
+        sessionSeenAt: s.sessionSeenAt,
+        leftAt: s.leftAt,
         introducedGames: s.introducedGames,
         ruleDrafts: s.ruleDrafts,
         musicPreferences: s.musicPreferences,

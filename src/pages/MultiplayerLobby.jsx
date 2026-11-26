@@ -138,6 +138,8 @@ export default function MultiplayerLobby() {
           d.players.findIndex((p) => p.user_id === authenticatedUser.current),
         ) % tokens.length
       ];
+    // Joining or creating a room supersedes any saved online match we are not actually playing.
+    if (state.online && state.game && !state.playing) state.discardSession();
     useGameStore.setState({
       lobbyRoom: d.room.id,
       selectedMap: displayMap,

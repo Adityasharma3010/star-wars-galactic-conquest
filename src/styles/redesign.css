@@ -2517,6 +2517,16 @@
   }
 }
 
+/* welcome screen: small forget button next to the saved-match resume */
+.simple-resume .resume-forget {
+  flex: none;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+.simple-resume .resume-forget:hover {
+  opacity: 1;
+}
+
 /* =====================================================================
    TRADE + AUCTION
    ===================================================================== */

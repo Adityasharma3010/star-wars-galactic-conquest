@@ -27,6 +27,7 @@ import WelcomeScreen from '../pages/WelcomeScreen.jsx';
 import MapSelection from '../pages/MapSelection.jsx';
 import MatchOpening from '../components/MatchOpening.jsx';
 import MissionTransmission from '../components/MissionTransmission.jsx';
+import { isStaleSession } from '../game/staleSession.js';
 import { useGameStore } from '../stores/gameStore.js';
 import { chooseAction } from '../game/ai/commander.js';
 import { timeoutAction } from '../game/engine/timeouts.js';
@@ -195,6 +196,7 @@ function GameApp() {
       try {
         const d = await serverCall('connection', { gameId: game.id });
         acceptConnections(d.connections);
+        useGameStore.getState().markSeen();
         if (!disposed) setConnected(true);
       } catch {
         if (!disposed) setConnected(false);
@@ -249,6 +251,7 @@ function GameApp() {
         )
           return;
         acceptConnections(d.connections);
+        useGameStore.getState().markSeen();
         if (d.state.version > useGameStore.getState().game.version) commit(d.state);
         setConnected(true);
       } catch {
@@ -311,13 +314,35 @@ function GameApp() {
     }, 1000);
     return () => clearInterval(timer);
   }, [online, dispatch, playing]);
+  // Once the server has released our seat, drop the dead session instead of offering a rejoin
+  // that can only fail (this also covers a tab that stays open for hours).
+  useEffect(() => {
+    const check = () => {
+      const state = useGameStore.getState();
+      if (state.busy || !state.online || !state.game || !state.matchAway) return;
+      if (!isStaleSession(state)) return;
+      state.discardSession();
+      useGameStore.setState({
+        error: 'Your seat in that match expired, so the saved match was cleared.',
+      });
+    };
+    check();
+    const timer = setInterval(check, 5000);
+    return () => clearInterval(timer);
+  }, []);
   const exit = async () => {
-    useGameStore.setState({ matchAway: true, busy: true, eventQueue: [], modal: null });
+    useGameStore.setState({
+      matchAway: true,
+      leftAt: Date.now(),
+      busy: true,
+      eventQueue: [],
+      modal: null,
+    });
     try {
       const d = await leaveMatch(game.id);
       useGameStore.setState({ connections: d.connections });
     } catch (e) {
-      useGameStore.setState({ matchAway: false, error: e.message });
+      useGameStore.setState({ matchAway: false, leftAt: null, error: e.message });
     } finally {
       useGameStore.setState({ busy: false });
     }
@@ -330,13 +355,23 @@ function GameApp() {
       commit(d.state);
       useGameStore.setState({
         matchAway: false,
+        leftAt: null,
+        sessionSeenAt: Date.now(),
         playing: true,
         ...(d.role === 'spectator' ? { onlinePlayer: null, onlineRole: 'spectator' } : {}),
         connections: d.connections,
         error: null,
       });
     } catch (e) {
-      useGameStore.setState({ error: e.message });
+      if (/fetch|network|offline|timed? ?out|load failed/i.test(e.message))
+        useGameStore.setState({ error: e.message });
+      else {
+        // The match is gone or our seat expired: clear it so the home screen is not stuck on it.
+        useGameStore.getState().discardSession();
+        useGameStore.setState({
+          error: 'That match has ended or your seat expired, so the saved match was cleared.',
+        });
+      }
     } finally {
       useGameStore.setState({ busy: false });
     }

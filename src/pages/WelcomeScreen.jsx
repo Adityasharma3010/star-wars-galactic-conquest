@@ -1,11 +1,12 @@
-import { ArrowRight, BookOpen, Globe2, LockKeyhole, Play, Radio } from 'lucide-react';
+import { ArrowRight, BookOpen, Globe2, LockKeyhole, Play, Radio, X } from 'lucide-react';
 import { useGameStore } from '../stores/gameStore.js';
 import { TokenArt } from '../components/Art.jsx';
 import MapPicker from '../components/MapPicker.jsx';
 import { mapFor, tokensFor } from '../game/maps.js';
 
 export default function WelcomeScreen({ onResumeOnline }) {
-  const { selectedMap, chooseMap, profile, game, online, open, resumeSaved, busy } = useGameStore();
+  const { selectedMap, chooseMap, profile, game, online, open, resumeSaved, busy, discardSession } =
+    useGameStore();
   const map = mapFor(selectedMap);
   const character =
     tokensFor(selectedMap).find((token) => token.id === profile.character) ||
@@ -107,6 +108,15 @@ export default function WelcomeScreen({ onResumeOnline }) {
                   ? 'View results'
                   : 'Resume saved game'}
               <ArrowRight size={15} />
+            </button>
+            <button
+              className="icon-button resume-forget"
+              disabled={busy}
+              aria-label="Forget this saved match"
+              title="Forget this saved match"
+              onClick={discardSession}
+            >
+              <X size={14} />
             </button>
           </div>
         )}
